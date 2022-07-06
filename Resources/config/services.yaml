@@ -1,0 +1,21 @@
+services:
+  _defaults:
+    public:       true
+
+##### Form Mapper
+  austral.form.mapper:
+    class:          Austral\FormBundle\Mapper\FormMapper
+    arguments:      ['@event_dispatcher']
+
+##### Event Subscriber
+  austral.form.event_subscriber:
+    class:          Austral\FormBundle\EventSubscriber\FormSubscriber
+    tags:
+      - { name: kernel.event_subscriber }
+
+##### Form Type
+  austral.form.type.master:
+    class:          Austral\FormBundle\Form\Type\FormType
+    arguments:      [ "@security.authorization_checker" ]
+    tags:
+      - { name: form.type , alias: austral_form_type }

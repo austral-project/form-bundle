@@ -1,0 +1,36 @@
+{
+  "name":                                     "austral/form-bundle",
+  "type":                                     "symfony-bundle",
+  "description":                              "Form builder and mapper for Austral",
+  "keywords":                                 ["Austral", "Mapper", "Form"],
+  "license":                                  "MIT",
+  "homepage":                                 "https://austral.dev",
+  "version":                                  "3.0",
+  "authors": [
+    {
+      "name":                                 "Matthieu Beurel",
+      "email":                                "matthieu@austral.dev",
+      "role":                                 "Developer"
+    }
+  ],
+  "require": {
+    "php":                                    "^7.4 || ^8.0",
+
+    "austral/entity-bundle":                  "^3.0",
+    "austral/tools-bundle":                   "^3.0",
+
+    "symfony/routing":                        "^5.4",
+    "symfony/form":                           "^5.4",
+    "symfony/validator":                      "^5.4",
+    "symfony/event-dispatcher":               "^5.4"
+  },
+  "require-dev": {
+  },
+  "config": {
+    "sort-packages":                          true
+  },
+  "autoload": {
+    "psr-4": { "Austral\\FormBundle\\": "" }
+  },
+  "minimum-stability":                        "dev"
+}
