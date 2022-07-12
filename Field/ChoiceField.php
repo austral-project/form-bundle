@@ -67,10 +67,6 @@ class ChoiceField extends Field
         );
       }
       $values = $resolver->resolve($values);
-      if(!$values['styles'])
-      {
-        $values['styles'] = $this->getDefaultStyleByValue($values['value']);
-      }
       $this->choices[$key] = $values;
     }
 
@@ -162,6 +158,10 @@ class ChoiceField extends Field
       if(!$styles && $this->options['choices_styles'])
       {
         $styles = $this->options['choices_styles'];
+      }
+      elseif(!$styles)
+      {
+        $styles = $this->getDefaultStyleByValue($values['value']);
       }
       $stylesValues[$key] = $styles;
     }
