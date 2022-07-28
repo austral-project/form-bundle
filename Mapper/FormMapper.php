@@ -132,6 +132,11 @@ class FormMapper extends MapperElement implements MapperElementInterface
   protected bool $formSend = false;
 
   /**
+   * @var string
+   */
+  protected string $requestMethod = "GET";
+
+  /**
    * Mapper constructor.
    *
    */
@@ -799,6 +804,25 @@ class FormMapper extends MapperElement implements MapperElementInterface
     $position = $position > 0 ? $position : count($this->actions)+1;
     $this->actions["{$position}-{$action->keyname()}"] = $action;
     ksort($this->actions);
+    return $this;
+  }
+
+  /**
+   * @return string
+   */
+  public function getRequestMethod(): string
+  {
+    return $this->requestMethod;
+  }
+
+  /**
+   * @param string $requestMethod
+   *
+   * @return FormMapper
+   */
+  public function setRequestMethod(string $requestMethod): FormMapper
+  {
+    $this->requestMethod = $requestMethod;
     return $this;
   }
 
