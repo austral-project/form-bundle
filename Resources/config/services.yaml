@@ -19,3 +19,11 @@ services:
     arguments:      [ "@security.authorization_checker" ]
     tags:
       - { name: form.type , alias: austral_form_type }
+
+
+##### Validator
+  austral.form.validator.recaptcha:
+    class:          Austral\FormBundle\Validator\RecaptchaValidator
+    arguments:      [ "@request_stack", "@austral.form.mapper" ]
+    tags:
+      - { name: validator.constraint_validator }
