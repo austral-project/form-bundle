@@ -52,9 +52,9 @@ class FormEvent extends Event
   }
 
   /**
-   * @return FormInterface
+   * @return FormInterface|null
    */
-  public function getForm(): FormInterface
+  public function getForm(): ?FormInterface
   {
     return $this->form;
   }

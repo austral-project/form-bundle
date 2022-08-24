@@ -41,6 +41,8 @@ class FormSubscriber implements EventSubscriberInterface
       FormEvent::EVENT_AUSTRAL_FORM_VALIDATE              =>  ["formValidate", 1024],
       FormEvent::EVENT_AUSTRAL_FORM_ADD_AUTO_FIELDS_AFTER =>  ["formAddAutoFields", 0],
       FormEvent::EVENT_AUSTRAL_FORM_INIT_END              =>  ["formInitEnd", 0],
+      FormEvent::EVENT_AUSTRAL_FORM_UPDATE_BEFORE         =>  ["formUpdateBefore", 0],
+      FormEvent::EVENT_AUSTRAL_FORM_UPDATE_AFTER          =>  ["formUpdateAfter", 0],
       FormFieldEvent::EVENT_AUSTRAL_FORM_PRE_SET_DATA     =>  ["fieldPreSetData", 0],
       FormFieldEvent::EVENT_AUSTRAL_FIELD_CONFIGURATION   =>  ["fieldConfiguration", 0],
     ];
@@ -51,19 +53,7 @@ class FormSubscriber implements EventSubscriberInterface
    */
   public function formValidate(FormEvent $formEvent)
   {
-    if($formEvent->getFormMapper()->getSubFormMappers())
-    {
-      /** @var FormMapper $subMapper */
-      foreach ($formEvent->getFormMapper()->getSubFormMappers() as $subMapper)
-      {
-        if(isset($formEvent->getForm()[$subMapper->getName()]))
-        {
-          $subFormEvent = new FormEvent($subMapper);
-          $subFormEvent->setForm($formEvent->getForm()[$subMapper->getName()]);
-          $subMapper->getDispatcher()->dispatch($subFormEvent, FormEvent::EVENT_AUSTRAL_FORM_VALIDATE);
-        }
-      }
-    }
+    $this->dispatchEventSubFormMapper($formEvent, FormEvent::EVENT_AUSTRAL_FORM_VALIDATE);
   }
 
   /**
@@ -71,13 +61,44 @@ class FormSubscriber implements EventSubscriberInterface
    */
   public function formAddAutoFields(FormEvent $formEvent)
   {
+    $this->dispatchEventSubFormMapper($formEvent, FormEvent::EVENT_AUSTRAL_FORM_ADD_AUTO_FIELDS_AFTER);
+  }
+
+  /**
+   * @param FormEvent $formEvent
+   */
+  public function formUpdateBefore(FormEvent $formEvent)
+  {
+    $this->dispatchEventSubFormMapper($formEvent, FormEvent::EVENT_AUSTRAL_FORM_UPDATE_BEFORE);
+  }
+
+  /**
+   * @param FormEvent $formEvent
+   */
+  public function formUpdateAfter(FormEvent $formEvent)
+  {
+    $this->dispatchEventSubFormMapper($formEvent, FormEvent::EVENT_AUSTRAL_FORM_UPDATE_AFTER);
+  }
+
+  /**
+   * @param FormEvent $formEvent
+   * @param $eventName
+   *
+   * @return void
+   */
+  protected function dispatchEventSubFormMapper(FormEvent $formEvent, $eventName)
+  {
     if($formEvent->getFormMapper()->getSubFormMappers())
     {
       /** @var FormMapper $subMapper */
       foreach ($formEvent->getFormMapper()->getSubFormMappers() as $subMapper)
       {
         $subFormEvent = new FormEvent($subMapper);
-        $subMapper->getDispatcher()->dispatch($subFormEvent, FormEvent::EVENT_AUSTRAL_FORM_ADD_AUTO_FIELDS_AFTER);
+        if($formEvent->getForm() && $formEvent->getForm()->has($subMapper->getName()))
+        {
+          $subFormEvent->setForm($formEvent->getForm()->get($subMapper->getName()));
+        }
+        $subMapper->getDispatcher()->dispatch($subFormEvent, $eventName);
       }
     }
   }
