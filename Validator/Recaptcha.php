@@ -27,6 +27,4 @@ class Recaptcha extends Constraint
     parent::__construct($options ?? [], $groups, $payload);
     $this->message = $message ?? $this->message;
   }
-
-
 }

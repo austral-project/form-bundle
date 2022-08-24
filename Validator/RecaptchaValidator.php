@@ -82,7 +82,6 @@ class RecaptchaValidator extends ConstraintValidator
             ->setParameter('{{ reason }}', implode(",", array_key_exists("error-codes", $responseValue) ? $responseValue["error-codes"] : array()))
             ->addViolation();
         }
-        dump($this->context);
       }
     }
   }
