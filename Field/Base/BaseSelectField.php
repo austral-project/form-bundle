@@ -50,6 +50,7 @@ class BaseSelectField extends Field
 
     $resolver->setDefault('select-options', function (OptionsResolver $resolverChild) {
       $resolverChild->setDefaults(array(
+          "enabled"                     =>  true,
           "tag"                         =>  false,
           "addItems"                    =>  true,
           "editItems"                   =>  true,
@@ -65,6 +66,8 @@ class BaseSelectField extends Field
         )
       );
       $resolverChild->setAllowedTypes('function', array('string', \Closure::class, "null"))
+        ->setAllowedTypes('enabled', array('boolean'))
+        ->setAllowedTypes('tag', array('boolean'))
         ->setAllowedTypes('placeholder', array('boolean'))
         ->setAllowedTypes('placeholderValue', array('string', "null"))
         ->setAllowedTypes('searchPlaceholderValue', array('string', "null"))
@@ -99,8 +102,10 @@ class BaseSelectField extends Field
       $this->options['select-options']['removeItemButton'] = true;
     }
 
-    $fieldOptions["attr"]['data-select'] = true;
-    $fieldOptions["attr"]["data-select-options"] = json_encode($this->options['select-options']);
+    $fieldOptions["attr"]['data-select'] = $this->options['select-options']['enabled'];
+    if($fieldOptions["attr"]['data-select']) {
+      $fieldOptions["attr"]["data-select-options"] = json_encode($this->options['select-options']);
+    }
     return $fieldOptions;
   }
 
