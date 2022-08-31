@@ -63,6 +63,7 @@ class BaseSelectField extends Field
           "searchPlaceholderValue"      =>  null,
           "delimiter"                   =>  ", ",
           "duplicateItemsAllowed"       =>  false,
+          "shouldSort"                  =>  false,
         )
       );
       $resolverChild->setAllowedTypes('function', array('string', \Closure::class, "null"))
@@ -77,7 +78,8 @@ class BaseSelectField extends Field
         ->setAllowedTypes('editItems', array('boolean'))
         ->setAllowedTypes('duplicateItemsAllowed', array('boolean'))
         ->setAllowedTypes('delimiter', array('string'))
-        ->setAllowedTypes('removeItems', array('boolean'));
+        ->setAllowedTypes('removeItems', array('boolean'))
+        ->setAllowedTypes('shouldSort', array('boolean'));
     });
   }
 
