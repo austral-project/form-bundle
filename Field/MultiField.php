@@ -52,7 +52,7 @@ class MultiField extends Field
 
     if($this->isDefaultTemplate)
     {
-      $this->options['templatePath'] = "multi-fields.html.twig";
+      $this->options["template"]["path"] = "multi-fields.html.twig";
     }
 
     /**

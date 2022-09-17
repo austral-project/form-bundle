@@ -51,7 +51,7 @@ class PasswordField extends Field
     $this->options["entitled"] = "{$this->options["entitled"]}.master";
     if($this->isDefaultTemplate)
     {
-      $this->options['templatePath'] = $this->options['repeat'] ? "repeated-field.html.twig" : "";
+      $this->options['template']["path"] = $this->options['repeat'] ? "repeated-field.html.twig" : "";
     }
     if($this->options['repeat']) {
       $this->options['type'] = PasswordType::class;

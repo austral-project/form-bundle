@@ -468,17 +468,18 @@ class FormMapper extends MapperElement implements MapperElementInterface
 
   /**
    * @param FieldInterface|null $field
+   * @param int|null $sortable
    *
    * @return $this
-   * @throws \Exception
    */
-  public function add(?FieldInterface $field): FormMapper
+  public function add(?FieldInterface $field, int $sortable = null): FormMapper
   {
     if($field)
     {
       $fieldset = $this->addFieldset("no-fieldset")
         ->setPositionName(Fieldset::POSITION_BOTTOM)
         ->setIsView(true)
+        ->setSortable($sortable)
         ->setViewName(false);
       $fieldset->add($field);
     }
@@ -487,12 +488,13 @@ class FormMapper extends MapperElement implements MapperElementInterface
 
   /**
    * @param string $name
+   * @param string|null $entitled
    *
    * @return Fieldset
    */
-  public function addFieldset(string $name): Fieldset
+  public function addFieldset(string $name, ?string $entitled = null): Fieldset
   {
-    $fieldset = new Fieldset($name, $this);
+    $fieldset = new Fieldset($name, $this, $entitled);
     if(!array_key_exists($fieldset->getKeyname(), $this->fieldsets)) {
       $this->fields[$fieldset->getKeyname()] = $fieldset;
       $this->fieldsets[$fieldset->getKeyname()] = $fieldset;
@@ -511,16 +513,20 @@ class FormMapper extends MapperElement implements MapperElementInterface
   public function getFieldsetByPosition(string $positionName): array
   {
     $fieldsets = array();
-    /** @var Fieldset $field */
-    foreach($this->getFieldsets() as $field)
+    $count = 0;
+    /** @var Fieldset $fieldset */
+    foreach($this->getFieldsets() as $fieldset)
     {
-      if($field->getIsView()) {
-        if($field->getPositionName() == $positionName)
+      if($fieldset->getIsView()) {
+        if($fieldset->getPositionName() == $positionName)
         {
-          $fieldsets[] = $field;
+          $sortable = $fieldset->getSortable() !== null ? $fieldset->getSortable() : $count;
+          $fieldsets["{$sortable}-{$fieldset->getKeyname()}"] = $fieldset;
+          $count++;
         }
       }
     }
+    ksort($fieldsets, SORT_NUMERIC);
     return $fieldsets;
   }
 
@@ -634,6 +640,11 @@ class FormMapper extends MapperElement implements MapperElementInterface
     {
       unset($this->allFields[$fieldname]);
     }
+    /** @var Fieldset $fieldset */
+    foreach ($this->fieldsets as $fieldset)
+    {
+      $fieldset->removeField($fieldname);
+    }
     return $this;
   }
 
@@ -732,6 +743,14 @@ class FormMapper extends MapperElement implements MapperElementInterface
   public function getParentFormMapper(): ?FormMapper
   {
     return $this->parentFormMapper;
+  }
+
+  /**
+   * @return bool
+   */
+  public function hasParentFormMapper(): bool
+  {
+    return (bool) $this->parentFormMapper;
   }
 
   /**

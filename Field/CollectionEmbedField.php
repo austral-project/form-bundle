@@ -65,7 +65,7 @@ class CollectionEmbedField extends Field
     $this->widgetInput = false;
     if($this->isDefaultTemplate)
     {
-      $this->options['templatePath'] = "collection-embed.html.twig";
+      $this->options["template"]["path"] = "collection-embed.html.twig";
     }
   }
 

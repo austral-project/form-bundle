@@ -92,7 +92,7 @@ abstract class Field implements FieldInterface
     $this->configureOptions($resolver);
     $this->options = $resolver->resolve($options);
 
-    if($this->options['templatePath'])
+    if($this->options['template']["path"])
     {
       $this->isDefaultTemplate = false;
     }
@@ -113,7 +113,7 @@ abstract class Field implements FieldInterface
         "placeholder"         =>  null,
         "picto"               =>  null,
         "attr"                =>  array(
-          "class"               =>  null
+          "class"               =>  null,
         ),
         "group"               =>  function(OptionsResolver $subResolver) {
           $subResolver->setDefaults(array(
@@ -136,7 +136,15 @@ abstract class Field implements FieldInterface
         "autoConstraints"      =>  true,
         "helper"              =>  null,
 
-        "templatePath"        =>  null,
+        "template"            =>  function(OptionsResolver $subResolver) {
+          $subResolver->setDefaults(array(
+              "path"      =>  null,
+              "vars"      =>  array()
+            )
+          );
+          $subResolver->addAllowedTypes("path", array('null', "string"))
+            ->addAllowedTypes("vars", array('array'));
+        },
 
         "setter"              =>  null,
         "getter"              =>  null,
@@ -165,7 +173,6 @@ abstract class Field implements FieldInterface
 
       ->addAllowedTypes("autoConstraints", array('bool'))
       ->addAllowedTypes("helper", array('null', "string"))
-      ->addAllowedTypes("templatePath", array('null', "string"))
 
       ->addAllowedTypes("attr", array('array'))
 
@@ -619,7 +626,7 @@ abstract class Field implements FieldInterface
    */
   public function getTemplatePath(): ?string
   {
-    return $this->options['templatePath'];
+    return $this->options['template']['path'];
   }
 
   /**
@@ -629,7 +636,26 @@ abstract class Field implements FieldInterface
    */
   public function setTemplatePath(string $templatePath): FieldInterface
   {
-    $this->options['templatePath'] = $templatePath;
+    $this->options['template']["path"] = $templatePath;
+    return $this;
+  }
+
+  /**
+   * @return array
+   */
+  public function getTemplateVars(): ?array
+  {
+    return $this->options['template']['vars'];
+  }
+
+  /**
+   * @param array $templateVars
+   *
+   * @return FieldInterface
+   */
+  public function setTemplateVars(array $templateVars): FieldInterface
+  {
+    $this->options['template']["vars"] = $templateVars;
     return $this;
   }
 

@@ -15,6 +15,7 @@ use Austral\FormBundle\Field\UploadField;
 use Austral\FormBundle\Mapper\FormMapper;
 use Austral\FormBundle\Mapper\GroupFields;
 use Austral\FormBundle\Mapper\Popin;
+use Austral\ToolsBundle\AustralTools;
 
 /**
  * Austral Mapper Element.
@@ -43,6 +44,16 @@ abstract class MapperElement implements MapperElementInterface
    * @var array
    */
   protected array $fields = array();
+
+  /**
+   * @var array
+   */
+  protected array $fieldKeynameByPositions = array();
+
+  /**
+   * @var int|null
+   */
+  protected ?int $sortable = null;
 
   /**
    * @var MapperElementInterface
@@ -132,19 +143,31 @@ abstract class MapperElement implements MapperElementInterface
 
   /**
    * @param FieldInterface|null $field
+   * @param int|null $sortable
    *
    * @return MapperElement
    */
-  public function add(?FieldInterface $field): MapperElement
+  public function add(?FieldInterface $field, int $sortable = null): MapperElement
   {
     if($field && $this->isView)
     {
       $field->setIsInPopin($this->isInPopin());
-      if($field->getIsView() && $this->isView && !array_key_exists($field->getFieldname(), $this->formMapper()->allFields()))
+      if($field->getIsView())
       {
-        $this->configField($field)->addAllFields($field);
-        $this->fields[$field->getFieldname()] = $field;
-        $this->uploadFieldEditor($field);
+        if(array_key_exists($field->getFieldname(), $this->formMapper()->allFields()))
+        {
+          $this->formMapper()->removeAllField($field->getFieldname());
+        }
+        if($this->isView)
+        {
+          $this->configField($field)->addAllFields($field);
+          $this->fields[$field->getFieldname()] = $field;
+          $this->uploadFieldEditor($field);
+          if($sortable)
+          {
+            $this->fieldKeynameByPositions[$field->getFieldname()] = $sortable;
+          }
+        }
       }
     }
     return $this;
@@ -218,6 +241,13 @@ abstract class MapperElement implements MapperElementInterface
       unset($this->fields[$fieldname]);
       $this->removeAllField($fieldname);
     }
+    foreach ($this->fields as $field)
+    {
+      if($field instanceof GroupFields)
+      {
+        $field->removeField($fieldname);
+      }
+    }
     return $this;
   }
 
@@ -284,6 +314,33 @@ abstract class MapperElement implements MapperElementInterface
   }
 
   /**
+   * @return array
+   */
+  public function getFieldsSortable(): array
+  {
+    $fields = array();
+    $count = 0;
+    /** @var FieldInterface|GroupFields $field */
+    foreach($this->fields as $field)
+    {
+      if($field instanceof FieldInterface)
+      {
+        $sortable = AustralTools::getValueByKey($this->fieldKeynameByPositions, $field->getFieldname(), $count);
+        $keySortable = "{$sortable}-{$field->getFieldname()}";
+      }
+      else
+      {
+        $sortable = $field->getSortable() !== null ? $field->getSortable() : $count;
+        $keySortable = "{$sortable}-{$field->getKeyname()}";
+      }
+      $fields[$keySortable] = $field;
+      $count++;
+    }
+    ksort($fields, SORT_NUMERIC);
+    return $fields;
+  }
+
+  /**
    * @param bool $isView
    *
    * @return MapperElement
@@ -300,6 +357,25 @@ abstract class MapperElement implements MapperElementInterface
   public function getIsView(): bool
   {
     return $this->isView;
+  }
+
+  /**
+   * @return int|null
+   */
+  public function getSortable(): ?int
+  {
+    return $this->sortable;
+  }
+
+  /**
+   * @param int|null $sortable
+   *
+   * @return MapperElement
+   */
+  public function setSortable(int $sortable = null): MapperElement
+  {
+    $this->sortable = $sortable;
+    return $this;
   }
 
 

@@ -72,7 +72,7 @@ class ChoiceField extends Field
 
     if($this->isDefaultTemplate)
     {
-      $this->options["templatePath"] = "choiceRadioField.html.twig";
+      $this->options["template"]["path"] = "choiceRadioField.html.twig";
     }
   }
 
@@ -202,11 +202,13 @@ class ChoiceField extends Field
     $fieldOptions["multiple"] = array_key_exists("multiple", $fieldOptions) ? $fieldOptions["multiple"] : $this->options["multiple"];
     $fieldOptions["expanded"] = true;
     $fieldOptions["placeholder"] = false;
-    $fieldOptions["choice_attr"] = function($val, $key, $index) {
+
+    $autocomplete = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "autocomplete", "off");
+    $fieldOptions["choice_attr"] = function($val, $key, $index) use($autocomplete) {
       $key = strtolower($key);
       $key = str_replace(".", " ", $key);
       $key = u($key)->snake()->toString();
-      return ['class' => 'field_'.$key];
+      return ['class' => 'field_'.$key, "autocomplete" => $autocomplete];
     };
     return $fieldOptions;
   }

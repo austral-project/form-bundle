@@ -43,11 +43,12 @@ interface MapperElementInterface
 
   /**
    * @param FieldInterface|null $field
+   * @param int|null $sortable
    *
    * @return $this
    * @throws \Exception
    */
-  public function add(?FieldInterface $field): MapperElementInterface;
+  public function add(?FieldInterface $field, int $sortable = null): MapperElementInterface;
 
   /**
    * @param string $name

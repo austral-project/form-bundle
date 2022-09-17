@@ -44,7 +44,7 @@ class CheckboxField extends SwitchField
     parent::__construct($fieldname, $options);
     if($this->isDefaultTemplate)
     {
-      $this->options['templatePath'] = "checkbox-field.html.twig";
+      $this->options["template"]["path"] = "checkbox-field.html.twig";
     }
   }
 

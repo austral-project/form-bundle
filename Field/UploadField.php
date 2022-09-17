@@ -77,7 +77,7 @@ class UploadField extends Field
 
     if($this->isDefaultTemplate)
     {
-      $this->options["templatePath"] = "upload-file.html.twig";
+      $this->options["template"]["path"] = "upload-file.html.twig";
     }
   }
   

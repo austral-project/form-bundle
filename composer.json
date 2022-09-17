@@ -5,7 +5,7 @@
   "keywords":                                 ["Austral", "Mapper", "Form"],
   "license":                                  "MIT",
   "homepage":                                 "https://austral.dev",
-  "version":                                  "3.0",
+  "version":                                  "3.1",
   "authors": [
     {
       "name":                                 "Matthieu Beurel",
@@ -16,8 +16,8 @@
   "require": {
     "php":                                    "^7.4 || ^8.0",
 
-    "austral/entity-bundle":                  "^3.0",
-    "austral/tools-bundle":                   "^3.0",
+    "austral/entity-bundle":                  "^3.1",
+    "austral/tools-bundle":                   "^3.1",
 
     "symfony/routing":                        "^5.4",
     "symfony/form":                           "^5.4",

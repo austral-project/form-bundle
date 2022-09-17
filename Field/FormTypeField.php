@@ -46,7 +46,7 @@ class FormTypeField extends Field
     $this->symfonyFormType = get_class($fieldTypeClass);
     if($this->isDefaultTemplate)
     {
-      $this->options["templatePath"] = "form-type-field.html.twig";
+      $this->options["template"]["path"] = "form-type-field.html.twig";
     }
   }
 

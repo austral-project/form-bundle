@@ -49,7 +49,7 @@ class TemplateField extends Field
   public function __construct($fieldname, string $templatePath, array $options = array(), array $vars = array())
   {
     parent::__construct($fieldname, $options);
-    $this->options['templatePath'] = $templatePath;
+    $this->options["template"]["path"] = $templatePath;
     $this->isDefaultTemplate = false;
     $this->symfonyFormType = "template";
     $this->usedGeneratedForm = false;
