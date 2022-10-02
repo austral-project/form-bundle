@@ -86,12 +86,14 @@ class Popin extends MapperElement implements MapperElementInterface
       $resolverChild->setDefaults(array(
           "entitled"            =>  "",
           "picto"               =>  "austral-picto-edit",
-          "class"               =>  "button-picto"
+          "class"               =>  "button-picto",
+          "data"                =>  array()
         )
       );
       $resolverChild->setAllowedTypes('entitled', array('string', "null"));
       $resolverChild->setAllowedTypes('picto', array('string', "null"));
       $resolverChild->setAllowedTypes('class', array('string', "null"));
+      $resolverChild->setAllowedTypes('data', array('array'));
     });
   }
 

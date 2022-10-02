@@ -11,6 +11,7 @@
 namespace Austral\FormBundle\Field;
 
 use Austral\FormBundle\Field\Base\BaseSelectField;
+use Austral\ToolsBundle\AustralTools;
 
 
 /**
@@ -36,5 +37,16 @@ class SelectField extends BaseSelectField
   {
     return new self($fieldname, $choices, $options);
   }
+
+  /**
+   * @return array
+   */
+  public function getFieldOptions(): array
+  {
+    $fieldOptions = parent::getFieldOptions();
+    $fieldOptions["attr"]['autocomplete'] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "autocomplete", "off");
+    return $fieldOptions;
+  }
+
 
 }

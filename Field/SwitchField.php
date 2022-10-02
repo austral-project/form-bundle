@@ -12,6 +12,7 @@ namespace Austral\FormBundle\Field;
 
 use Austral\FormBundle\Field\Base\Field;
 
+use Austral\ToolsBundle\AustralTools;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -117,6 +118,16 @@ class SwitchField extends Field
       $styles[] = "--switch-fond-color-{$key}:{$color};";
     }
     return implode(" ", $styles);
+  }
+
+  /**
+   * @return array
+   */
+  public function getFieldOptions(): array
+  {
+    $fieldOptions = parent::getFieldOptions();
+    $fieldOptions["attr"]['autocomplete'] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "autocomplete", "off");
+    return $fieldOptions;
   }
 
 }
