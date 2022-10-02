@@ -16,7 +16,7 @@ composer require austral/form-bundle
 ```
 
 ## Documentation
-See documentation on the [official website](https://austral.dev/bundles/form-bundle)
+See documentation on the [official website](https://austral.dev/en/bundles/form-bundle)
 
 ## Commit Messages
 
