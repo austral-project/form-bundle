@@ -126,12 +126,16 @@ class BaseSelectField extends Field
   {
     if($this->options["select-options"]['function'])
     {
-      return $this->executeClosureFunction($this->options["select-options"]['function'], $object, $default);
+      $choices = $this->executeClosureFunction($this->options["select-options"]['function'], $object, $default);
     }
     else
     {
-      return $this->executeClosureFunction($this->options["getter"], $object, $default);
+      $choices = $this->executeClosureFunction($this->options["getter"], $object, $default);
     }
+    foreach($this->choices as $key => $choice) {
+      $choices[$key] = $choice;
+    }
+    return $choices;
   }
 
   /**
