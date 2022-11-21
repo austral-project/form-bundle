@@ -48,7 +48,7 @@ class PasswordField extends Field
     parent::__construct($fieldname, $options);
     $this->symfonyFormType = $this->options['repeat'] ? RepeatedType::class : PasswordType::class;
     $this->widgetInput = !$this->options['repeat'];
-    $this->options["entitled"] = "{$this->options["entitled"]}.master";
+    $this->options["entitled"] = $this->options['repeat'] ? "{$this->options["entitled"]}.master" : "{$this->options["entitled"]}";
     if($this->isDefaultTemplate)
     {
       $this->options['template']["path"] = $this->options['repeat'] ? "repeated-field.html.twig" : "";
