@@ -176,11 +176,11 @@ class Fieldset extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param EntityInterface|null $object
+   * @param EntityInterface|array|null $object
    *
    * @return array
    */
-  public function getTranslateArguments(?EntityInterface $object = null): array
+  public function getTranslateArguments($object = null): array
   {
     if($this->closureTranslateArgument)
     {
