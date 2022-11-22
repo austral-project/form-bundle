@@ -81,7 +81,7 @@ class FormType extends AbstractType implements FormTypeInterface
    */
   public function getBlockPrefix(): string
   {
-    return $this->formMapper->getName();
+    return $this->getFormMapper()->getName();
   }
 
   /**
