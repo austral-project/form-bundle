@@ -104,9 +104,11 @@ class BaseSelectField extends Field
       $this->options['select-options']['removeItemButton'] = true;
     }
 
-    $fieldOptions["attr"]['data-select'] = $this->options['select-options']['enabled'];
-    if($fieldOptions["attr"]['data-select']) {
-      $fieldOptions["attr"]["data-select-options"] = json_encode($this->options['select-options']);
+    if(!array_key_exists("expanded", $fieldOptions) || $fieldOptions["expanded"] !== true) {
+      $fieldOptions["attr"]['data-select'] = $this->options['select-options']['enabled'];
+      if($fieldOptions["attr"]['data-select']) {
+        $fieldOptions["attr"]["data-select-options"] = json_encode($this->options['select-options']);
+      }
     }
     return $fieldOptions;
   }
