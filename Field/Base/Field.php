@@ -772,14 +772,14 @@ abstract class Field implements FieldInterface
       {
         list($closureOrString, $parameter) = $closureOrString;
       }
-      if(method_exists($object, $closureOrString))
+      if(is_object($object) && method_exists($object, $closureOrString))
       {
         $value = $object->{$closureOrString}($parameter);
       }
       else
       {
         $getter = AustralTools::createGetterFunction($closureOrString);
-        if(method_exists($object, $getter))
+        if(is_object($object) && method_exists($object, $getter))
         {
           $value = $object->$getter($parameter);
         }
