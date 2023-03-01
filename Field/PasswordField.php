@@ -106,6 +106,7 @@ class PasswordField extends Field
     else
     {
       $optionsFields['attr']["autocomplete"] = "new-password";
+      $optionsFields['attr']["data-password"] = "";
     }
     return $optionsFields;
   }
