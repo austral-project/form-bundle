@@ -23,6 +23,7 @@ use Austral\ListBundle\Column\Interfaces\ColumnActionInterface;
 use Austral\ToolsBundle\AustralTools;
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * Form Mapper.
@@ -512,9 +513,11 @@ class FormMapper extends MapperElement implements MapperElementInterface
    */
   public function getFieldset(string $name): ?Fieldset
   {
-    if(array_key_exists($name, $this->fieldsets))
+    $slugger = new AsciiSlugger();
+    $keyname = "fieldset-".strtolower($slugger->slug($name));
+    if(array_key_exists($keyname, $this->fieldsets))
     {
-      return $this->fieldsets[$name];
+      return $this->fieldsets[$keyname];
     }
     return null;
   }
