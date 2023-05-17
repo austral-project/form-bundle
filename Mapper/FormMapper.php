@@ -506,6 +506,20 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
+   * @param string $name
+   *
+   * @return Fieldset|null
+   */
+  public function getFieldset(string $name): ?Fieldset
+  {
+    if(array_key_exists($name, $this->fieldsets))
+    {
+      return $this->fieldsets[$name];
+    }
+    return null;
+  }
+
+  /**
    * @param string $positionName
    *
    * @return array
