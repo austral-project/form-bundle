@@ -22,7 +22,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * Austral Field CollectionEmbed Input.
  * @author Matthieu Beurel <matthieu@austral.dev>
- * @final
  */
 class CollectionEmbedField extends Field
 {
