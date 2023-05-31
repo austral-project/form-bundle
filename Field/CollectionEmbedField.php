@@ -118,6 +118,14 @@ class CollectionEmbedField extends Field
         );
       },
 
+      "children_parameters"    =>  function(OptionsResolver $subResolver ) {
+        $subResolver->setDefaults(array(
+            "min"                   =>  null,
+            "max"                   =>  null,
+          )
+        );
+      },
+
       "color"               =>  0,
 
       "getter"              =>  null,
@@ -156,6 +164,11 @@ class CollectionEmbedField extends Field
   public function viewPosition()
   {
     return $this->options["view_position"];
+  }
+
+  public function childrenParameters()
+  {
+    return $this->options["children_parameters"];
   }
 
   /**
