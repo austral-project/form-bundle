@@ -191,9 +191,11 @@ class UploadField extends Field
         "picto"       =>  null,
       )
     );
+    $resolver->define("key")->required();
     $resolver->define("name")->required();
     $resolver->define("ratio")->required();
     $resolver->setAllowedTypes('name', array('string'));
+    $resolver->setAllowedTypes('key', array('string'));
     $resolver->setAllowedTypes('picto', array('string', "null"));
   }
 
