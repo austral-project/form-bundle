@@ -17,7 +17,6 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 /**
  * Austral Field Text Input.
  * @author Matthieu Beurel <matthieu@austral.dev>
- * @final
  */
 class TextField extends Field
 {
