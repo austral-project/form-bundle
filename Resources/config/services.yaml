@@ -5,6 +5,7 @@ services:
     public:         true
 
 ##### Form Mapper
+  Austral\FormBundle\Mapper\FormMapper: "@austral.form.mapper"
   austral.form.mapper:
     class:          Austral\FormBundle\Mapper\FormMapper
     arguments:      ['@event_dispatcher']
@@ -16,6 +17,7 @@ services:
       - { name: kernel.event_subscriber }
 
 ##### Form Type
+  Austral\FormBundle\Form\Type\FormType: "@austral.form.type.master"
   austral.form.type.master:
     class:          Austral\FormBundle\Form\Type\FormType
     arguments:      [ "@security.authorization_checker" ]
@@ -24,6 +26,7 @@ services:
 
 
 ##### Validator
+  Austral\FormBundle\Validator\RecaptchaValidator: "@austral.form.validator.recaptcha"
   austral.form.validator.recaptcha:
     class:          Austral\FormBundle\Validator\RecaptchaValidator
     arguments:      [ "@request_stack", "@austral.form.mapper" ]
