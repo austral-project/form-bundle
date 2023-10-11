@@ -15,10 +15,12 @@ use Austral\FormBundle\Event\FormEvent;
 use Austral\FormBundle\Event\FormFieldEvent;
 use Austral\FormBundle\Field\Base\FieldInterface;
 use Austral\FormBundle\Field\PasswordField;
+use Austral\FormBundle\Field\RecaptchaField;
 use Austral\FormBundle\Field\TextField;
 
 use Austral\FormBundle\Field\UploadField;
 use Austral\FormBundle\Mapper\FormMapper;
+use Austral\FormBundle\Validator\Recaptcha;
 use Austral\ToolsBundle\AustralTools;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -249,6 +251,9 @@ class FormSubscriber implements EventSubscriberInterface
             )
           );
         }
+      }
+      if($field instanceof RecaptchaField) {
+        $field->addConstraint(new Recaptcha());
       }
     }
     foreach ($field->getConstraints() as $contraint)
