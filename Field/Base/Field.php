@@ -212,7 +212,11 @@ abstract class Field implements FieldInterface
     $fieldOptions['attr'] = array_key_exists("attr", $fieldOptions) ? $fieldOptions['attr'] : array();
     $fieldOptions["attr"] = array_merge($fieldOptions['attr'], $this->options['attr']);
     $fieldOptions["required"] = array_key_exists("required", $fieldOptions) ? $fieldOptions["required"] : $this->getRequired();
-    $fieldOptions["attr"]["placeholder"] = array_key_exists("placeholder", $fieldOptions['attr']) ? $fieldOptions['attr']["placeholder"] : $this->options['placeholder'];
+
+    if($this->options['placeholder'] && !array_key_exists("placeholder", $fieldOptions['attr']))
+    {
+      $fieldOptions["attr"]["placeholder"] = $this->options['placeholder'];
+    }
     $fieldOptions["setter"] = array_key_exists("setter", $fieldOptions) ? $fieldOptions["setter"] : $this->options['setter'];
     $fieldOptions["getter"] = array_key_exists("getter", $fieldOptions) ? $fieldOptions["getter"] : $this->options['getter'];
     $fieldOptions["mapped"] = array_key_exists("mapped", $fieldOptions) ? $fieldOptions["mapped"] : $this->options['mapped'];
