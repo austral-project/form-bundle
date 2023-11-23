@@ -237,7 +237,9 @@ class FormSubscriber implements EventSubscriberInterface
       }
 
       if($field->getRequired()) {
-        $field->addConstraint(new Constraints\NotNull());
+        $field->addConstraint(new Constraints\NotNull(array(
+          "message" =>  "errors.not_null"
+        )));
       }
 
       if($field instanceof PasswordField) {
@@ -253,7 +255,9 @@ class FormSubscriber implements EventSubscriberInterface
         }
       }
       if($field instanceof RecaptchaField) {
-        $field->addConstraint(new Recaptcha());
+        $field->addConstraint(new Recaptcha(array(
+          "message" =>  "errors.captcha"
+        )));
       }
     }
     foreach ($field->getConstraints() as $contraint)
