@@ -246,6 +246,20 @@ class CollectionEmbedField extends Field
   }
 
   /**
+   * initCollectionsForm
+   *
+   * @return $this
+   */
+  public function initCollectionForm(): CollectionEmbedField
+  {
+    if(!$this->collectionsForms)
+    {
+      $this->renamePopinKeyId($this->getFormMapper(), $this);
+    }
+    return $this;
+  }
+
+  /**
    * @param FormMapper $formMapper
    * @param $collectionsForm
    */
