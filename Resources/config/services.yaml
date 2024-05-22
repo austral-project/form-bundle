@@ -4,6 +4,12 @@ services:
     autoconfigure:  true
     public:         true
 
+##### Form Mappers
+  Austral\FormBundle\Mapper\FormMappers: "@austral.form.mappers"
+  austral.form.mappers:
+    class:          Austral\FormBundle\Mapper\FormMappers
+    arguments:      ['@event_dispatcher']
+
 ##### Form Mapper
   Austral\FormBundle\Mapper\FormMapper: "@austral.form.mapper"
   austral.form.mapper:
@@ -29,6 +35,6 @@ services:
   Austral\FormBundle\Validator\RecaptchaValidator: "@austral.form.validator.recaptcha"
   austral.form.validator.recaptcha:
     class:          Austral\FormBundle\Validator\RecaptchaValidator
-    arguments:      [ "@request_stack", "@austral.form.mapper" ]
+    arguments:      [ "@request_stack", "@austral.form.mappers" ]
     tags:
       - { name: validator.constraint_validator }

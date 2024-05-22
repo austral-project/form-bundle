@@ -11,7 +11,7 @@
 namespace Austral\FormBundle\Validator;
 
 use Austral\FormBundle\Field\RecaptchaField;
-use Austral\FormBundle\Mapper\FormMapper;
+use Austral\FormBundle\Mapper\FormMappers;
 use Symfony\Component\Form\Exception\UnexpectedTypeException;
 use Symfony\Component\HttpClient\NativeHttpClient;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,18 +33,18 @@ class RecaptchaValidator extends ConstraintValidator
   private ?Request $request;
 
   /**
-   * @var FormMapper
+   * @var FormMappers
    */
-  private FormMapper $formMapper;
+  private FormMappers $formMappers;
 
   /**
    * @param RequestStack $requestStack
-   * @param FormMapper $formMapper
+   * @param FormMappers $formMappers
    */
-  public function __construct(RequestStack $requestStack, FormMapper $formMapper)
+  public function __construct(RequestStack $requestStack, FormMappers $formMappers)
   {
     $this->request = $requestStack->getMainRequest();
-    $this->formMapper = $formMapper;
+    $this->formMappers = $formMappers;
   }
 
   /**
@@ -52,35 +52,41 @@ class RecaptchaValidator extends ConstraintValidator
    */
   public function validate($value, Constraint $constraint)
   {
-    /** @var RecaptchaField $fieldRecaptcha */
-    if($fieldRecaptcha = $this->formMapper->getField(RecaptchaField::FIELD_NAME))
+    foreach($this->request->request->keys() as $keyForm)
     {
-      if($recaptchaSecretKey = $fieldRecaptcha->getSecretKey())
+      if($formMapper = $this->formMappers->getFormMapper($keyForm))
       {
-        if (!$constraint instanceof Recaptcha) {
-          throw new UnexpectedTypeException($constraint, Recaptcha::class);
-        }
-        $httpClient = new NativeHttpClient(array(
-          "verify_host" => false,
-          "verify_peer" => false,
-          "max_redirects" =>  5,
-          "max_duration"  =>  2,
-        ));
-        $requestParameters = array(
-          "body"    =>  array(
-            "secret"    => $recaptchaSecretKey,
-            "response"  => $value,
-            "remoteip"  => $this->request->getClientIp()
-          )
-        );
-
-        $response = $httpClient->request("POST", "https://www.google.com/recaptcha/api/siteverify", $requestParameters);
-        $responseValue = json_decode($response->getContent(false), true);
-        if($responseValue["success"] !== true)
+        /** @var RecaptchaField $fieldRecaptcha */
+        if($fieldRecaptcha = $formMapper->getField(RecaptchaField::FIELD_NAME))
         {
-          $this->context->buildViolation($constraint->message)
-            ->setParameter('{{ reason }}', implode(",", array_key_exists("error-codes", $responseValue) ? $responseValue["error-codes"] : array()))
-            ->addViolation();
+          if($recaptchaSecretKey = $fieldRecaptcha->getSecretKey())
+          {
+            if (!$constraint instanceof Recaptcha) {
+              throw new UnexpectedTypeException($constraint, Recaptcha::class);
+            }
+            $httpClient = new NativeHttpClient(array(
+              "verify_host" => false,
+              "verify_peer" => false,
+              "max_redirects" =>  5,
+              "max_duration"  =>  2,
+            ));
+            $requestParameters = array(
+              "body"    =>  array(
+                "secret"    => $recaptchaSecretKey,
+                "response"  => $value,
+                "remoteip"  => $this->request->getClientIp()
+              )
+            );
+
+            $response = $httpClient->request("POST", "https://www.google.com/recaptcha/api/siteverify", $requestParameters);
+            $responseValue = json_decode($response->getContent(false), true);
+            if($responseValue["success"] !== true)
+            {
+              $this->context->buildViolation($constraint->message)
+                ->setParameter('{{ reason }}', implode(",", array_key_exists("error-codes", $responseValue) ? $responseValue["error-codes"] : array()))
+                ->addViolation();
+            }
+          }
         }
       }
     }
