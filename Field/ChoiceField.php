@@ -204,12 +204,15 @@ class ChoiceField extends Field
     $fieldOptions["placeholder"] = false;
 
     $autocomplete = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "autocomplete", "off");
-    $fieldOptions["choice_attr"] = function($val, $key, $index) use($autocomplete) {
-      $key = strtolower($key);
-      $key = str_replace(".", " ", $key);
-      $key = u($key)->snake()->toString();
-      return ['class' => 'field_'.$key, "autocomplete" => $autocomplete];
-    };
+    if(!array_key_exists("choice_attr", $fieldOptions))
+    {
+      $fieldOptions["choice_attr"] = function($val, $key, $index) use($autocomplete) {
+        $key = strtolower($key);
+        $key = str_replace(".", " ", $key);
+        $key = u($key)->snake()->toString();
+        return ['class' => 'field_'.$key, "autocomplete" => $autocomplete];
+      };
+    }
     return $fieldOptions;
   }
 

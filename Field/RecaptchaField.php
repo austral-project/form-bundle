@@ -54,8 +54,10 @@ class RecaptchaField extends Field
     parent::configureOptions($resolver);
     $resolver->setDefault('secretKey', null);
     $resolver->setDefault('publicKey', null);
+    $resolver->setDefault('action', "registry");
     $resolver->setAllowedTypes('secretKey', array('string'));
     $resolver->setAllowedTypes('publicKey', array('string'));
+    $resolver->setAllowedTypes('action', array('string'));
   }
 
   /**
@@ -75,6 +77,14 @@ class RecaptchaField extends Field
   }
 
   /**
+   * @return string|null
+   */
+  public function getAction(): ?string
+  {
+    return $this->options["action"];
+  }
+
+  /**
    * @return array
    */
   public function getFieldOptions(): array
@@ -83,7 +93,7 @@ class RecaptchaField extends Field
     $fieldOptions['mapped'] = false;
     $fieldOptions['error_bubbling'] = false;
     $fieldOptions['attr']["data-recaptcha"] = $this->getPublicKey();
-    $fieldOptions['attr']["data-type-action"] = "registry";
+    $fieldOptions['attr']["data-type-action"] = $this->getAction();
     return $fieldOptions;
   }
 
