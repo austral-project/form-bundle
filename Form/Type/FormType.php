@@ -32,9 +32,9 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 class FormType extends AbstractType implements FormTypeInterface
 {
   /**
-   * @var AuthorizationCheckerInterface
+   * @var AuthorizationCheckerInterface|null
    */
-  protected AuthorizationCheckerInterface $security;
+  protected ?AuthorizationCheckerInterface $security;
 
   /**
    * @var string|null
@@ -69,11 +69,22 @@ class FormType extends AbstractType implements FormTypeInterface
   /**
    * FormType constructor.
    *
-   * @param AuthorizationCheckerInterface $security
+   * @param ?AuthorizationCheckerInterface $security
    */
-  public function __construct(AuthorizationCheckerInterface $security)
+  public function __construct()
+  {
+  }
+
+  /**
+   * setSecurity
+   *
+   * @param AuthorizationCheckerInterface|null $security
+   * @return $this
+   */
+  public function setSecurity(?AuthorizationCheckerInterface $security = null): FormType
   {
     $this->security = $security;
+    return $this;
   }
 
   /**
