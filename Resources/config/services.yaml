@@ -27,7 +27,7 @@ services:
   austral.form.type.master:
     class:          Austral\FormBundle\Form\Type\FormType
     calls:
-      - [ set, [ "@security.authorization_checker" ] ]
+      - [ setSecurity, [ "@security.authorization_checker" ] ]
     tags:
       - { name: form.type , alias: austral_form_type }
 
