@@ -48,6 +48,9 @@ class BaseSelectField extends Field
     $resolver->setDefault("multiple", false)
       ->setAllowedTypes('multiple', array('boolean'));
 
+    $resolver->setDefault("nullValue", false)
+      ->setAllowedTypes('nullValue', array('boolean'));
+
     $resolver->setDefault('select-options', function (OptionsResolver $resolverChild) {
       $resolverChild->setDefaults(array(
           "enabled"                     =>  true,
@@ -102,6 +105,10 @@ class BaseSelectField extends Field
 
     if($this->options["multiple"]) {
       $this->options['select-options']['removeItemButton'] = true;
+    }
+
+    if($this->options["nullValue"]) {
+      $fieldOptions["attr"]["data-null-value"] = true;
     }
 
     if(!array_key_exists("expanded", $fieldOptions) || $fieldOptions["expanded"] !== true) {
