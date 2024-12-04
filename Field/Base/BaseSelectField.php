@@ -108,7 +108,7 @@ class BaseSelectField extends Field
     }
 
     if($this->options["nullValue"]) {
-      $fieldOptions["attr"]["data-null-value"] = true;
+      $fieldOptions["attr"]["data-null-value"] = "true";
     }
 
     if(!array_key_exists("expanded", $fieldOptions) || $fieldOptions["expanded"] !== true) {
