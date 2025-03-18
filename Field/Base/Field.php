@@ -87,16 +87,7 @@ abstract class Field implements FieldInterface
   public function __construct($fieldname, array $options = array())
   {
     $this->fieldname = $fieldname;
-
-    $resolver = new OptionsResolver();
-    $this->configureOptions($resolver);
-    $this->options = $resolver->resolve($options);
-
-    if($this->options['template']["path"])
-    {
-      $this->isDefaultTemplate = false;
-    }
-
+    $this->setOptions($options);
   }
 
   /**
@@ -106,10 +97,13 @@ abstract class Field implements FieldInterface
   {
     $resolver->setDefaults(array(
         "required"            =>  false,
+        "reverse"             =>  false,
+        "disabled"            =>  false,
         "formMapper"          =>  null,
         "class"               =>  null,
         "isView"              =>  true,
         "entitled"            =>  "fields.{$this->fieldname}.entitled",
+        "labelPosition"       =>  "default",
         "placeholder"         =>  null,
         "picto"               =>  null,
         "attr"                =>  array(
@@ -146,6 +140,26 @@ abstract class Field implements FieldInterface
             ->addAllowedTypes("vars", array('array'));
         },
 
+        "before"            =>  function(OptionsResolver $subResolver) {
+          $subResolver->setDefaults(array(
+              "path"      =>  null,
+              "content"   =>  null
+            )
+          );
+          $subResolver->addAllowedTypes("path", array('null', "string"))
+            ->addAllowedTypes("content", array('null', 'string'));
+        },
+
+        "after"            =>  function(OptionsResolver $subResolver) {
+          $subResolver->setDefaults(array(
+              "path"      =>  null,
+              "content"   =>  null
+            )
+          );
+          $subResolver->addAllowedTypes("path", array('null', "string"))
+            ->addAllowedTypes("content", array('null', 'string'));
+        },
+
         "setter"              =>  null,
         "getter"              =>  null,
 
@@ -164,6 +178,10 @@ abstract class Field implements FieldInterface
     );
 
     $resolver->addAllowedTypes("required", array('bool'))
+      ->addAllowedTypes("reverse", array('bool'))
+      ->addAllowedTypes("disabled", array('bool'))
+      ->setAllowedValues('labelPosition', ['default', 'animate', 'external'])
+      ->addAllowedTypes("labelPosition", array("string"))
       ->addAllowedTypes("formMapper", array('null', FormMapper::class))
       ->addAllowedTypes("class", array('null', "string"))
       ->addAllowedTypes("isView", array('bool', \Closure::class, "array"))
@@ -200,6 +218,11 @@ abstract class Field implements FieldInterface
     $resolver = new OptionsResolver();
     $this->configureOptions($resolver);
     $this->options = $resolver->resolve($options);
+
+    if($this->options['template']["path"])
+    {
+      $this->isDefaultTemplate = false;
+    }
     return $this;
   }
 
@@ -212,7 +235,7 @@ abstract class Field implements FieldInterface
     $fieldOptions['attr'] = array_key_exists("attr", $fieldOptions) ? $fieldOptions['attr'] : array();
     $fieldOptions["attr"] = array_merge($fieldOptions['attr'], $this->options['attr']);
     $fieldOptions["required"] = array_key_exists("required", $fieldOptions) ? $fieldOptions["required"] : $this->getRequired();
-
+    $fieldOptions["disabled"] = array_key_exists("disabled", $fieldOptions) ? $fieldOptions["disabled"] : $this->getDisabled();
     if($this->options['placeholder'] && !array_key_exists("placeholder", $fieldOptions['attr']))
     {
       $fieldOptions["attr"]["placeholder"] = $this->options['placeholder'];
@@ -552,6 +575,66 @@ abstract class Field implements FieldInterface
   }
 
   /**
+   * Get disabled
+   * @return bool|null
+   */
+  public function getDisabled(): ?bool
+  {
+    return $this->options["disabled"];
+  }
+
+  /**
+   * @param bool|null $disabled
+   *
+   * @return FieldInterface
+   */
+  public function setDisabled(?bool $disabled): FieldInterface
+  {
+    $this->options["disabled"] = $disabled;
+    return $this;
+  }
+
+  /**
+   * Get reverse
+   * @return bool|null
+   */
+  public function getReverse(): ?bool
+  {
+    return $this->options["reverse"];
+  }
+
+  /**
+   * @param bool|null $reverse
+   *
+   * @return FieldInterface
+   */
+  public function setReverse(?bool $reverse): FieldInterface
+  {
+    $this->options["reverse"] = $reverse;
+    return $this;
+  }
+
+  /**
+   * Get labelPosition
+   * @return bool|null
+   */
+  public function getAnimateLabel(): ?string
+  {
+    return $this->options["labelPosition"];
+  }
+
+  /**
+   * @param bool|null $labelPosition
+   *
+   * @return FieldInterface
+   */
+  public function setAnimateLabel(?bool $labelPosition): FieldInterface
+  {
+    $this->options["labelPosition"] = $labelPosition;
+    return $this;
+  }
+
+  /**
    * @return mixed
    */
   public function picto()
@@ -642,6 +725,38 @@ abstract class Field implements FieldInterface
   {
     $this->options['template']["path"] = $templatePath;
     return $this;
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getBeforePath(): ?string
+  {
+    return $this->options['before']['path'];
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getBeforeContent(): ?string
+  {
+    return $this->options['before']['content'];
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getAfterPath(): ?string
+  {
+    return $this->options['after']['path'];
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getAfterContent(): ?string
+  {
+    return $this->options['after']['content'];
   }
 
   /**

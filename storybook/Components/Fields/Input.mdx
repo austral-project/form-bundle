@@ -1,0 +1,18 @@
+import { Canvas, Meta, Primary, Controls, Story, ArgsTable } from '@storybook/addon-docs';
+
+import * as Input from './Input.stories';
+
+<Meta of={Input}  title="Components/Input"/>
+
+# Input
+
+<Primary />
+<Controls />
+
+## Theme default
+<Canvas of={Input.Default} />
+
+<br/><br/>
+
+## Theme second
+<Canvas of={Input.WithAfter} />

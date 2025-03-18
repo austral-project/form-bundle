@@ -1,0 +1,32 @@
+<{{ tag|default("div") }} {{ attributes.defaults({class: "field-row field-row-"~id}) }} data-field="#{{ id }}">
+  {% block label_external %}{% endblock %}
+  <div class="field-container {{ fieldClassContainer }}">
+    {% if block('before') is defined and block('before') != '' %}
+      <div class="field-before">
+        {% block before %}{% endblock %}
+      </div>
+    {% endif %}
+    <div class="field-content">
+      {% block label %}{% endblock %}
+      {% block field %}{% endblock %}
+    </div>
+    {% if block('after') is defined and block('after') != '' %}
+      <div class="field-after">
+        {% block after %}{% endblock %}
+      </div>
+    {% endif %}
+  </div>
+
+
+  {% if block('helper') is defined and block('helper') != '' %}
+    <div class="field-helper">
+      {% block helper %}{% endblock %}
+    </div>
+  {% endif %}
+  {% if block('error') is defined and block('error') != '' %}
+    <div class="field-error">
+      {% block error %}{% endblock %}
+    </div>
+  {% endif %}
+
+</{{ tag|default("div") }}>
