@@ -75,6 +75,11 @@ final class Select extends BaseField
       $this->placeholderAttributesString = implode(" ", $placeholderAttributesTmp);
     }
 
+    if(!array_key_exists("data-select", $data))
+    {
+      $data["data-select"] = "";
+    }
+
     if(array_key_exists("data-select-options", $data) && $data["data-select-options"])
     {
       $this->dataSelectOptions = json_decode($data["data-select-options"], true);

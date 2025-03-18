@@ -78,7 +78,7 @@ class EntityField extends BaseSelectField
   public function getFieldOptions(): array
   {
     $fieldOptions = parent::getFieldOptions();
-    $fieldOptions["attr"]["class"] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "class")." {$this->entityClass}";
+    $fieldOptions["attr"]["class"] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "class");
     $fieldOptions["attr"]['autocomplete'] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "autocomplete", "off");
     $fieldOptions["class"] = $this->entityClass;
     $fieldOptions["query_builder"] = array_key_exists("query_builder", $fieldOptions) ? $fieldOptions["query_builder"] : $this->options['query_builder'];

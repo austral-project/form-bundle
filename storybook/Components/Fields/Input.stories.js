@@ -13,7 +13,7 @@ export default {
   render: (args) => ({
     tags: ['autodocs'],
     template: twig`
-            <twig:Austral:Form:Row tag="div" name="{{ name }}" typeField="text" labelPosition="{{ labelPosition }}" reverse="{{ reverse }}">
+            <twig:Austral:Form:Row tag="div" name="{{ name }}" typeField="{{ type }}" labelPosition="{{ labelPosition }}" reverse="{{ reverse }}" disabled="{{ disabled }}">
               ${args.labelPosition !== "external" ? '<twig:block name="label"><twig:Austral:Form:Label tag="label" entitled="{{ label }}" id="{{ id }}"/></twig:block>' : ''}
               ${args.labelPosition === "external" ? '<twig:block name="label_external"><twig:Austral:Form:Label tag="label" entitled="{{ label }}" id="{{ id }}"/></twig:block>' : ''}
               <twig:block name="field">
