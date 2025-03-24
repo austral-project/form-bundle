@@ -215,14 +215,16 @@ abstract class Field implements FieldInterface
    */
   public function setOptions(array $options): FieldInterface
   {
+    if(array_key_exists("template", $options) && array_key_exists("path", $options['template']))
+    {
+      if($options['template']['path'] != $this->options['template']["path"])
+      {
+        $this->isDefaultTemplate = false;
+      }
+    }
     $resolver = new OptionsResolver();
     $this->configureOptions($resolver);
     $this->options = $resolver->resolve($options);
-
-    if($this->options['template']["path"])
-    {
-      $this->isDefaultTemplate = false;
-    }
     return $this;
   }
 
