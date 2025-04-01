@@ -42,8 +42,7 @@ abstract class BaseField extends Base
     $resolver->setDefault('required', false)
       ->addAllowedTypes("required", array("boolean"));
 
-    $resolver->setDefault('value', null)
-      ->addAllowedTypes("value", array("null", "string"));
+    $resolver->setDefault('value', null);
     return $resolver->resolve($data) + $data;
   }
 
