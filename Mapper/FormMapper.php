@@ -468,6 +468,14 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
+   * @return $this
+   */
+  public function end() : FormMapper
+  {
+    return $this;
+  }
+
+  /**
    * @param FieldInterface|null $field
    * @param int|null $sortable
    *
@@ -558,22 +566,23 @@ class FormMapper extends MapperElement implements MapperElementInterface
    */
   public function addPopin(string $name, string $fieldname = null, array $attr = array(), MapperElementInterface $parent = null): Popin
   {
+    if($popin = $this->getPopinByFieldName($fieldname))
+    {
+      dump($popin);
+      return $popin;
+    }
     $popin = new Popin($name, $parent ?? $this, $fieldname, $attr);
-    if(!array_key_exists($popin->getKeyname(), $this->fields)) {
-      $this->popins[$popin->getKeyname()] = $popin;
-      if($fieldname)
+    $this->popins[$popin->getKeyname()] = $popin;
+    if($fieldname)
+    {
+      $this->popinKeysByFieldname[$fieldname] = $popin->getKeyname();
+      /** @var FieldInterface $field */
+      if(array_key_exists($fieldname, $this->allFields))
       {
-        $this->popinKeysByFieldname[$fieldname] = $popin->getKeyname();
-        /** @var FieldInterface $field */
-        if(array_key_exists($fieldname, $this->allFields))
-        {
-          $this->allFields[$fieldname]->setPopinId($popin->getKeyname());
-        }
+        $this->allFields[$fieldname]->setPopinId($popin->getKeyname());
       }
     }
-    else {
-      $popin = $this->popins[$popin->getKeyname()];
-    }
+    dump($popin);
     return $popin;
   }
 
@@ -627,6 +636,15 @@ class FormMapper extends MapperElement implements MapperElementInterface
   public function getPopinByKey(string $key)
   {
     return AustralTools::getValueByKey($this->popins, $key, array());
+  }
+
+  /**
+   * @param string $fieldname
+   * @return array|Popin
+   */
+  public function getPopinByFieldName(string $fieldname)
+  {
+    return AustralTools::getValueByKey($this->popins, AustralTools::getValueByKey($this->popinKeysByFieldname, $fieldname, null), array());
   }
 
   /**

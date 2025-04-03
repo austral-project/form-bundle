@@ -114,7 +114,7 @@ abstract class MapperElement implements MapperElementInterface
    */
   public function end(): MapperElementInterface
   {
-    return $this->parent;
+    return $this->parent();
   }
 
   /**
