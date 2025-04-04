@@ -568,7 +568,6 @@ class FormMapper extends MapperElement implements MapperElementInterface
   {
     if($popin = $this->getPopinByFieldName($fieldname))
     {
-      dump($popin);
       return $popin;
     }
     $popin = new Popin($name, $parent ?? $this, $fieldname, $attr);
@@ -582,7 +581,6 @@ class FormMapper extends MapperElement implements MapperElementInterface
         $this->allFields[$fieldname]->setPopinId($popin->getKeyname());
       }
     }
-    dump($popin);
     return $popin;
   }
 
