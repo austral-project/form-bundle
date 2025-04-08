@@ -39,7 +39,7 @@ abstract class Field implements FieldInterface
   /**
    * @var array
    */
-  protected array $options;
+  protected array $options = array();
 
   /**
    * @var array
@@ -215,7 +215,7 @@ abstract class Field implements FieldInterface
    */
   public function setOptions(array $options): FieldInterface
   {
-    if(array_key_exists("template", $options) && array_key_exists("path", $options['template']))
+    if(array_key_exists("template", $options) && array_key_exists("path", $options['template']) && array_key_exists("template", $this->options))
     {
       if($options['template']['path'] != $this->options['template']["path"])
       {

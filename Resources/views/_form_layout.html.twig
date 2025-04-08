@@ -15,20 +15,20 @@
 
 
 {%- block textarea_widget -%}
-  <twig:Austral:Form:Textarea id="{{ id }}" required="{{ required }}" disabled="{{ disabled }}" name="{{ name }}" attr="{{ attr }}" value="{{ value }}"/>
+  <twig:Austral:Form:Textarea id="{{ id }}" required="{{ required }}" disabled="{{ disabled }}" name="{{ full_name }}" attr="{{ attr }}" value="{{ value }}"/>
 {%- endblock textarea_widget -%}
 
 {%- block form_widget_simple -%}
   {%- set type = type|default('text') -%}
-  <twig:Austral:Form:Input type="{{ type }}" id="{{ id }}" name="{{ name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value }}"/>
+  <twig:Austral:Form:Input type="{{ type }}" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value }}"/>
 {%- endblock form_widget_simple -%}
 
 {%- block checkbox_widget -%}
-  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" />
+  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" />
 {%- endblock checkbox_widget -%}
 
 {%- block radio_widget -%}
-  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" />
+  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" />
 {%- endblock radio_widget -%}
 
 {%- block choice_widget_expanded -%}
@@ -63,7 +63,7 @@
       {%- set render_preferred_choices = false -%}
       {{- block('choice_widget_options') -}}
     {% endset %}
-    <twig:Austral:Form:Select id="{{ id }}" name="{{ name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" multiple="{{ multiple }}">
+    <twig:Austral:Form:Select id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" multiple="{{ multiple }}">
       <twig:block name="choices">
         {{ selectContent|raw()  }}
       </twig:block>
