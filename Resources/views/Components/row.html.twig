@@ -1,4 +1,9 @@
-<{{ tag|default("div") }} {{ attributes.defaults({class: "field-row field-row-"~id}) }} data-field="#{{ id }}">
+{% set class = "field-row field-row-"~id %}
+{% if block('error') is defined and block('error') != '' %}
+  {% set class = class~" error" %}
+{% endif %}
+
+<{{ tag|default("div") }} {{ attributes.defaults({class: class}) }} data-field="#{{ id }}">
   {% block label_external %}{% endblock %}
   <div class="field-container {{ fieldClassContainer }}">
     {% if block('before') is defined and block('before') != '' %}

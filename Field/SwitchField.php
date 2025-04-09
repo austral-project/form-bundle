@@ -54,7 +54,7 @@ class SwitchField extends Field
   /**
    * @param OptionsResolver $resolver
    */
-  public function configureOptions(OptionsResolver $resolver)
+  protected function configureOptions(OptionsResolver $resolver)
   {
     parent::configureOptions($resolver);
     $resolver->setDefault('switch-options', function (OptionsResolver $resolverChild) {

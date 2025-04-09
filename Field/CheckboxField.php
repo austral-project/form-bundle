@@ -10,8 +10,11 @@
 
 namespace Austral\FormBundle\Field;
 
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
 /**
  * Austral Field checkbox Input.
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -46,6 +49,39 @@ class CheckboxField extends SwitchField
     {
       $this->options["template"]["path"] = "checkbox-field.html.twig";
     }
+  }
+
+  /**
+   * @param OptionsResolver $resolver
+   */
+  protected function configureOptions(OptionsResolver $resolver)
+  {
+    parent::configureOptions($resolver);
+    $resolver->setDefault("checkboxPicto", function(OptionsResolver $subResolver) {
+      $subResolver->setDefaults(array(
+          "path"      =>  null,
+          "content"   =>  null
+        )
+      );
+      $subResolver->addAllowedTypes("path", array('null', "string"))
+        ->addAllowedTypes("content", array('null', 'string'));
+    });
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getCheckboxPictoPath(): ?string
+  {
+    return $this->options['checkboxPicto']['path'];
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getCheckboxPictoContent(): ?string
+  {
+    return $this->options['checkboxPicto']['content'];
   }
 
 }

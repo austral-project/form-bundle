@@ -24,7 +24,9 @@
 {%- endblock form_widget_simple -%}
 
 {%- block checkbox_widget -%}
-  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" />
+  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" >
+    {% block picto %}{% if checkboxPicto|default() %}{{ checkboxPicto|raw() }}{% endif %}{% endblock %}
+  </twig:Austral:Form:Input>
 {%- endblock checkbox_widget -%}
 
 {%- block radio_widget -%}
@@ -92,7 +94,7 @@
     <twig:Austral:Form:Label
       tag="{{ element|default("label") }}"
       entitled="{{ label }}"
-      id="{{ id }}"
+      id="{{ id }}_label"
       attr="{{ label_attr }}"
       translationParameters="{{ attr_translation_parameters }}"
       translationDomain="{{ translation_domain }}"
