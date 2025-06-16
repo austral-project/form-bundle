@@ -1,0 +1,10 @@
+<div class="field field-{{ type }} field-{{ id }}">
+  {% if type == "checkbox" or type == "radio" %}
+    <div class="field-style">
+      {% if (block('picto') is defined and block('picto') != '') %}
+        <div class="checkbox-picto">{% block picto %}{% endblock %}</div>
+      {% endif %}
+    </div>
+  {% endif %}
+  <input type="{{ type }}" id="{{ id }}" name="{{ name }}" {{ attributes }} {% if value %}value="{{ value }}"{% endif %} />
+</div>

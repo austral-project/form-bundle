@@ -1,0 +1,173 @@
+{% use "form_div_layout.html.twig" %}
+
+{# Widget #}
+{%- block form_widget_compound -%}
+  <div class="collection-container">
+    <div {{ block('widget_container_attributes') }}>
+      {%- if form is rootform -%}
+        {{ form_errors(form) }}
+      {%- endif -%}
+      {{- block('form_rows') -}}
+      {{- form_rest(form) -}}
+    </div>
+  </div>
+{%- endblock form_widget_compound -%}
+
+
+{%- block textarea_widget -%}
+  <twig:Austral:Form:Textarea id="{{ id }}" required="{{ required }}" disabled="{{ disabled }}" name="{{ full_name }}" attr="{{ attr }}" value="{{ value }}"/>
+{%- endblock textarea_widget -%}
+
+{%- block form_widget_simple -%}
+  {%- set type = type|default('text') -%}
+  <twig:Austral:Form:Input type="{{ type }}" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value }}"/>
+{%- endblock form_widget_simple -%}
+
+{%- block checkbox_widget -%}
+  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" >
+    {% block picto %}{% if checkboxPicto|default() %}{{ checkboxPicto|raw() }}{% endif %}{% endblock %}
+  </twig:Austral:Form:Input>
+{%- endblock checkbox_widget -%}
+
+{%- block radio_widget -%}
+  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" />
+{%- endblock radio_widget -%}
+
+{%- block choice_widget_expanded -%}
+  <ul {% with { attr: {class:"field-list-content list-"~name~"-content"} } %}{{ block('widget_container_attributes') }}{% endwith %}>
+    {%- for child in form %}
+      <li class="field-list-element">
+        {{- form_widget(child) -}}
+        {{- form_label(child, null, {translation_domain: choice_translation_domain}) -}}
+      </li>
+    {% endfor -%}
+  </ul>
+{%- endblock choice_widget_expanded -%}
+
+{%- block choice_widget_collapsed -%}
+    {%- if required and placeholder is none and not placeholder_in_choices and not multiple and (attr.size is not defined or attr.size <= 1) -%}
+      {% set required = false %}
+    {%- endif -%}
+  
+    {% set selectContent %}
+      {%- if placeholder is not none -%}
+        <option value=""{% if placeholder_attr|default({}) %}{% with { attr: placeholder_attr } %}{{ block('attributes') }}{% endwith %}{% endif %}{% if required and value is empty %} selected="selected"{% endif %}>{{ placeholder != '' ? (translation_domain is same as(false) ? placeholder : placeholder|trans({}, translation_domain)) }}</option>
+      {%- endif -%}
+      {%- if preferred_choices|length > 0 -%}
+        {% set options = preferred_choices %}
+        {% set render_preferred_choices = true %}
+        {{- block('choice_widget_options') -}}
+        {%- if choices|length > 0 and separator is not none -%}
+          <option disabled="disabled">{{ separator }}</option>
+        {%- endif -%}
+      {%- endif -%}
+      {%- set options = choices -%}
+      {%- set render_preferred_choices = false -%}
+      {{- block('choice_widget_options') -}}
+    {% endset %}
+    <twig:Austral:Form:Select id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" multiple="{{ multiple }}">
+      <twig:block name="choices">
+        {{ selectContent|raw()  }}
+      </twig:block>
+    </twig:Austral:Form:Select>
+{%- endblock choice_widget_collapsed -%}
+
+{# Label #}
+{% block form_label %}
+  {% if label is not same as(false) -%}
+    {% if not compound -%}
+      {% set label_attr = label_attr|merge({'for': id}) %}
+    {%- endif -%}
+    {% if required -%}
+      {% set label_attr = label_attr|merge({'class': (label_attr.class|default('') ~ ' required')|trim}) %}
+    {%- endif -%}
+    {%- if label is empty -%}
+      {%- if label_format is not empty -%}
+        {% set label = label_format|replace({
+          '%name%': name,
+          '%id%': id,
+        }) %}
+      {%- else -%}
+        {% set label = name|humanize %}
+      {%- endif -%}
+    {%- endif -%}
+    <twig:Austral:Form:Label
+      tag="{{ element|default("label") }}"
+      entitled="{{ label }}"
+      id="{{ id }}_label"
+      attr="{{ label_attr }}"
+      translationParameters="{{ attr_translation_parameters }}"
+      translationDomain="{{ translation_domain }}"
+    />
+  {%- endif -%}
+{% endblock form_label %}
+{%- block button_label -%}{%- endblock -%}
+
+{# Rows #}
+{%- block form_row -%}
+  {%- set widget_attr = {} -%}
+  {%- set row_attr = row_attr is not defined ? {} : row_attr -%}
+  {% if field.helper is defined and field.helper %}
+    {%- set widget_attr = {attr: {'aria-describedby': id ~"_helper"}} -%}
+  {% elseif help is not empty -%}
+    {%- set widget_attr = {attr: {'aria-describedby': id ~"_help"}} -%}
+  {%- endif -%}
+  
+  {%- set labelPosition = labelPosition|default(field.labelPosition|default("default")) -%}
+  {%- set typeField = block_prefixes[1] is defined  ? block_prefixes[1] : "" -%}
+  <twig:Austral:Form:Row tag="{{ tag|default("div") }}"
+      attr="{{ row_attr }}"
+      typeField="{{ typeField }}"
+      name="{{ name }}"
+      labelPosition="{{ labelPosition }}"
+      reverse="{{ reverse|default(field.reverse|default(false)) }}"
+      disabled="{{ disabled|default(field.disabled|default(false)) }}"
+      required="{{ required|default(field.required|default(false)) }}"
+  >
+    <twig:block name="label">
+      {%- if labelPosition != "external" -%}
+        {{- form_label(form) -}}
+      {%- endif -%}
+    </twig:block>
+    <twig:block name="label_external">
+      {%- if labelPosition == "external" -%}
+        {{- form_label(form) -}}
+      {%- endif -%}
+    </twig:block>
+    <twig:block name="field">
+      {{- form_widget(form, widget_attr) -}}
+    </twig:block>
+    <twig:block name="error">
+      {{- form_errors(form) -}}
+    </twig:block>
+    <twig:block name="before">
+      {{- before is defined and before ? before|raw() : "" -}}
+    </twig:block>
+    <twig:block name="after">
+      {{- after is defined and after ? after|raw() : "" -}}
+    </twig:block>
+    <twig:block name="helper">
+      {%- if field.helper is defined and field.helper -%}
+        <ul id="{{ id }}_helper" class="helper-content">
+          <li class="value">{{ field.helper|trans() }}</li>
+        </ul>
+      {%- else -%}
+        {{- form_help(form) -}}
+      {%- endif -%}
+    </twig:block>
+  </twig:Austral:Form:Row>
+{%- endblock form_row -%}
+
+{%- block form_errors -%}
+  {%- if errors|length > 0 -%}
+    <div class="errors-content" data-fieldname="{{ name }}">
+      <ul>
+        {%- for error in errors -%}
+          <li>{{ error.message }}</li>
+        {%- endfor -%}
+      </ul>
+    </div>
+  {%- endif -%}
+{%- endblock form_errors -%}
+
+{# Support #}
