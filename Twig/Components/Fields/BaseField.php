@@ -12,6 +12,7 @@ namespace Austral\FormBundle\Twig\Components\Fields;
 
 use Austral\FormBundle\Twig\Components\Base;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Translation\Translator;
 use Symfony\UX\TwigComponent\Attribute\PostMount;
 use Symfony\UX\TwigComponent\Attribute\PreMount;
 

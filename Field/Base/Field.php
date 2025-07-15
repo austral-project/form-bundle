@@ -112,6 +112,42 @@ abstract class Field implements FieldInterface
         "entitled"            =>  "fields.{$this->fieldname}.entitled",
         "placeholder"         =>  null,
         "picto"               =>  null,
+        "before"              =>  function(OptionsResolver $subResolver) {
+          $subResolver->setDefaults(array(
+              "path"            =>  null,
+              "html"            =>  null,
+              "twigComponent"  =>  function(OptionsResolver $threeResolver) {
+                $threeResolver->setDefaults(array(
+                    "name"            =>  null,
+                    "parameters"      =>  array(),
+                  )
+                );
+                $threeResolver->addAllowedTypes("name", array('null', "string"));
+                $threeResolver->addAllowedTypes("parameters", array('null', "array"));
+              },
+            )
+          );
+          $subResolver->addAllowedTypes("path", array('null', "string"));
+          $subResolver->addAllowedTypes("html", array('null', "string"));
+        },
+        "after"              =>  function(OptionsResolver $subResolver) {
+          $subResolver->setDefaults(array(
+              "path"        =>  null,
+              "html"        =>  null,
+              "twigComponent"  =>  function(OptionsResolver $threeResolver) {
+                $threeResolver->setDefaults(array(
+                    "name"            =>  null,
+                    "parameters"      =>  array(),
+                  )
+                );
+                $threeResolver->addAllowedTypes("name", array('null', "string"));
+                $threeResolver->addAllowedTypes("parameters", array('null', "array"));
+              }
+            )
+          );
+          $subResolver->addAllowedTypes("path", array('null', "string"));
+          $subResolver->addAllowedTypes("html", array('null', "string"));
+        },
         "attr"                =>  array(
           "class"               =>  null,
         ),
@@ -707,6 +743,22 @@ abstract class Field implements FieldInterface
   public function getHelper(): ?string
   {
     return $this->options["helper"];
+  }
+
+  /**
+   * @return array|null
+   */
+  public function getBefore(): ?array
+  {
+    return $this->options["before"];
+  }
+
+  /**
+   * @return array|null
+   */
+  public function getAfter(): ?array
+  {
+    return $this->options["after"];
   }
 
   /**

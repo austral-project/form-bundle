@@ -20,7 +20,7 @@ abstract class Base
 {
   protected Translator $translator;
   public array $attr = array();
-  public ?string $translationDomain = null;
+  public ?string $translationDomain = "messages";
   public array $translationParameters = array();
 
   public function __construct(
@@ -45,7 +45,7 @@ abstract class Base
     foreach ($this->attr as $key => $value) {
       if(in_array($key, array("placeholder", "title")) && $this->translationDomain)
       {
-        $data[$key] = $value ? $value : $this->translator->trans($value, $this->translationParameters, $this->translationDomain);
+        $data[$key] = $this->translator->trans($value, $this->translationParameters, $this->translationDomain);
       }
       else
       {
