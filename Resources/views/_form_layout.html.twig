@@ -113,6 +113,20 @@
     {%- set widget_attr = {attr: {'aria-describedby': id ~"_help"}} -%}
   {%- endif -%}
   
+  {% set beforeValue = field.before.html|default() %}
+  {% if field.before.path|default() %}
+    {% set beforeValue = include(field.before.path) %}
+  {% elseif field.before.twigComponent.name|default() %}
+    {% set beforeValue = component(field.before.twigComponent.name, field.before.twigComponent.parameters) %}
+  {% endif %}
+  
+  {% set afterValue = field.after.html|default() %}
+  {% if field.after.path|default() %}
+    {% set afterValue = include(field.after.path) %}
+  {% elseif field.after.twigComponent.name|default() %}
+    {% set afterValue = component(field.after.twigComponent.name, field.after.twigComponent.parameters) %}
+  {% endif %}
+  
   {%- set labelPosition = labelPosition|default(field.labelPosition|default("default")) -%}
   {%- set typeField = block_prefixes[1] is defined  ? block_prefixes[1] : "" -%}
   <twig:Austral:Form:Row tag="{{ tag|default("div") }}"
@@ -141,10 +155,10 @@
       {{- form_errors(form) -}}
     </twig:block>
     <twig:block name="before">
-      {{- before is defined and before ? before|raw() : "" -}}
+      {{- beforeValue is defined and beforeValue ? beforeValue|raw() : "" -}}
     </twig:block>
     <twig:block name="after">
-      {{- after is defined and after ? after|raw() : "" -}}
+      {{- afterValue is defined and afterValue ? afterValue|raw() : "" -}}
     </twig:block>
     <twig:block name="helper">
       {%- if field.helper is defined and field.helper -%}
