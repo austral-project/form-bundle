@@ -2,14 +2,12 @@
 
 {# Widget #}
 {%- block form_widget_compound -%}
-  <div class="collection-container">
-    <div {{ block('widget_container_attributes') }}>
-      {%- if form is rootform -%}
-        {{ form_errors(form) }}
-      {%- endif -%}
-      {{- block('form_rows') -}}
-      {{- form_rest(form) -}}
-    </div>
+  <div {% with { attr: {class:"collection-container fields-container"} } %}{{ block('widget_container_attributes') }}{% endwith %}>
+    {%- if form is rootform -%}
+      {{ form_errors(form) }}
+    {%- endif -%}
+    {% with { formMapper: formMapper|default() } %}{{- block('form_rows') -}}{% endwith %}
+    {{- form_rest(form) -}}
   </div>
 {%- endblock form_widget_compound -%}
 
@@ -103,14 +101,30 @@
 {% endblock form_label %}
 {%- block button_label -%}{%- endblock -%}
 
+
+{%- block form_rows -%}
+  {% if block_prefixes[1] is defined and block_prefixes[1] == "collection_entry" and formMapper is defined and formMapper-%}
+    {% set formMapper = formMapper.getSubFormMapperByKey(block_prefixes[2]) %}
+  {% endif %}
+  {% for child in form|filter(child => not child.rendered) %}
+    {% set field = formMapper ? formMapper.getField(child.vars.name) : null %}
+    {{- form_row(child, {
+      tag: "div",
+      field:  field,
+      formMapper: formMapper,
+      row_attr: field ? field.options.container : {},
+    }) -}}
+  {% endfor %}
+{%- endblock form_rows -%}
+
 {# Rows #}
 {%- block form_row -%}
   {%- set widget_attr = {} -%}
   {%- set row_attr = row_attr is not defined ? {} : row_attr -%}
   {% if field.helper is defined and field.helper %}
-    {%- set widget_attr = {attr: {'aria-describedby': id ~"_helper"}} -%}
+    {%- set widget_attr = {attr: {'aria-describedby': id ~"_helper"}, formMapper: formMapper|default()} -%}
   {% elseif help is not empty -%}
-    {%- set widget_attr = {attr: {'aria-describedby': id ~"_help"}} -%}
+    {%- set widget_attr = {attr: {'aria-describedby': id ~"_help"}, formMapper: formMapper|default()} -%}
   {%- endif -%}
   
   {% set beforeValue = field.before.html|default() %}
@@ -127,7 +141,7 @@
     {% set afterValue = component(field.after.twigComponent.name, field.after.twigComponent.parameters) %}
   {% endif %}
   
-  {%- set labelPosition = labelPosition|default(field.labelPosition|default("default")) -%}
+  {%- set labelPosition = labelPosition|default(field.options.labelPosition|default("external")) -%}
   {%- set typeField = block_prefixes[1] is defined  ? block_prefixes[1] : "" -%}
   <twig:Austral:Form:Row tag="{{ tag|default("div") }}"
       attr="{{ row_attr }}"

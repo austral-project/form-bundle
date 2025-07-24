@@ -112,6 +112,7 @@ abstract class Field implements FieldInterface
         "entitled"            =>  "fields.{$this->fieldname}.entitled",
         "placeholder"         =>  null,
         "picto"               =>  null,
+        "labelPosition"       =>  "external",
         "before"              =>  function(OptionsResolver $subResolver) {
           $subResolver->setDefaults(array(
               "path"            =>  null,
@@ -206,6 +207,7 @@ abstract class Field implements FieldInterface
       ->addAllowedTypes("entitled", array('null', "bool", "string"))
       ->addAllowedTypes("placeholder", array('null', "string"))
       ->addAllowedTypes("picto", array('null', "string"))
+      ->addAllowedTypes("labelPosition", array('null', "string"))
 
       ->addAllowedTypes("autoConstraints", array('bool'))
       ->addAllowedTypes("helper", array('null', "string"))
