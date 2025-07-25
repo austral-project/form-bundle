@@ -28,7 +28,9 @@
 {%- endblock checkbox_widget -%}
 
 {%- block radio_widget -%}
-  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" />
+  <twig:Austral:Form:Input type="radio" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" >
+    {% block picto %}{% if checkboxPicto|default() %}{{ checkboxPicto|raw() }}{% endif %}{% endblock %}
+  </twig:Austral:Form:Input>
 {%- endblock radio_widget -%}
 
 {%- block choice_widget_expanded -%}
@@ -122,10 +124,12 @@
   {%- set widget_attr = {} -%}
   {%- set row_attr = row_attr is not defined ? {} : row_attr -%}
   {% if field.helper is defined and field.helper %}
-    {%- set widget_attr = {attr: {'aria-describedby': id ~"_helper"}, formMapper: formMapper|default()} -%}
+    {%- set widget_attr = {attr: {'aria-describedby': id ~"_helper", checkboxPicto: checkboxPicto|default()}, formMapper: formMapper|default()} -%}
   {% elseif help is not empty -%}
-    {%- set widget_attr = {attr: {'aria-describedby': id ~"_help"}, formMapper: formMapper|default()} -%}
+    {%- set widget_attr = {attr: {'aria-describedby': id ~"_help", checkboxPicto: checkboxPicto|default()}, formMapper: formMapper|default()} -%}
   {%- endif -%}
+  
+  
   
   {% set beforeValue = field.before.html|default() %}
   {% if field.before.path|default() %}

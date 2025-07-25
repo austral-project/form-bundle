@@ -162,14 +162,9 @@ abstract class Field implements FieldInterface
           $subResolver->addAllowedTypes("size", array('null', "string"));
         },
 
-        "container"           =>  function(OptionsResolver $subResolver) {
-          $subResolver->setDefaults(array(
-              "class"      =>  null,
-            )
-          );
-          $subResolver->addAllowedTypes("class", array('null', "string"));
-        },
-
+        "container"           =>  array(
+          "class"               =>  null,
+        ),
         "autoConstraints"      =>  true,
         "helper"              =>  null,
 
@@ -215,6 +210,7 @@ abstract class Field implements FieldInterface
       ->addAllowedTypes("attr", array('array'))
 
       ->addAllowedTypes("fieldOptions", array('array'))
+      ->addAllowedTypes("container", array('array'))
 
       ->addAllowedTypes("mapped", array('bool'));
   }
