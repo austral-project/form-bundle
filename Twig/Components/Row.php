@@ -53,7 +53,6 @@ final class Row extends Base
       ->setAllowedValues('labelPosition', ['default', 'external'])
       ->addAllowedTypes("labelPosition", array("null", "string"));
 
-
     return $resolver->resolve($data) + $data;
   }
 

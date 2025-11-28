@@ -6,5 +6,54 @@
       {% endif %}
     </div>
   {% endif %}
-  <input type="{{ type }}" id="{{ id }}" name="{{ name }}" {{ attributes }} {% if value %}value="{{ value }}"{% endif %} />
+  
+  {% if type == "file" %}
+    
+    {% set fieldUploadKey = form.vars.id %}
+    {% set popinValues = {
+      "size":           field.uploadFileParameters.file.infos.sizeHuman,
+      "mime-type":      field.uploadFileParameters.file.infos.extension,
+      "dimensions":     field.uploadFileParameters.file.infos.imageSize ? field.uploadFileParameters.infos.imageSize~"px" : null,
+      "reel-filename":  field.uploadFileParameters.file.reelFilename
+    } %}
+    
+    {% set uploadFileOptions = {
+      "max-size": field.maxSize(true),
+      "mime-types": field.mimeTypes,
+      "image-sizes": field.imageSizes,
+      "file-container": "#"~fieldUploadKey~"-container",
+      "input-file": "#"~fieldUploadKey,
+      "fieldname": field.fieldname,
+      "cropper": field.cropper,
+      "file-path": field.uploadFileParameters.file.path.view,
+      "fileValues": popinValues,
+      "delete-field-element": "*[data-delete-files='"~ fieldUploadKey ~"']"
+    } %}
+    <div id="{{ fieldUploadKey}}-container" class="file-upload-content {% if field.uploadFileParameters.file.path.view %}edit{% endif %}" data-upload-file="" data-file-options="{{ uploadFileOptions|json_encode }}">
+      <div class="hidden">
+        <input type="{{ type }}" id="{{ id }}" name="{{ name }}" {{ attributes }} {% if value %}value="{{ value }}"{% endif %} />
+      </div>
+      <div class="error-content">
+        <div class="error-picto">
+          <span class="picto austral-picto-cross"></span>
+        </div>
+        <ul class="messages-content">
+        </ul>
+      </div>
+      <div class="loader-content">
+        <div class="picto-spin">
+          {% include "SVG/picto-spin.svg" %}
+        </div>
+      </div>
+      <div class="preview-file">
+        {% if field.uploadFileParameters.file.path.view %}
+          <img src="{{ field.uploadFileParameters.file.path.view }}" alt="original" />
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <input type="{{ type }}" id="{{ id }}" name="{{ name }}" {{ attributes }} {% if value is defined %}value="{{ value }}"{% endif %} />
+  {% endif %}
+  
+  
 </div>

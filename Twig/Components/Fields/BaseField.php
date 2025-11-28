@@ -10,9 +10,10 @@
 
 namespace Austral\FormBundle\Twig\Components\Fields;
 
+use Austral\FormBundle\Field\Base\FieldInterface;
 use Austral\FormBundle\Twig\Components\Base;
+use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Translation\Translator;
 use Symfony\UX\TwigComponent\Attribute\PostMount;
 use Symfony\UX\TwigComponent\Attribute\PreMount;
 
@@ -23,6 +24,8 @@ abstract class BaseField extends Base
   public bool $disabled = false;
   public bool $required = false;
   public ?string $value = "";
+  public ?FieldInterface $field = null;
+  public ?FormView $form = null;
 
   #[PreMount]
   public function preMount(array $data): array

@@ -11,24 +11,27 @@
   </div>
 {%- endblock form_widget_compound -%}
 
+{%- block collection_widget -%}
+  {{- block('form_widget') -}}
+{%- endblock collection_widget -%}
 
 {%- block textarea_widget -%}
-  <twig:Austral:Form:Textarea id="{{ id }}" required="{{ required }}" disabled="{{ disabled }}" name="{{ full_name }}" attr="{{ attr }}" value="{{ value }}"/>
+  <twig:Austral:Form:Textarea id="{{ id }}" form="{{ form }}" field="{{ field|default(null) }}" required="{{ required }}" disabled="{{ disabled }}" name="{{ full_name }}" attr="{{ attr }}" value="{{ value }}"/>
 {%- endblock textarea_widget -%}
 
 {%- block form_widget_simple -%}
   {%- set type = type|default('text') -%}
-  <twig:Austral:Form:Input type="{{ type }}" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value }}"/>
+  <twig:Austral:Form:Input type="{{ type }}" id="{{ id }}" form="{{ form }}" field="{{ field|default(null) }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value }}"/>
 {%- endblock form_widget_simple -%}
 
 {%- block checkbox_widget -%}
-  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" >
+  <twig:Austral:Form:Input type="checkbox" id="{{ id }}" name="{{ full_name }}" form="{{ form }}" field="{{ field|default(null) }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" >
     {% block picto %}{% if checkboxPicto|default() %}{{ checkboxPicto|raw() }}{% endif %}{% endblock %}
   </twig:Austral:Form:Input>
 {%- endblock checkbox_widget -%}
 
 {%- block radio_widget -%}
-  <twig:Austral:Form:Input type="radio" id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" >
+  <twig:Austral:Form:Input type="radio" id="{{ id }}" name="{{ full_name }}" form="{{ form }}" field="{{ field|default(null) }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" value="{{ value is defined ? value : null }}" checked="{{ checked }}" >
     {% block picto %}{% if checkboxPicto|default() %}{{ checkboxPicto|raw() }}{% endif %}{% endblock %}
   </twig:Austral:Form:Input>
 {%- endblock radio_widget -%}
@@ -65,7 +68,7 @@
       {%- set render_preferred_choices = false -%}
       {{- block('choice_widget_options') -}}
     {% endset %}
-    <twig:Austral:Form:Select id="{{ id }}" name="{{ full_name }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" multiple="{{ multiple }}">
+    <twig:Austral:Form:Select id="{{ id }}" name="{{ full_name }}" form="{{ form }}" field="{{ field|default(null) }}" required="{{ required }}" disabled="{{ disabled }}" attr="{{ attr }}" multiple="{{ multiple }}">
       <twig:block name="choices">
         {{ selectContent|raw()  }}
       </twig:block>
@@ -129,8 +132,6 @@
     {%- set widget_attr = {attr: {'aria-describedby': id ~"_help", checkboxPicto: checkboxPicto|default()}, formMapper: formMapper|default()} -%}
   {%- endif -%}
   
-  
-  
   {% set beforeValue = field.before.html|default() %}
   {% if field.before.path|default() %}
     {% set beforeValue = include(field.before.path) %}
@@ -147,6 +148,7 @@
   
   {%- set labelPosition = labelPosition|default(field.options.labelPosition|default("external")) -%}
   {%- set typeField = block_prefixes[1] is defined  ? block_prefixes[1] : "" -%}
+  
   <twig:Austral:Form:Row tag="{{ tag|default("div") }}"
       attr="{{ row_attr }}"
       typeField="{{ typeField }}"
