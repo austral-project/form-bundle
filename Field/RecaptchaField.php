@@ -58,6 +58,12 @@ class RecaptchaField extends Field
     $resolver->setAllowedTypes('secretKey', array('string'));
     $resolver->setAllowedTypes('publicKey', array('string'));
     $resolver->setAllowedTypes('action', array('string'));
+    $resolver->setDefault('score', function (OptionsResolver $resolverChild) {
+      $resolverChild->setDefault('limit', 0.7);
+      $resolverChild->setAllowedTypes('limit', array('float'));
+      $resolverChild->setDefault('message', "Bot is detected");
+      $resolverChild->setAllowedTypes('message', array('string'));
+    });
   }
 
   /**
@@ -82,6 +88,22 @@ class RecaptchaField extends Field
   public function getAction(): ?string
   {
     return $this->options["action"];
+  }
+
+  /**
+   * @return float
+   */
+  public function getScoreLimit(): float
+  {
+    return $this->options["score"]["limit"];
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getScoreMessage(): ?string
+  {
+    return $this->options["score"]["message"];
   }
 
   /**
