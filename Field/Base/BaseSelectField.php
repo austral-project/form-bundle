@@ -51,6 +51,17 @@ class BaseSelectField extends Field
     $resolver->setDefault("nullValue", false)
       ->setAllowedTypes('nullValue', array('boolean'));
 
+    $resolver->setDefault("theme", function(OptionsResolver $subResolver) {
+      $subResolver->setDefaults(array(
+        "name"          => "default",
+        "direction"     => null,
+      ));
+      $subResolver->addAllowedTypes("name", array('null', "string"));
+      $subResolver->addAllowedValues("name", array('default', "choiceList", "choiceElement"));
+      $subResolver->addAllowedTypes("direction", array('null', "string"));
+      $subResolver->addAllowedValues("direction", array(null, 'vertical', "horizontal"));
+    });
+
     $resolver->setDefault('select-options', function (OptionsResolver $resolverChild) {
       $resolverChild->setDefaults(array(
           "enabled"                     =>  true,
@@ -156,6 +167,26 @@ class BaseSelectField extends Field
   {
     $this->choices = $choices;
     return $this;
+  }
+
+  /**
+   * getThemeName
+   *
+   * @return string
+   */
+  public function getThemeName(): string
+  {
+    return $this->options['theme']["name"];
+  }
+
+  /**
+   * getThemeDirection
+   *
+   * @return string|null
+   */
+  public function getThemeDirection(): ?string
+  {
+    return $this->options['theme']['direction'];
   }
 
 }
