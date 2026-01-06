@@ -13,7 +13,7 @@
     {% set popinValues = {
       "size":           field.uploadFileParameters.file.infos.sizeHuman,
       "mime-type":      field.uploadFileParameters.file.infos.extension,
-      "dimensions":     field.uploadFileParameters.file.infos.imageSize ? field.uploadFileParameters.infos.imageSize~"px" : null,
+      "dimensions":     field.uploadFileParameters.file.infos.imageSize ? field.uploadFileParameters.file.infos.imageSize~"px" : null,
       "reel-filename":  field.uploadFileParameters.file.reelFilename
     } %}
     
@@ -37,8 +37,7 @@
         <div class="error-picto">
           <span class="picto austral-picto-cross"></span>
         </div>
-        <ul class="messages-content">
-        </ul>
+        <ul class="messages-content"></ul>
       </div>
       <div class="loader-content">
         <div class="picto-spin">

@@ -10,14 +10,18 @@
 
 namespace Austral\FormBundle\Form\Type;
 
+use Austral\EntityBundle\Entity\Interfaces\FileInterface;
+use Austral\EntityFileBundle\File\Mapping\FieldFileMapping;
 use Austral\FormBundle\Field\Base\FieldInterface;
 use Austral\FormBundle\Field\CollectionEmbedField;
 use Austral\FormBundle\Field\MultiField;
 use Austral\FormBundle\Field\SelectField;
+use Austral\FormBundle\Field\UploadField;
 use Austral\FormBundle\Mapper\FormMapper;
 
 use Austral\ToolsBundle\AustralTools;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
@@ -35,6 +39,11 @@ class FormType extends AbstractType implements FormTypeInterface
    * @var AuthorizationCheckerInterface|null
    */
   protected ?AuthorizationCheckerInterface $security;
+
+  /**
+   * @var ContainerInterface|null
+   */
+  protected ?ContainerInterface $container = null;
 
   /**
    * @var string|null
@@ -84,6 +93,18 @@ class FormType extends AbstractType implements FormTypeInterface
   public function setSecurity(?AuthorizationCheckerInterface $security = null): FormType
   {
     $this->security = $security;
+    return $this;
+  }
+
+  /**
+   * setContainer
+   *
+   * @param ContainerInterface|null $container
+   * @return $this
+   */
+  public function setContainer(ContainerInterface $container = null): FormType
+  {
+    $this->container = $container;
     return $this;
   }
 
@@ -210,7 +231,7 @@ class FormType extends AbstractType implements FormTypeInterface
     $formMapper = $this->getFormMapper($builder);
     foreach($formMapper->allFields() as $field)
     {
-      $this->addFieldToBuildForm($builder, $field);
+      $this->addFieldToBuildForm($builder, $field, $formMapper);
       $builder->addEventListener(
         FormEvents::PRE_SUBMIT,
         function(FormEvent $event) use($field, $formMapper)
@@ -277,8 +298,9 @@ class FormType extends AbstractType implements FormTypeInterface
   /**
    * @param FormBuilderInterface $builder
    * @param FieldInterface $field
+   * @param FormMapper $formMapper
    */
-  protected function addFieldToBuildForm(FormBuilderInterface $builder, FieldInterface $field)
+  protected function addFieldToBuildForm(FormBuilderInterface $builder, FieldInterface $field, FormMapper $formMapper)
   {
     if($field->getUsedGeneratedForm())
     {
@@ -289,6 +311,52 @@ class FormType extends AbstractType implements FormTypeInterface
         $options["constraints"] = $contraints;
       }
 
+      $object = $builder->getData();
+      if($field instanceof UploadField && $this->container && $object)
+      {
+        /** @var FieldFileMapping $fieldMapping */
+        if($fieldMapping = $this->container->get("austral.entity.mapping")->getFieldsMappingByFieldname($object->getClassnameForMapping(), FieldFileMapping::class, $field->getFieldname()))
+        {
+          if($filePath = $this->filePath($object, $field->getFieldname()))
+          {
+            $parameters = $field->getUploadFileParameters();
+
+            $isImage  = AustralTools::isImage($filePath);
+            $parameters["file"]["reelFilename"] = $fieldMapping->getFilename($object, true);
+            $parameters["file"]['path'] = array(
+              "view"          =>  $isImage ? $this->image($object, $field->getFieldname(), "original", "i", 1000, 1000) : null,
+              "original"      =>  $isImage ? $this->image($object, $field->getFieldname()) : null,
+              "download"      =>  $this->download($object, $field->getFieldname()),
+              "absolute"      =>  $filePath,
+            );
+            $parameters["file"]['infos']["mimeType"] = AustralTools::mimeType($filePath);
+            $parameters["file"]['infos']["extension"] = AustralTools::extension($filePath);
+            $parameters["file"]['infos']["size"] = filesize($filePath);
+            $parameters["file"]['infos']["sizeHuman"] = AustralTools::humanizeSize($filePath);
+            if($isImage)
+            {
+              $imageDimension = $isImage ? AustralTools::imageDimension($filePath, true) : array(
+                "width"             =>  null,
+                "height"            =>  null,
+              );
+              $aspectRatio = null;
+              if(array_key_exists("width", $imageDimension) && array_key_exists("height", $imageDimension))
+              {
+                if($imageDimension["width"] > 0 && $imageDimension["height"] > 0)
+                {
+                  $aspectRatio = $imageDimension["width"]/$imageDimension["height"];
+                }
+              }
+              $parameters["file"]['infos']["imageSize"] = $imageDimension ? implode(" x ", $imageDimension) : null;
+              $parameters["file"]['infos']["imageDimension"] = $imageDimension;
+              $parameters["file"]['infos']["aspectRatio"] = $aspectRatio;
+            }
+            $field->setUploadFileParameters($parameters);
+          }
+        }
+      }
+
+
       if($field->getSymfonyFormType())
       {
         $builder->add($field->getFieldname(), $field->getSymfonyFormType(), $options);
@@ -297,7 +365,7 @@ class FormType extends AbstractType implements FormTypeInterface
       {
         foreach($field->getFields() as $field)
         {
-          $this->addFieldToBuildForm($builder, $field);
+          $this->addFieldToBuildForm($builder, $field, $formMapper);
         }
       }
 
@@ -308,7 +376,7 @@ class FormType extends AbstractType implements FormTypeInterface
           /** @var FieldInterface $collectionsForm */
           foreach($field->getCollectionsForms() as $collectionsForm)
           {
-            $this->addFieldToBuildForm($builder, $collectionsForm);
+            $this->addFieldToBuildForm($builder, $collectionsForm, $formMapper);
           }
         }
         else
@@ -317,6 +385,55 @@ class FormType extends AbstractType implements FormTypeInterface
         }
       }
     }
+  }
+
+  /**
+   * @param FileInterface|null $object
+   * @param string $fieldname
+   *
+   * @return string|null
+   * @throws \Exception
+   */
+  public function filePath(?FileInterface $object, string $fieldname): ?string
+  {
+    /** @var FieldFileMapping $fieldMapping */
+    if($fieldMapping = $this->container->get("austral.entity.mapping")->getFieldsMappingByFieldname($object->getClassnameForMapping(), FieldFileMapping::class, $fieldname))
+    {
+      return $fieldMapping->getObjectFilePath($object);
+    }
+    return null;
+  }
+
+  /**
+   * Download Url initializations
+   *
+   * @param FileInterface $object
+   * @param string $fieldname
+   * @param array $params
+   *
+   * @return string|null
+   */
+  public function download(FileInterface $object, string $fieldname, array $params = array()): ?string
+  {
+    return $this->container->get('austral.entity_file.link.generator')->download($object, $fieldname, $params);
+  }
+
+  /**
+   * Download Url initializations
+   *
+   * @param FileInterface $object
+   * @param string $fieldname
+   * @param string|null $mode
+   * @param int|null $width
+   * @param int|null $height
+   * @param string|null $type
+   * @param array $params
+   *
+   * @return string|null
+   */
+  public function image(FileInterface $object, string $fieldname, ?string $type = "original", ?string $mode = "resize", int $width = null, int $height = null, array $params = array()): ?string
+  {
+    return $this->container->get('austral.entity_file.link.generator')->image($object, $fieldname, $type, $mode, $width, $height, $params);
   }
 
 }

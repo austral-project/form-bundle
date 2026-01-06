@@ -107,26 +107,36 @@ class UploadField extends Field
   {
     parent::configureOptions($resolver);
     $resolver->setDefault('upload-file-parameters', function (OptionsResolver $resolverChild) {
-      $resolverChild->setDefaults(array(
-          "maxSize"             =>  null,
-          "imageSizes"          =>  array(),
-          "mimeTypes"           =>  array(),
-          "mimeTypesMessage"    =>  null,
-          "maxSizeMessage"      =>  null
-        )
-      );
-      $resolverChild->setAllowedTypes('maxSize', array('string', "null"));
-      $resolverChild->setAllowedTypes('imageSizes', array('array', "null"));
-      $resolverChild->setAllowedTypes('mimeTypes', array('array', "null"));
-      $resolverChild->setAllowedTypes('mimeTypesMessage', array('string', "null"));
-      $resolverChild->setAllowedTypes('maxSizeMessage', array('string', "null"));
-      $resolverChild->setDefault('file', function (OptionsResolver $resolverSubChild) {
-        $this->resolverConfigureFile($resolverSubChild);
-      });
+      $this->resolverConfigureUploadFileParameters($resolverChild);
     });
     $resolver->setDefault('blockSize', self::DETAIL);
     $resolver->setDefault('cropper', array());
     $resolver->setDefault('cropperFieldKey', null);
+  }
+
+  /**
+   * @param OptionsResolver $resolver
+   */
+  protected function resolverConfigureUploadFileParameters(OptionsResolver $resolver)
+  {
+    $resolver->setDefaults(array(
+        "maxSize"             =>  null,
+        "imageSizes"          =>  array(),
+        "mimeTypes"           =>  array(),
+        "mimeTypesMessage"    =>  null,
+        "maxSizeMessage"      =>  null,
+        "extensions"          =>  null
+      )
+    );
+    $resolver->setAllowedTypes('maxSize', array('string', "null"));
+    $resolver->setAllowedTypes('imageSizes', array('array', "null"));
+    $resolver->setAllowedTypes('mimeTypes', array('array', "null"));
+    $resolver->setAllowedTypes('mimeTypesMessage', array('string', "null"));
+    $resolver->setAllowedTypes('maxSizeMessage', array('string', "null"));
+    $resolver->setAllowedTypes('extensions', array('string', "null"));
+    $resolver->setDefault('file', function (OptionsResolver $resolverSubChild) {
+      $this->resolverConfigureFile($resolverSubChild);
+    });
   }
 
   /**
@@ -150,6 +160,32 @@ class UploadField extends Field
   /**
    * @param OptionsResolver $resolver
    */
+  protected function resolverConfigureInfos(OptionsResolver $resolver)
+  {
+    $resolver->setDefaults(array(
+        "mimeType"        =>  null,
+        "extension"       =>  null,
+        "size"            =>  null,
+        "sizeHuman"       =>  null,
+        "imageSize"       =>  null,
+        "aspectRatio"     =>  null,
+      )
+    );
+    $resolver->setDefault('imageDimension', function (OptionsResolver $resolverSubChild) {
+      $resolverSubChild->setDefault("width", null)->setAllowedTypes('width', array('int', 'float', "null"));
+      $resolverSubChild->setDefault("height", null)->setAllowedTypes('height', array('int', 'float', "null"));
+    });
+    $resolver->setAllowedTypes('mimeType', array('string', "null"));
+    $resolver->setAllowedTypes('extension', array('string', "null"));
+    $resolver->setAllowedTypes('size', array('int', "null"));
+    $resolver->setAllowedTypes('sizeHuman', array('string', "null"));
+    $resolver->setAllowedTypes('imageSize', array('string', "null"));
+    $resolver->setAllowedTypes('aspectRatio', array('int', 'float', "null"));
+  }
+
+  /**
+   * @param OptionsResolver $resolver
+   */
   protected function resolverConfigureFile(OptionsResolver $resolver)
   {
     $resolver->setDefaults(array(
@@ -160,26 +196,20 @@ class UploadField extends Field
     $resolver->setDefault('path', function (OptionsResolver $resolverSubChild) {
       $resolverSubChild->setDefaults(array(
           "view"          =>  null,
+          "original"      =>  null,
           "download"      =>  null,
           "absolute"      =>  null,
         )
       );
       $resolverSubChild->setAllowedTypes('view', array('string', "null"));
+      $resolverSubChild->setAllowedTypes('original', array('string', "null"));
       $resolverSubChild->setAllowedTypes('download', array('string', "null"));
       $resolverSubChild->setAllowedTypes('absolute', array('string', "null"));
     });
     $resolver->setDefault('infos', function (OptionsResolver $resolverSubChild) {
-      $resolverSubChild->setDefaults(array(
-          "mimeType"        =>  null,
-          "extension"       =>  null,
-          "size"            =>  null,
-          "sizeHuman"       =>  null,
-          "imageSize"       =>  null,
-        )
-      );
-      $resolverSubChild->setAllowedTypes('mimeType', array('string', "null"));
-      $resolverSubChild->setAllowedTypes('size', array('int', "float", "null"));
+      $this->resolverConfigureInfos($resolverSubChild);
     });
+
   }
 
   /**
@@ -260,6 +290,19 @@ class UploadField extends Field
     $mimetypesString = implode(" ", $this->options['upload-file-parameters']['mimeTypes']);
     $this->options['upload-file-parameters']["extensions"] = preg_replace('/(\w{0,}\/)/', ".", $mimetypesString);
     return $this->options['upload-file-parameters'];
+  }
+
+  /**
+   * setUploadFileParameters
+   *
+   * @param array $uploadFileParameters
+   * @return void
+   */
+  public function setUploadFileParameters(array $uploadFileParameters)
+  {
+    $resolver = new OptionsResolver();
+    $this->resolverConfigureUploadFileParameters($resolver);
+    $this->options['upload-file-parameters'] = $resolver->resolve($uploadFileParameters);
   }
 
   /**
