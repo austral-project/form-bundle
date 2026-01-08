@@ -2,8 +2,11 @@
 {% if block('error') is defined and block('error') != '' %}
   {% set class = class~" error" %}
 {% endif %}
-{% if block('label') is defined and block('label') != '' %}
-  {% set class = class~" animate" %}
+
+{% if animateLabel == true %}
+  {% if block('label') is defined and block('label') != '' %}
+    {% set class = class~" animate" %}
+  {% endif %}
 {% endif %}
 
 <{{ tag|default("div") }} {{ attributes.defaults({class: class}) }} data-field="#{{ name }}">

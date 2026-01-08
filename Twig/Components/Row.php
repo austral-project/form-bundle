@@ -22,6 +22,7 @@ final class Row extends Base
   public ?string $typeField = null;
   public string $name = "fieldname";
   public bool $reverse = false;
+  public bool $animateLabel = true;
   public bool $disabled = false;
   public bool $required = false;
   public string $labelPosition = "default";
@@ -48,6 +49,9 @@ final class Row extends Base
 
     $resolver->setDefault('required', false)
       ->addAllowedTypes("required", array("boolean"));
+
+    $resolver->setDefault('animateLabel', false)
+      ->addAllowedTypes("animateLabel", array("boolean"));
 
     $resolver->setDefault('labelPosition', "label")
       ->setAllowedValues('labelPosition', ['default', 'external'])

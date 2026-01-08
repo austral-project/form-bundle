@@ -195,7 +195,7 @@ class FormSubscriber implements EventSubscriberInterface
         }
 
         $fieldTypeMapping = AustralTools::getValueByKey($mapping, "type", null) ;
-        if($fieldTypeMapping === "string") {
+        if($fieldTypeMapping === "string" && !array_key_exists("enumType", $mapping)) {
           $field->addConstraint(new Constraints\Length(array(
                 "max" => AustralTools::getValueByKey($mapping, "length"),
                 "maxMessage" => "errors.length.max"

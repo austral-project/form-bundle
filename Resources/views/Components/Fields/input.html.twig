@@ -1,10 +1,19 @@
-<div class="field field-{{ type }} field-{{ id }}">
+{% set fieldClassname = field ? field.getClassname() : "" %}
+<div class="field field-{{ type }} field-{{ id }} {{ fieldClassname == "SwitchField" ? "switch-type switch-element " ~(attributes.iterator.checked|default() == "checked" ? "tails" : "heads") : "" }}" {{ fieldClassname == "SwitchField" ? 'data-switch=""' }}>
   {% if type == "checkbox" or type == "radio" %}
-    <div class="field-style">
-      {% if (block('picto') is defined and block('picto') != '') %}
-        <div class="check-picto">{% block picto %}{% endblock %}</div>
-      {% endif %}
-    </div>
+    {% if fieldClassname == "SwitchField" %}
+      <div class="switch-button-content">
+        <span class="switch-button">
+          <span class="indicator"></span>
+        </span>
+      </div>
+    {% else %}
+      <div class="field-style">
+        {% if (block('picto') is defined and block('picto') != '') %}
+          <div class="check-picto">{% block picto %}{% endblock %}</div>
+        {% endif %}
+      </div>
+    {% endif %}
   {% endif %}
   
   {% if type == "file" %}
@@ -53,6 +62,4 @@
   {% else %}
     <input type="{{ type }}" id="{{ id }}" name="{{ name }}" {{ attributes }} {% if value is defined %}value="{{ value }}"{% endif %} />
   {% endif %}
-  
-  
 </div>
