@@ -86,6 +86,12 @@ class RecaptchaValidator extends ConstraintValidator
                 ->setParameter('{{ reason }}', implode(",", array_key_exists("error-codes", $responseValue) ? $responseValue["error-codes"] : array()))
                 ->addViolation();
             }
+            elseif($responseValue["score"] < $fieldRecaptcha->getScoreLimit())
+            {
+              $this->context->buildViolation($constraint->message)
+                ->setParameter('{{ reason }}', $fieldRecaptcha->getScoreMessage())
+                ->addViolation();
+            }
           }
         }
       }
