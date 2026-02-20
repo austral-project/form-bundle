@@ -11,6 +11,7 @@
 namespace Austral\FormBundle\Validator;
 
 use Austral\FormBundle\Field\RecaptchaField;
+use Austral\FormBundle\Mapper\FormMapper;
 use Austral\FormBundle\Mapper\FormMappers;
 use Symfony\Component\Form\Exception\UnexpectedTypeException;
 use Symfony\Component\HttpClient\NativeHttpClient;
@@ -18,6 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Austral Validator Recaptcha.
@@ -38,13 +40,19 @@ class RecaptchaValidator extends ConstraintValidator
   private FormMappers $formMappers;
 
   /**
+   * @var TranslatorInterface
+   */
+  private TranslatorInterface $translator;
+
+  /**
    * @param RequestStack $requestStack
    * @param FormMappers $formMappers
    */
-  public function __construct(RequestStack $requestStack, FormMappers $formMappers)
+  public function __construct(RequestStack $requestStack, FormMappers $formMappers, TranslatorInterface $translator)
   {
     $this->request = $requestStack->getMainRequest();
     $this->formMappers = $formMappers;
+    $this->translator = $translator;
   }
 
   /**
@@ -54,6 +62,7 @@ class RecaptchaValidator extends ConstraintValidator
   {
     foreach($this->request->request->keys() as $keyForm)
     {
+      /** @var FormMapper $formMapper */
       if($formMapper = $this->formMappers->getFormMapper($keyForm))
       {
         /** @var RecaptchaField $fieldRecaptcha */
@@ -82,14 +91,21 @@ class RecaptchaValidator extends ConstraintValidator
             $responseValue = json_decode($response->getContent(false), true);
             if($responseValue["success"] !== true)
             {
+              $reasons = array();
+              $errorsCodes = array_key_exists("error-codes", $responseValue) ? $responseValue["error-codes"] : array();
+              foreach ($errorsCodes as $errorCode)
+              {
+                $reasons[] = $this->translator->trans("recaptcha.error.{$errorCode}", array(), "validators");
+              }
+
               $this->context->buildViolation($constraint->message)
-                ->setParameter('{{ reason }}', implode(",", array_key_exists("error-codes", $responseValue) ? $responseValue["error-codes"] : array()))
+                ->setParameter('{{ reason }}', implode(",", $reasons))
                 ->addViolation();
             }
             elseif($responseValue["score"] < $fieldRecaptcha->getScoreLimit())
             {
               $this->context->buildViolation($constraint->message)
-                ->setParameter('{{ reason }}', $fieldRecaptcha->getScoreMessage())
+                ->setParameter('{{ reason }}', $this->translator->trans("recaptcha.error.{$fieldRecaptcha->getScoreMessage()}", array(), "validators"))
                 ->addViolation();
             }
           }

@@ -39,6 +39,6 @@ services:
   Austral\FormBundle\Validator\RecaptchaValidator: "@austral.form.validator.recaptcha"
   austral.form.validator.recaptcha:
     class:          Austral\FormBundle\Validator\RecaptchaValidator
-    arguments:      [ "@request_stack", "@austral.form.mappers" ]
+    arguments:      [ "@request_stack", "@austral.form.mappers", "@translator" ]
     tags:
       - { name: validator.constraint_validator }

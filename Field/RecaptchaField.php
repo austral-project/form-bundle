@@ -61,7 +61,7 @@ class RecaptchaField extends Field
     $resolver->setDefault('score', function (OptionsResolver $resolverChild) {
       $resolverChild->setDefault('limit', 0.7);
       $resolverChild->setAllowedTypes('limit', array('float'));
-      $resolverChild->setDefault('message', "Bot is detected");
+      $resolverChild->setDefault('message', "bot-detected");
       $resolverChild->setAllowedTypes('message', array('string'));
     });
   }
