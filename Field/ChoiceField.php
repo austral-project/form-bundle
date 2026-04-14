@@ -10,6 +10,7 @@
 
 namespace Austral\FormBundle\Field;
 
+use Austral\FormBundle\Field\Base\BaseSelectField;
 use Austral\FormBundle\Field\Base\Field;
 
 use Austral\ToolsBundle\AustralTools;
@@ -22,7 +23,7 @@ use function Symfony\Component\String\u;
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
-class ChoiceField extends Field
+class ChoiceField extends BaseSelectField
 {
 
   /**
@@ -52,24 +53,8 @@ class ChoiceField extends Field
    */
   public function __construct($fieldname, array $choices, array $options = array())
   {
-    parent::__construct($fieldname, $options);
+    parent::__construct($fieldname, $choices, $options);
     $this->symfonyFormType = ChoiceType::class;
-
-    $resolver = new OptionsResolver();
-    $this->configureChoices($resolver);
-
-    foreach($choices as $key => $values)
-    {
-      if(!is_array($values))
-      {
-        $values = array(
-          'value'   =>  $values,
-        );
-      }
-      $values = $resolver->resolve($values);
-      $this->choices[$key] = $values;
-    }
-
     if($this->isDefaultTemplate)
     {
       $this->options["template"]["path"] = "choiceRadioField.html.twig";

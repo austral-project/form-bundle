@@ -39,7 +39,7 @@ abstract class Field implements FieldInterface
   /**
    * @var array
    */
-  protected array $options = array();
+  protected array $options;
 
   /**
    * @var array
@@ -87,7 +87,16 @@ abstract class Field implements FieldInterface
   public function __construct($fieldname, array $options = array())
   {
     $this->fieldname = $fieldname;
-    $this->setOptions($options);
+
+    $resolver = new OptionsResolver();
+    $this->configureOptions($resolver);
+    $this->options = $resolver->resolve($options);
+
+    if($this->options['template']["path"])
+    {
+      $this->isDefaultTemplate = false;
+    }
+
   }
 
   /**
@@ -97,15 +106,49 @@ abstract class Field implements FieldInterface
   {
     $resolver->setDefaults(array(
         "required"            =>  false,
-        "reverse"             =>  false,
-        "disabled"            =>  false,
         "formMapper"          =>  null,
         "class"               =>  null,
         "isView"              =>  true,
         "entitled"            =>  "fields.{$this->fieldname}.entitled",
-        "labelPosition"       =>  "default",
         "placeholder"         =>  null,
         "picto"               =>  null,
+        "labelPosition"       =>  "external",
+        "before"              =>  function(OptionsResolver $subResolver) {
+          $subResolver->setDefaults(array(
+              "path"            =>  null,
+              "html"            =>  null,
+              "twigComponent"  =>  function(OptionsResolver $threeResolver) {
+                $threeResolver->setDefaults(array(
+                    "name"            =>  null,
+                    "parameters"      =>  array(),
+                  )
+                );
+                $threeResolver->addAllowedTypes("name", array('null', "string"));
+                $threeResolver->addAllowedTypes("parameters", array('null', "array"));
+              },
+            )
+          );
+          $subResolver->addAllowedTypes("path", array('null', "string"));
+          $subResolver->addAllowedTypes("html", array('null', "string"));
+        },
+        "after"              =>  function(OptionsResolver $subResolver) {
+          $subResolver->setDefaults(array(
+              "path"        =>  null,
+              "html"        =>  null,
+              "twigComponent"  =>  function(OptionsResolver $threeResolver) {
+                $threeResolver->setDefaults(array(
+                    "name"            =>  null,
+                    "parameters"      =>  array(),
+                  )
+                );
+                $threeResolver->addAllowedTypes("name", array('null', "string"));
+                $threeResolver->addAllowedTypes("parameters", array('null', "array"));
+              }
+            )
+          );
+          $subResolver->addAllowedTypes("path", array('null', "string"));
+          $subResolver->addAllowedTypes("html", array('null', "string"));
+        },
         "attr"                =>  array(
           "class"               =>  null,
         ),
@@ -119,14 +162,9 @@ abstract class Field implements FieldInterface
           $subResolver->addAllowedTypes("size", array('null', "string"));
         },
 
-        "container"           =>  function(OptionsResolver $subResolver) {
-          $subResolver->setDefaults(array(
-              "class"      =>  null,
-            )
-          );
-          $subResolver->addAllowedTypes("class", array('null', "string"));
-        },
-
+        "container"           =>  array(
+          "class"               =>  null,
+        ),
         "autoConstraints"      =>  true,
         "helper"              =>  null,
 
@@ -140,26 +178,6 @@ abstract class Field implements FieldInterface
             ->addAllowedTypes("vars", array('array'));
         },
 
-        "before"            =>  function(OptionsResolver $subResolver) {
-          $subResolver->setDefaults(array(
-              "path"      =>  null,
-              "content"   =>  null
-            )
-          );
-          $subResolver->addAllowedTypes("path", array('null', "string"))
-            ->addAllowedTypes("content", array('null', 'string'));
-        },
-
-        "after"            =>  function(OptionsResolver $subResolver) {
-          $subResolver->setDefaults(array(
-              "path"      =>  null,
-              "content"   =>  null
-            )
-          );
-          $subResolver->addAllowedTypes("path", array('null', "string"))
-            ->addAllowedTypes("content", array('null', 'string'));
-        },
-
         "setter"              =>  null,
         "getter"              =>  null,
 
@@ -170,7 +188,7 @@ abstract class Field implements FieldInterface
             )
           );
           $subResolver->addAllowedTypes("id", array('null', "string"))
-          ->addAllowedTypes("isIn", array('bool'));
+            ->addAllowedTypes("isIn", array('bool'));
         },
         "fieldOptions"        => array(),
         "mapped"              =>  true
@@ -178,16 +196,13 @@ abstract class Field implements FieldInterface
     );
 
     $resolver->addAllowedTypes("required", array('bool'))
-      ->addAllowedTypes("reverse", array('bool'))
-      ->addAllowedTypes("disabled", array('bool'))
-      ->setAllowedValues('labelPosition', ['default', 'animate', 'external'])
-      ->addAllowedTypes("labelPosition", array("string"))
       ->addAllowedTypes("formMapper", array('null', FormMapper::class))
       ->addAllowedTypes("class", array('null', "string"))
       ->addAllowedTypes("isView", array('bool', \Closure::class, "array"))
       ->addAllowedTypes("entitled", array('null', "bool", "string"))
       ->addAllowedTypes("placeholder", array('null', "string"))
       ->addAllowedTypes("picto", array('null', "string"))
+      ->addAllowedTypes("labelPosition", array('null', "string"))
 
       ->addAllowedTypes("autoConstraints", array('bool'))
       ->addAllowedTypes("helper", array('null', "string"))
@@ -195,6 +210,7 @@ abstract class Field implements FieldInterface
       ->addAllowedTypes("attr", array('array'))
 
       ->addAllowedTypes("fieldOptions", array('array'))
+      ->addAllowedTypes("container", array('array'))
 
       ->addAllowedTypes("mapped", array('bool'));
   }
@@ -215,13 +231,6 @@ abstract class Field implements FieldInterface
    */
   public function setOptions(array $options): FieldInterface
   {
-    if(array_key_exists("template", $options) && array_key_exists("path", $options['template']) && array_key_exists("template", $this->options))
-    {
-      if($options['template']['path'] != $this->options['template']["path"])
-      {
-        $this->isDefaultTemplate = false;
-      }
-    }
     $resolver = new OptionsResolver();
     $this->configureOptions($resolver);
     $this->options = $resolver->resolve($options);
@@ -237,7 +246,7 @@ abstract class Field implements FieldInterface
     $fieldOptions['attr'] = array_key_exists("attr", $fieldOptions) ? $fieldOptions['attr'] : array();
     $fieldOptions["attr"] = array_merge($fieldOptions['attr'], $this->options['attr']);
     $fieldOptions["required"] = array_key_exists("required", $fieldOptions) ? $fieldOptions["required"] : $this->getRequired();
-    $fieldOptions["disabled"] = array_key_exists("disabled", $fieldOptions) ? $fieldOptions["disabled"] : $this->getDisabled();
+
     if($this->options['placeholder'] && !array_key_exists("placeholder", $fieldOptions['attr']))
     {
       $fieldOptions["attr"]["placeholder"] = $this->options['placeholder'];
@@ -577,66 +586,6 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * Get disabled
-   * @return bool|null
-   */
-  public function getDisabled(): ?bool
-  {
-    return $this->options["disabled"];
-  }
-
-  /**
-   * @param bool|null $disabled
-   *
-   * @return FieldInterface
-   */
-  public function setDisabled(?bool $disabled): FieldInterface
-  {
-    $this->options["disabled"] = $disabled;
-    return $this;
-  }
-
-  /**
-   * Get reverse
-   * @return bool|null
-   */
-  public function getReverse(): ?bool
-  {
-    return $this->options["reverse"];
-  }
-
-  /**
-   * @param bool|null $reverse
-   *
-   * @return FieldInterface
-   */
-  public function setReverse(?bool $reverse): FieldInterface
-  {
-    $this->options["reverse"] = $reverse;
-    return $this;
-  }
-
-  /**
-   * Get labelPosition
-   * @return bool|null
-   */
-  public function getAnimateLabel(): ?string
-  {
-    return $this->options["labelPosition"];
-  }
-
-  /**
-   * @param bool|null $labelPosition
-   *
-   * @return FieldInterface
-   */
-  public function setAnimateLabel(?bool $labelPosition): FieldInterface
-  {
-    $this->options["labelPosition"] = $labelPosition;
-    return $this;
-  }
-
-  /**
    * @return mixed
    */
   public function picto()
@@ -730,38 +679,6 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @return string|null
-   */
-  public function getBeforePath(): ?string
-  {
-    return $this->options['before']['path'];
-  }
-
-  /**
-   * @return string|null
-   */
-  public function getBeforeContent(): ?string
-  {
-    return $this->options['before']['content'];
-  }
-
-  /**
-   * @return string|null
-   */
-  public function getAfterPath(): ?string
-  {
-    return $this->options['after']['path'];
-  }
-
-  /**
-   * @return string|null
-   */
-  public function getAfterContent(): ?string
-  {
-    return $this->options['after']['content'];
-  }
-
-  /**
    * @return array
    */
   public function getTemplateVars(): ?array
@@ -824,6 +741,22 @@ abstract class Field implements FieldInterface
   public function getHelper(): ?string
   {
     return $this->options["helper"];
+  }
+
+  /**
+   * @return array|null
+   */
+  public function getBefore(): ?array
+  {
+    return $this->options["before"];
+  }
+
+  /**
+   * @return array|null
+   */
+  public function getAfter(): ?array
+  {
+    return $this->options["after"];
   }
 
   /**
