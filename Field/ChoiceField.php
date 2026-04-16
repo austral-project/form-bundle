@@ -139,16 +139,19 @@ class ChoiceField extends BaseSelectField
     $stylesValues = array();
     foreach($this->choices as $key => $values)
     {
-      $styles = $values["styles"];
-      if(!$styles && $this->options['choices_styles'])
+      if(is_array($values) && array_key_exists("styles", $values))
       {
-        $styles = $this->options['choices_styles'];
+        $styles = $values["styles"];
+        if(!$styles && $this->options['choices_styles'])
+        {
+          $styles = $this->options['choices_styles'];
+        }
+        elseif(!$styles)
+        {
+          $styles = $this->getDefaultStyleByValue($values['value']);
+        }
+        $stylesValues[$key] = $styles;
       }
-      elseif(!$styles)
-      {
-        $styles = $this->getDefaultStyleByValue($values['value']);
-      }
-      $stylesValues[$key] = $styles;
     }
     return $stylesValues;
   }
