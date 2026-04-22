@@ -108,6 +108,7 @@ abstract class Field implements FieldInterface
         "required"            =>  false,
         "formMapper"          =>  null,
         "class"               =>  null,
+        "disabled"            =>  false,
         "isView"              =>  true,
         "entitled"            =>  "fields.{$this->fieldname}.entitled",
         "placeholder"         =>  null,
@@ -198,6 +199,7 @@ abstract class Field implements FieldInterface
     $resolver->addAllowedTypes("required", array('bool'))
       ->addAllowedTypes("formMapper", array('null', FormMapper::class))
       ->addAllowedTypes("class", array('null', "string"))
+      ->addAllowedTypes("disabled", array('null', "bool"))
       ->addAllowedTypes("isView", array('bool', \Closure::class, "array"))
       ->addAllowedTypes("entitled", array('null', "bool", "string"))
       ->addAllowedTypes("placeholder", array('null', "string"))
@@ -254,6 +256,10 @@ abstract class Field implements FieldInterface
     $fieldOptions["setter"] = array_key_exists("setter", $fieldOptions) ? $fieldOptions["setter"] : $this->options['setter'];
     $fieldOptions["getter"] = array_key_exists("getter", $fieldOptions) ? $fieldOptions["getter"] : $this->options['getter'];
     $fieldOptions["mapped"] = array_key_exists("mapped", $fieldOptions) ? $fieldOptions["mapped"] : $this->options['mapped'];
+
+    if($this->options['disabled']) {
+      $fieldOptions["attr"]["disabled"] = true;
+    }
     return $fieldOptions;
   }
 
