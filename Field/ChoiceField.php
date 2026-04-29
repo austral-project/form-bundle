@@ -186,6 +186,18 @@ class ChoiceField extends BaseSelectField
   {
     $fieldOptions = parent::getFieldOptions();
 
+    if(array_key_exists("attr", $fieldOptions))
+    {
+      if(array_key_exists("data-select", $fieldOptions["attr"]))
+      {
+        unset($fieldOptions["attr"]["data-select"]);
+      }
+      if(array_key_exists("data-select-options", $fieldOptions["attr"]))
+      {
+        unset($fieldOptions["attr"]["data-select-options"]);
+      }
+    }
+
     $fieldOptions['choices'] = array_key_exists("choices", $fieldOptions) ? $fieldOptions["choices"] : $this->getChoicesValues();
     $fieldOptions["multiple"] = array_key_exists("multiple", $fieldOptions) ? $fieldOptions["multiple"] : $this->options["multiple"];
     $fieldOptions["expanded"] = true;
