@@ -174,7 +174,14 @@ class ChoiceField extends BaseSelectField
     $choicesValues = array();
     foreach($this->choices as $key => $values)
     {
-      $choicesValues[$key] = $values["value"];
+      if(is_array($values) && array_key_exists("value", $values))
+      {
+        $choicesValues[$key] = $values["value"];
+      }
+      else
+      {
+        $choicesValues[$key] = $values;
+      }
     }
     return $choicesValues;
   }
@@ -198,7 +205,7 @@ class ChoiceField extends BaseSelectField
       }
     }
 
-    $fieldOptions['choices'] = array_key_exists("choices", $fieldOptions) ? $fieldOptions["choices"] : $this->getChoicesValues();
+    $fieldOptions['choices'] = $this->getChoicesValues();
     $fieldOptions["multiple"] = array_key_exists("multiple", $fieldOptions) ? $fieldOptions["multiple"] : $this->options["multiple"];
     $fieldOptions["expanded"] = true;
     $fieldOptions["placeholder"] = false;
