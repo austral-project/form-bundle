@@ -116,6 +116,7 @@ abstract class Field implements FieldInterface
         "labelPosition"       =>  "external",
         "before"              =>  function(OptionsResolver $subResolver) {
           $subResolver->setDefaults(array(
+              "hasBackground"      =>  false,
               "path"            =>  null,
               "html"            =>  null,
               "twigComponent"  =>  function(OptionsResolver $threeResolver) {
@@ -131,9 +132,11 @@ abstract class Field implements FieldInterface
           );
           $subResolver->addAllowedTypes("path", array('null', "string"));
           $subResolver->addAllowedTypes("html", array('null', "string"));
+          $subResolver->addAllowedTypes("hasBackground", array('null', "boolean"));
         },
         "after"              =>  function(OptionsResolver $subResolver) {
           $subResolver->setDefaults(array(
+              "hasBackground"      =>  false,
               "path"        =>  null,
               "html"        =>  null,
               "twigComponent"  =>  function(OptionsResolver $threeResolver) {
@@ -149,6 +152,7 @@ abstract class Field implements FieldInterface
           );
           $subResolver->addAllowedTypes("path", array('null', "string"));
           $subResolver->addAllowedTypes("html", array('null', "string"));
+          $subResolver->addAllowedTypes("hasBackground", array('null', "boolean"));
         },
         "attr"                =>  array(
           "class"               =>  null,
