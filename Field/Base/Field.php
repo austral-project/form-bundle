@@ -398,14 +398,21 @@ abstract class Field implements FieldInterface
    *
    * @return FieldInterface
    */
-  public function addConstraint(Constraint $addConstraint): FieldInterface
+  public function addConstraint(Constraint $addConstraint, bool $replace = false): FieldInterface
   {
     $addContraintCheck = true;
-    foreach($this->constraints as $constraint)
+    foreach($this->constraints as $key => $constraint)
     {
       if($addConstraint instanceof $constraint)
       {
-        $addContraintCheck = false;
+        if($replace)
+        {
+          unset($this->constraints[$key]);
+        }
+        else
+        {
+          $addContraintCheck = false;
+        }
       }
     }
     if($addContraintCheck)
