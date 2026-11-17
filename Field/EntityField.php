@@ -18,6 +18,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral Field Entity input.
+ * @template T of object
+ *
+ * @extends BaseSelectField<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -25,9 +29,9 @@ class EntityField extends BaseSelectField
 {
 
   /**
-   * @var array
+   * @var array<string, mixed>
    */
-  protected array $choices = array();
+  protected array $choices = [];
 
   /**
    * @var string
@@ -35,35 +39,35 @@ class EntityField extends BaseSelectField
   protected string $entityClass;
 
   /**
-   * @param $fieldname
+   * @param string $fieldname
    * @param string $entityClass
-   * @param array $options
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, string $entityClass, array $options = array()): EntityField
+  public static function create(string $fieldname, string $entityClass, array $options = []): self
   {
-    return new EntityField($fieldname, $entityClass, $options);
+    return new self($fieldname, $entityClass, $options);
   }
 
   /**
-   * Choices constructor.
+   * EntityField constructor.
    *
    * @param string $fieldname
    * @param string $entityClass
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, string $entityClass, array $options = array())
+  public function __construct(string $fieldname, string $entityClass, array $options = [])
   {
-    parent::__construct($fieldname, array(), $options);
+    parent::__construct($fieldname, [], $options);
     $this->symfonyFormType = EntityType::class;
     $this->entityClass = $entityClass;
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  protected function configureOptions(OptionsResolver $resolver)
+  protected function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefaults(array(
@@ -73,16 +77,16 @@ class EntityField extends BaseSelectField
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {
     $fieldOptions = parent::getFieldOptions();
-    $fieldOptions["attr"]["class"] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "class")." {$this->entityClass}";
-    $fieldOptions["attr"]['autocomplete'] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "autocomplete", "off");
+    $fieldOptions["attr"]["class"] = AustralTools::valueByKey(AustralTools::valueByKey($fieldOptions, "attr", []), "class")." {$this->entityClass}";
+    $fieldOptions["attr"]['autocomplete'] = AustralTools::valueByKey(AustralTools::valueByKey($fieldOptions, "attr", []), "autocomplete", "off");
     $fieldOptions["class"] = $this->entityClass;
-    $fieldOptions["query_builder"] = array_key_exists("query_builder", $fieldOptions) ? $fieldOptions["query_builder"] : $this->options['query_builder'];
-    $fieldOptions["choice_label"] = array_key_exists("choice_label", $fieldOptions) ? $fieldOptions["choice_label"] : $this->options['choice_label'];
+    $fieldOptions["query_builder"] = AustralTools::valueByKey($fieldOptions, "query_builder", $this->options['query_builder']);
+    $fieldOptions["choice_label"] = AustralTools::valueByKey($fieldOptions, "choice_label", $this->options['choice_label']);
     if(!$fieldOptions['choice_label'])
     {
       unset($fieldOptions['choice_label']);

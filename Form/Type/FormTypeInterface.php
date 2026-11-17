@@ -17,13 +17,15 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral FormType Interface.
+ * @template T of object
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 interface FormTypeInterface
 {
 
   /**
-   * @param FormMapper $formMapper
+   * @param FormMapper<T> $formMapper
    *
    * @return $this
    */
@@ -39,14 +41,14 @@ interface FormTypeInterface
   /**
    * @param OptionsResolver $resolver
    */
-  public function configureOptions(OptionsResolver $resolver);
+  public function configureOptions(OptionsResolver $resolver): void;
 
   /**
    * @param FormBuilderInterface $builder
-   * @param array $options
+   * @param array<string, mixed> $options
    *
-   * @return mixed
+   * @return void
    */
-  public function buildForm(FormBuilderInterface $builder, array $options);
+  public function buildForm(FormBuilderInterface $builder, array $options): void;
 
 }

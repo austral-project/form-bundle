@@ -10,50 +10,56 @@
 
 namespace Austral\FormBundle\Field;
 
+use Austral\Contracts\Entity\EntityInterface;
 use Austral\FormBundle\Field\Base\Field;
 use Austral\FormBundle\Field\Base\FieldInterface;
 use Austral\FormBundle\Mapper\FormMapper;
-use Austral\FormBundle\Mapper\Popin;
+use Austral\FormBundle\Mapper\Modal;
 use Austral\ToolsBundle\AustralTools;
 use Closure;
+use Random\RandomException;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral Field CollectionEmbed Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class CollectionEmbedField extends Field
 {
 
   /**
-   * @var array
+   * @var array<string, CollectionEmbedField<T>>
    */
-  protected array $collectionsForms = array();
+  protected array $collectionsForms = [];
 
   /**
-   * @var CollectionEmbedField|null
+   * @var CollectionEmbedField<T>|null
    */
   protected ?CollectionEmbedField $collectionParent = null;
 
   /**
    * @param string $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create(string $fieldname, array $options = array()): CollectionEmbedField
+  public static function create(string $fieldname, array $options = []): self
   {
     return new self($fieldname, $options);
   }
 
   /**
-   * Choices constructor.
+   * CollectionEmbedField constructor.
    *
    * @param string $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, array $options = array())
+  public function __construct(string $fieldname, array $options = [])
   {
     if(!array_key_exists("entitled", $options))
     {
@@ -77,9 +83,9 @@ class CollectionEmbedField extends Field
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  protected function configureOptions(OptionsResolver $resolver)
+  protected function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefaults(array(
@@ -102,9 +108,9 @@ class CollectionEmbedField extends Field
 
       "collections"           =>  function(OptionsResolver $subResolver ) {
         $subResolver->setDefaults(array(
-            "choices"  =>  array(),
-            "objects"  =>  array(),
-            "children" =>  array(),
+            "choices"  =>  [],
+            "objects"  =>  [],
+            "children" =>  [],
           )
         );
       },
@@ -135,7 +141,7 @@ class CollectionEmbedField extends Field
         $subResolver->setDefaults(array(
             "label"               =>  false,
             "type"                =>  null,
-            "attr"                =>  array()
+            "attr"                =>  []
           )
         );
       },
@@ -143,7 +149,7 @@ class CollectionEmbedField extends Field
       'error_bubbling'      =>  true,
       "prototype"           =>  function(OptionsResolver $subResolver ) {
           $subResolver->setDefaults(array(
-            "data"                =>  array(),
+            "data"                =>  [],
             "name"                =>  "__name__"
           )
         );
@@ -151,45 +157,56 @@ class CollectionEmbedField extends Field
     ));
   }
 
-  public function allowChild()
+  /**
+   * allowChild
+   *
+   * @return bool
+   */
+  public function allowChild(): bool
   {
     return $this->options["allow"]["child"];
   }
 
-  public function masterChildren()
+  /**
+   * masterChildren
+   *
+   * @return bool
+   */
+  public function masterChildren(): bool
   {
     return $this->options["master_children"];
   }
 
-  public function viewPosition()
+  /**
+   * viewPosition
+   *
+   * @return bool
+   */
+  public function viewPosition(): bool
   {
     return $this->options["view_position"];
   }
 
-  public function childrenParameters()
+  /**
+   * childrenParameters
+   *
+   * @return array{min: int|null, max: int|null}
+   */
+  public function childrenParameters(): array
   {
     return $this->options["children_parameters"];
   }
 
   /**
-   * @return mixed
+   * @return bool
    */
-  public function widgetNotRendering()
-  {
-    return $this->options["widgetNotRendering"];
-  }
-
-  /**
-   * @return mixed
-   */
-  public function betweenInsert()
+  public function betweenInsert(): bool
   {
     return $this->options["between_insert"];
   }
 
   /**
-   * Get options
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {
@@ -199,7 +216,7 @@ class CollectionEmbedField extends Field
     $fieldOptions['allow_add'] = array_key_exists("allow_add", $fieldOptions) ? $fieldOptions["allow_add"] : $this->options["allow"]["add"];
     $fieldOptions['allow_delete'] = array_key_exists("allow_delete", $fieldOptions) ? $fieldOptions["allow_delete"] : $this->options["allow"]["delete"];
     $fieldOptions['error_bubbling'] = array_key_exists("error_bubbling", $fieldOptions) ? $fieldOptions["error_bubbling"] : $this->options["error_bubbling"];
-    $fieldOptions['entry_options'] = array_key_exists("entry_options", $fieldOptions) ? $fieldOptions["entry_options"] : array();
+    $fieldOptions['entry_options'] = array_key_exists("entry_options", $fieldOptions) ? $fieldOptions["entry_options"] : [];
     $fieldOptions['entry_options']['label'] = array_key_exists("label", $fieldOptions['entry_options']) ? $fieldOptions["entry_options"]["label"] : $this->options["entry"]["label"];
     $fieldOptions['entry_options']['attr'] = array_key_exists("attr", $fieldOptions['entry_options']) ? $fieldOptions["entry_options"]["attr"] : $this->options["entry"]["attr"];
     $fieldOptions['entry_type'] = array_key_exists("entry_type", $fieldOptions) ? $fieldOptions["entry_type"] : $this->options["entry"]["type"];
@@ -208,38 +225,38 @@ class CollectionEmbedField extends Field
 
   /**
    * @param string $key
-   * @param FieldInterface $collectionsForms
+   * @param CollectionEmbedField<T> $collectionsForm
    *
-   * @return CollectionEmbedField
+   * @return $this
    */
-  public function addCollectionForm(string $key, FieldInterface $collectionsForms): CollectionEmbedField
+  public function addCollectionForm(string $key, CollectionEmbedField $collectionsForm): self
   {
     $this->symfonyFormType = null;
-    $collectionsForms->setCollectionParent($this);
-    $this->collectionsForms[$key] = $collectionsForms;
+    if($collectionsForm->getFormMapper())
+    {
+      $this->renameModalKeyId($collectionsForm->getFormMapper(), $collectionsForm);
+    }
+    $collectionsForm->setCollectionParent($this);
+    $this->collectionsForms[$key] = $collectionsForm;
     return $this;
   }
 
   /**
-   * @param array $collectionsForms
+   * @param array<string, CollectionEmbedField<T>> $collectionsForms
    *
-   * @return CollectionEmbedField
+   * @return $this
    */
-  public function addCollectionsForms(array $collectionsForms): CollectionEmbedField
+  public function addCollectionsForms(array $collectionsForms): self
   {
     $this->symfonyFormType = null;
+    $this->collectionsForms = [];
     /**
      * @var string $key
-     * @var  CollectionEmbedField $collectionsForm
+     * @var CollectionEmbedField<T> $collectionsForm
      */
     foreach ($collectionsForms as $key => $collectionsForm)
     {
-      if($collectionsForm->getFormMapper())
-      {
-        $this->renamePopinKeyId($collectionsForm->getFormMapper(), $collectionsForm);
-      }
-      $collectionsForm->setCollectionParent($this);
-      $collectionsForms[$key] = $collectionsForm;
+      $this->addCollectionForm($key, $collectionsForm);
     }
     $this->collectionsForms = $collectionsForms;
     return $this;
@@ -250,42 +267,42 @@ class CollectionEmbedField extends Field
    *
    * @return $this
    */
-  public function initCollectionForm(): CollectionEmbedField
+  public function initCollectionForm(): self
   {
-    if(!$this->collectionsForms)
+    if(!$this->collectionsForms && $this->getFormMapper())
     {
-      $this->renamePopinKeyId($this->getFormMapper(), $this);
+      $this->renameModalKeyId($this->getFormMapper(), $this);
     }
     return $this;
   }
 
   /**
-   * @param FormMapper $formMapper
-   * @param $collectionsForm
+   * @param FormMapper<T> $formMapper
+   * @param FieldInterface<T> $collectionsForm
    */
-  protected function renamePopinKeyId(FormMapper $formMapper, $collectionsForm)
+  protected function renameModalKeyId(FormMapper $formMapper, FieldInterface $collectionsForm): void
   {
-    if($formMapper->getPopins())
+    if($formMapper->getModals())
     {
-      /** @var Popin $popin */
-      foreach($formMapper->getPopins() as $popin)
+      /** @var Modal<T> $modal */
+      foreach($formMapper->getModals() as $modal)
       {
-        $popin->setPopinKeyId($popin->getPopinKeyId()."_".$collectionsForm->getOptions()['prototype']['name']);
+        $modal->setModalKeyId($modal->getModalKeyId()."_".$collectionsForm->getOptions()['prototype']['name']);
       }
     }
     elseif($subMappers = $formMapper->getSubFormMappers())
     {
-      /** @var FormMapper $subMapper */
+      /** @var FormMapper<T> $subMapper */
       foreach ($subMappers as $subMapper)
       {
-        $this->renamePopinKeyId($subMapper, $collectionsForm);
+        $this->renameModalKeyId($subMapper, $collectionsForm);
       }
     }
   }
 
 
   /**
-   * @return array
+   * @return array<string, FieldInterface<T>>
    */
   public function getCollectionsForms(): array
   {
@@ -293,7 +310,7 @@ class CollectionEmbedField extends Field
   }
 
   /**
-   * @return array
+   * @return array<string, array<string, mixed>>
    */
   public function getCollectionsChoices(): array
   {
@@ -301,14 +318,14 @@ class CollectionEmbedField extends Field
   }
 
   /**
-   * @return array
+   * @return array<string, array<string, mixed>>
    */
   public function getSelectCollectionChoices(): array
   {
-    $collectionsChoicesFinally = array();
+    $collectionsChoicesFinally = [];
     foreach($this->options['collections']['choices'] as $key => $values)
     {
-      $category = AustralTools::getValueByKey($values, "category", "default");
+      $category = AustralTools::valueByKey($values, "category", "default");
       $category = $category == "default" ? "" : $category;
       $collectionsChoicesFinally[$category][$key] = $values;
     }
@@ -317,25 +334,32 @@ class CollectionEmbedField extends Field
   }
 
   /**
-   * @return string|null|Closure
+   * @param EntityInterface<T>|null $object
+   * @param mixed|null $default
+   * @return mixed
    */
-  public function getCollectionsObjects($object = null, $default = array())
+  public function getCollectionsObjects(?EntityInterface $object = null, mixed $default = []): mixed
   {
     return $this->executeClosureFunction($this->options['collections']['objects'], $object, $default);
   }
 
   /**
-   * @return string|null|Closure
+   * @param EntityInterface<T>|null $object
+   * @param mixed|null $default
+   * @return mixed
    */
-  public function getCollectionsChildren($object = null, $default = array())
+  public function getCollectionsChildren(?EntityInterface $object = null, mixed $default = null): mixed
   {
     return $this->executeClosureFunction($this->options['collections']['children'], $object, $default);
   }
 
   /**
+   * @param EntityInterface<T>|null $object
+   * @param mixed|null $default
    * @return string
+   * @throws RandomException
    */
-  public function getSortable($object = null, $default = null): string
+  public function getSortable(?EntityInterface $object = null, mixed $default = null): string
   {
     $value = $this->executeClosureFunction($this->options['sortable']['value'], $object, $default);
     if(is_int($value) || is_float($value))
@@ -354,7 +378,7 @@ class CollectionEmbedField extends Field
   }
 
   /**
-   * @return CollectionEmbedField|null
+   * @return CollectionEmbedField<T>|null
    */
   public function getCollectionParent(): ?CollectionEmbedField
   {
@@ -362,11 +386,11 @@ class CollectionEmbedField extends Field
   }
 
   /**
-   * @param CollectionEmbedField|null $collectionParent
+   * @param CollectionEmbedField<T>|null $collectionParent
    *
-   * @return CollectionEmbedField
+   * @return $this
    */
-  public function setCollectionParent(?CollectionEmbedField $collectionParent): CollectionEmbedField
+  public function setCollectionParent(?CollectionEmbedField $collectionParent = null): self
   {
     $this->collectionParent = $collectionParent;
     return $this;

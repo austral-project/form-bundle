@@ -18,30 +18,33 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral Field Switch Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
- * @final
  */
 class SwitchField extends Field
 {
 
   /**
-   * @param $fieldname
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $options = array()): SwitchField
+  public static function create(string $fieldname, array $options = []): self
   {
     return new self($fieldname, $options);
   }
 
   /**
-   * Choices constructor.
+   * Switch constructor.
    *
    * @param string $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, array $options = array())
+  public function __construct(string $fieldname, array $options = [])
   {
     parent::__construct($fieldname, $options);
     $this->symfonyFormType = CheckboxType::class;
@@ -52,9 +55,9 @@ class SwitchField extends Field
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  public function configureOptions(OptionsResolver $resolver)
+  public function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefault('switch-options', function (OptionsResolver $resolverChild) {
@@ -96,9 +99,9 @@ class SwitchField extends Field
   }
 
   /**
-   * @return array|mixed
+   * @return array<string, mixed>
    */
-  public function getSwitchOptions()
+  public function getSwitchOptions(): array
   {
     return $this->options['switch-options'];
   }
@@ -108,7 +111,7 @@ class SwitchField extends Field
    */
   public function getSwitchStyles(): string
   {
-    $styles = array();
+    $styles = [];
     foreach($this->options['switch-options']['button-colors'] as $key => $color)
     {
       $styles[] = "--switch-button-color-{$key}:{$color};";
@@ -121,12 +124,12 @@ class SwitchField extends Field
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {
     $fieldOptions = parent::getFieldOptions();
-    $fieldOptions["attr"]['autocomplete'] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "autocomplete", "off");
+    $fieldOptions["attr"]['autocomplete'] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", []), "autocomplete", "off");
     return $fieldOptions;
   }
 

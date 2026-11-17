@@ -20,6 +20,10 @@ use function Symfony\Component\String\u;
 
 /**
  * Austral Field Password Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -27,12 +31,12 @@ class PasswordField extends Field
 {
 
   /**
-   * @param $fieldname
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $options = array()): PasswordField
+  public static function create(string $fieldname, array $options = []): self
   {
     return new self($fieldname, $options);
   }
@@ -41,9 +45,9 @@ class PasswordField extends Field
    * PasswordField constructor.
    *
    * @param string $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, array $options = array())
+  public function __construct(string $fieldname, array $options = [])
   {
     parent::__construct($fieldname, $options);
     $this->symfonyFormType = $this->options['repeat'] ? RepeatedType::class : PasswordType::class;
@@ -59,9 +63,9 @@ class PasswordField extends Field
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  public function configureOptions(OptionsResolver $resolver)
+  public function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefaults(array(
@@ -74,7 +78,7 @@ class PasswordField extends Field
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {

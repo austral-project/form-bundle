@@ -11,10 +11,14 @@
 namespace Austral\FormBundle\Field;
 
 use Austral\FormBundle\Field\Base\Field;
-use Austral\FormBundle\Form\Type\FormTypeInterface;
+use Symfony\Component\Form\FormTypeInterface;
 
 /**
  * Austral Field FormType Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -22,28 +26,28 @@ class FormTypeField extends Field
 {
 
   /**
-   * @param $fieldname
+   * @param string $fieldname
    * @param FormTypeInterface $fieldTypeClass
-   * @param array $options
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, FormTypeInterface $fieldTypeClass, array $options = array()): FormTypeField
+  public static function create(string $fieldname, FormTypeInterface $fieldTypeClass, array $options = []): self
   {
-    return new FormTypeField($fieldname, $fieldTypeClass, $options);
+    return new self($fieldname, $fieldTypeClass, $options);
   }
 
   /**
    * FormTypeField constructor.
    *
-   * @param FormTypeInterface $fieldTypeClass
    * @param string $fieldname
-   * @param array $options
+   * @param FormTypeInterface $fieldType
+   * @param array<string, mixed> $options
    */
-  public function __construct(string $fieldname, FormTypeInterface $fieldTypeClass, array $options = array())
+  public function __construct(string $fieldname, FormTypeInterface $fieldType, array $options = [])
   {
     parent::__construct($fieldname, $options);
-    $this->symfonyFormType = get_class($fieldTypeClass);
+    $this->symfonyFormType = get_class($fieldType);
     if($this->isDefaultTemplate)
     {
       $this->options["template"]["path"] = "form-type-field.html.twig";

@@ -11,42 +11,34 @@
 namespace Austral\FormBundle\Field;
 
 use Austral\FormBundle\Field\Base\BaseSelectField;
-use Austral\ToolsBundle\AustralTools;
 
 
 /**
  * Austral Field Select Input.
+ * @template T of object
+ *
+ * @extends BaseSelectField<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class SelectField extends BaseSelectField
 {
 
   /**
-   * @var array
+   * @var array<string, mixed>
    */
-  protected array $choices = array();
+  protected array $choices = [];
 
   /**
-   * @param $fieldname
-   * @param array $choices
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $choices
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $choices = array(), array $options = array()): SelectField
+  public static function create(string $fieldname, array $choices = [], array $options = []): self
   {
     return new self($fieldname, $choices, $options);
   }
-
-  /**
-   * @return array
-   */
-  public function getFieldOptions(): array
-  {
-    $fieldOptions = parent::getFieldOptions();
-    $fieldOptions["attr"]['autocomplete'] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "autocomplete", "off");
-    return $fieldOptions;
-  }
-
 
 }

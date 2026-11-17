@@ -10,7 +10,7 @@
 
 namespace Austral\FormBundle\Mapper;
 
-use Austral\EntityBundle\Entity\EntityInterface;
+use Austral\Contracts\Entity\EntityInterface;
 use Austral\FormBundle\Mapper\Base\MapperElementInterface;
 use Austral\FormBundle\Mapper\Base\MapperElement;
 
@@ -18,16 +18,26 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * Austral Fieldset Mapper.
+ * @template T of object
+ *
+ * @extends MapperElement<T>
+ * @implements MapperElementInterface<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class Fieldset extends MapperElement implements MapperElementInterface
 {
 
-  const POSITION_MASTER = "master";
-  const POSITION_RIGHT = "right";
-  const POSITION_LEFT = "left";
-  const POSITION_BOTTOM = "bottom";
-  const POSITION_NONE = "none";
+  const string POSITION_MASTER = "master";
+  const string POSITION_RIGHT = "right";
+  const string POSITION_LEFT = "left";
+  const string POSITION_BOTTOM = "bottom";
+  const string POSITION_NONE = "none";
+
+  /**
+   * @var string
+   */
+  public static string $keynameBefore = "fieldset-";
 
   /**
    * @var string
@@ -45,22 +55,17 @@ class Fieldset extends MapperElement implements MapperElementInterface
   protected ?string $entitled = null;
 
   /**
-   * @var array
-   */
-  protected array $attr = array();
-
-  /**
    * @var bool
    */
   protected bool $collapse = false;
 
   /**
-   * @var array
+   * @var array<string, string>
    */
-  protected array $translateArguments = array();
+  protected array $translateArguments = [];
 
   /**
-   * @var \Closure|null
+   * @var \Closure(EntityInterface<T>|array<string|int, mixed>|null): array<string, string>|null
    */
   protected ?\Closure $closureTranslateArgument = null;
 
@@ -68,16 +73,13 @@ class Fieldset extends MapperElement implements MapperElementInterface
    * Choices constructor.
    *
    * @param string $name
-   * @param MapperElementInterface $parent
+   * @param MapperElementInterface<T> $parent
    * @param string|null $entitled
    */
   public function __construct(string $name, MapperElementInterface $parent, ?string $entitled = null)
   {
-    $this->name = $name;
+    parent::__construct($name, $parent);
     $this->entitled = $entitled ?? $name;
-    $slugger = new AsciiSlugger();
-    $this->keyname = "fieldset-".strtolower($slugger->slug($name));
-    $this->parent = $parent;
   }
 
   /**
@@ -85,16 +87,16 @@ class Fieldset extends MapperElement implements MapperElementInterface
    *
    * @return string
    */
-  public function getFieldsetId(string $afterId = null): string
+  public function getFieldsetId(?string $afterId = null): string
   {
     if($this->positionName == self::POSITION_MASTER)
     {
       $slugger = new AsciiSlugger();
-      $fieldsetId = "fieldset-".strtolower($slugger->slug($this->name)).($afterId ? "-{$afterId}" : null);
+      $fieldsetId = self::$keynameBefore.strtolower($slugger->slug($this->name)).($afterId ? "-{$afterId}" : null);
     }
     else
     {
-      $fieldsetId = "fieldset-{$this->positionName}";
+      $fieldsetId = self::$keynameBefore.$this->positionName;
     }
     return $fieldsetId;
   }
@@ -104,7 +106,7 @@ class Fieldset extends MapperElement implements MapperElementInterface
    *
    * @return $this
    */
-  public function setPositionName(string $positionName = self::POSITION_MASTER): Fieldset
+  public function setPositionName(string $positionName = self::POSITION_MASTER): self
   {
     $this->positionName = $positionName;
     return $this;
@@ -129,12 +131,20 @@ class Fieldset extends MapperElement implements MapperElementInterface
   /**
    * @param string|null $entitled
    *
-   * @return Fieldset
+   * @return $this
    */
-  public function setEntitled(?string $entitled): Fieldset
+  public function setEntitled(?string $entitled): self
   {
     $this->entitled = $entitled;
     return $this;
+  }
+
+  /**
+   * @return string
+   */
+  public function getFieldname(): string
+  {
+    return $this->keyname;
   }
 
   /**
@@ -142,7 +152,7 @@ class Fieldset extends MapperElement implements MapperElementInterface
    *
    * @return $this
    */
-  public function setViewName(bool $viewName = true): Fieldset
+  public function setViewName(bool $viewName = true): self
   {
     $this->viewName = $viewName;
     return $this;
@@ -157,44 +167,35 @@ class Fieldset extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return array
+   * @return FormMapper<T>
    */
-  public function getAttr(): array
+  public function end(): FormMapper
   {
-    return $this->attr;
+    /** @var FormMapper<T> $parent */
+    $parent = $this->parent;
+    return $parent;
   }
 
   /**
-   * @param array $attr
+   * @param EntityInterface<T>|array<string|int, mixed>|null $object
    *
-   * @return Fieldset
+   * @return array<string, string>
    */
-  public function setAttr(array $attr): Fieldset
-  {
-    $this->attr = $attr;
-    return $this;
-  }
-
-  /**
-   * @param EntityInterface|array|null $object
-   *
-   * @return array
-   */
-  public function getTranslateArguments($object = null): array
+  public function getTranslateArguments(EntityInterface|array|null $object = null): array
   {
     if($this->closureTranslateArgument)
     {
-      $this->closureTranslateArgument->call($this, $this, $object);
+      $this->closureTranslateArgument->call($this, $object);
     }
     return $this->translateArguments;
   }
 
   /**
-   * @param \Closure $closureTranslateArgument
+   * @param \Closure(EntityInterface<T>|array<string|int, mixed>|null): array<string, string>|null $closureTranslateArgument
    *
-   * @return Fieldset
+   * @return $this
    */
-  public function setClosureTranslateArgument(\Closure $closureTranslateArgument): Fieldset
+  public function setClosureTranslateArgument(?\Closure $closureTranslateArgument = null): self
   {
     $this->closureTranslateArgument = $closureTranslateArgument;
     return $this;
@@ -204,31 +205,23 @@ class Fieldset extends MapperElement implements MapperElementInterface
    * @param string $key
    * @param string $value
    *
-   * @return Fieldset
+   * @return $this
    */
-  public function addTranslateArguments(string $key, string $value): Fieldset
+  public function addTranslateArguments(string $key, string $value): self
   {
     $this->translateArguments[$key] = $value;
     return $this;
   }
 
   /**
-   * @param array $translateArguments
+   * @param array<string, string> $translateArguments
    *
-   * @return Fieldset
+   * @return $this
    */
-  public function setTranslateArguments(array $translateArguments): Fieldset
+  public function setTranslateArguments(array $translateArguments): self
   {
     $this->translateArguments = $translateArguments;
     return $this;
-  }
-
-  /**
-   * @return MapperElementInterface|FormMapper
-   */
-  public function end(): MapperElementInterface
-  {
-    return $this->parent;
   }
 
   /**
@@ -242,9 +235,9 @@ class Fieldset extends MapperElement implements MapperElementInterface
   /**
    * @param bool $collapse
    *
-   * @return Fieldset
+   * @return $this
    */
-  public function setCollapse(bool $collapse): Fieldset
+  public function setCollapse(bool $collapse): self
   {
     $this->collapse = $collapse;
     return $this;

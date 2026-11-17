@@ -11,9 +11,14 @@
 namespace Austral\FormBundle\Field;
 
 use Austral\FormBundle\Field\Base\Field;
+use Symfony\Component\Form\FormTypeInterface;
 
 /**
  * Austral Field Symfony Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -21,13 +26,13 @@ class SymfonyField extends Field
 {
 
   /**
-   * @param $fieldname
-   * @param string $symfonyFormType
-   * @param array $options
+   * @param string $fieldname
+   * @param class-string<FormTypeInterface> $symfonyFormType
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, string $symfonyFormType, array $options = array()): SymfonyField
+  public static function create(string $fieldname, string $symfonyFormType, array $options = []): self
   {
     return new self($fieldname, $symfonyFormType, $options);
   }
@@ -36,10 +41,10 @@ class SymfonyField extends Field
    * SymfonyField constructor.
    *
    * @param string $fieldname
-   * @param string $symfonyFormType
-   * @param array $options
+   * @param class-string<FormTypeInterface> $symfonyFormType
+   * @param array<string, mixed> $options
    */
-  public function __construct(string $fieldname, string $symfonyFormType, array $options = array())
+  public function __construct(string $fieldname, string $symfonyFormType, array $options = [])
   {
     parent::__construct($fieldname, $options);
     $this->symfonyFormType = $symfonyFormType;

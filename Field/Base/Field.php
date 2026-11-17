@@ -10,9 +10,11 @@
 
 namespace Austral\FormBundle\Field\Base;
 
+use Austral\Contracts\Entity\EntityInterface;
 use Austral\FormBundle\Mapper\FormMapper;
 use Austral\FormBundle\Mapper\GroupFields;
 use Austral\ToolsBundle\AustralTools;
+use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints as Constraints;
@@ -21,7 +23,12 @@ use function Symfony\Component\String\u;
 
 /**
  * Austral Abstract Field.
+ * @template T of object
+ *
+ * @implements FieldInterface<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
+ *
  * @abstract
  */
 abstract class Field implements FieldInterface
@@ -32,19 +39,19 @@ abstract class Field implements FieldInterface
   protected string $fieldname;
 
   /**
-   * @var string|null
+   * @var class-string<FormTypeInterface>|string|null
    */
   protected ?string $symfonyFormType = null;
 
   /**
-   * @var array
+   * @var array<string, mixed>
    */
   protected array $options;
 
   /**
-   * @var array
+   * @var array<string|int, Constraint>
    */
-  protected array $constraints = array();
+  protected array $constraints = [];
 
   /**
    * @var bool
@@ -59,17 +66,17 @@ abstract class Field implements FieldInterface
   /**
    * @var string|null
    */
-  protected ?string $popinId = null;
+  protected ?string $modalId = null;
 
   /**
    * @var bool
    */
-  protected bool $isInPopin = false;
+  protected bool $isInModal = false;
 
   /**
-   * @var array
+   * @var array<string, mixed>
    */
-  protected array $editorFields = array();
+  protected array $editorFields = [];
 
   /**
    * @var bool
@@ -80,29 +87,28 @@ abstract class Field implements FieldInterface
   /**
    * EntityFieldList constructor.
    *
-   * @param $fieldname
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $options
    *
    */
-  public function __construct($fieldname, array $options = array())
+  public function __construct(string $fieldname, array $options = [])
   {
     $this->fieldname = $fieldname;
-
     $resolver = new OptionsResolver();
     $this->configureOptions($resolver);
     $this->options = $resolver->resolve($options);
-
     if($this->options['template']["path"])
     {
       $this->isDefaultTemplate = false;
     }
-
   }
 
   /**
    * @param OptionsResolver $resolver
+   *
+   * @return void
    */
-  protected function configureOptions(OptionsResolver $resolver)
+  protected function configureOptions(OptionsResolver $resolver): void
   {
     $resolver->setDefaults(array(
         "required"            =>  false,
@@ -171,7 +177,7 @@ abstract class Field implements FieldInterface
         "template"            =>  function(OptionsResolver $subResolver) {
           $subResolver->setDefaults(array(
               "path"      =>  null,
-              "vars"      =>  array()
+              "vars"      =>  []
             )
           );
           $subResolver->addAllowedTypes("path", array('null', "string"))
@@ -181,7 +187,7 @@ abstract class Field implements FieldInterface
         "setter"              =>  null,
         "getter"              =>  null,
 
-        "popin"               =>  function(OptionsResolver $subResolver) {
+        "modal"               =>  function(OptionsResolver $subResolver) {
           $subResolver->setDefaults(array(
               "id"      =>  null,
               "isIn"    =>  false
@@ -190,7 +196,7 @@ abstract class Field implements FieldInterface
           $subResolver->addAllowedTypes("id", array('null', "string"))
           ->addAllowedTypes("isIn", array('bool'));
         },
-        "fieldOptions"        => array(),
+        "fieldOptions"        => [],
         "mapped"              =>  true
       )
     );
@@ -216,8 +222,7 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * Get options
-   * @return array
+   * @inheritDoc
    */
   public function getOptions(): array
   {
@@ -225,11 +230,9 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param array $options
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setOptions(array $options): FieldInterface
+  public function setOptions(array $options): self
   {
     $resolver = new OptionsResolver();
     $this->configureOptions($resolver);
@@ -238,12 +241,12 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {
     $fieldOptions = $this->options['fieldOptions'];
-    $fieldOptions['attr'] = array_key_exists("attr", $fieldOptions) ? $fieldOptions['attr'] : array();
+    $fieldOptions['attr'] = array_key_exists("attr", $fieldOptions) ? $fieldOptions['attr'] : [];
     $fieldOptions["attr"] = array_merge($fieldOptions['attr'], $this->options['attr']);
     $fieldOptions["required"] = array_key_exists("required", $fieldOptions) ? $fieldOptions["required"] : $this->getRequired();
 
@@ -258,19 +261,16 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param array $fieldOptions
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setFieldOptions(array $fieldOptions = array()): FieldInterface
+  public function setFieldOptions(array $fieldOptions = []): self
   {
     $this->options['fieldOptions'] = $fieldOptions;
     return $this;
   }
 
   /**
-   * Get fieldname
-   * @return string
+   * @inheritDoc
    */
   public function getFieldname(): string
   {
@@ -278,20 +278,16 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * Get fieldname
-   *
-   * @param $fieldname
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setFieldname($fieldname): FieldInterface
+  public function setFieldname(string $fieldname): self
   {
     $this->fieldname = $fieldname;
     return $this;
   }
 
   /**
-   * @return FormMapper|null
+   * @inheritDoc
    */
   public function getFormMapper(): ?FormMapper
   {
@@ -299,38 +295,33 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param FormMapper|null $formMapper
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setFormMapper(FormMapper $formMapper = null): FieldInterface
+  public function setFormMapper(?FormMapper $formMapper = null): self
   {
     $this->options['formMapper'] = $formMapper;
     return $this;
   }
 
   /**
-   * Get entitled
-   * @return string|bool|null
+   * @inheritDoc
    */
-  public function getEntitled()
+  public function getEntitled(): bool|string|null
   {
     return $this->options['entitled'];
   }
 
   /**
-   * @param string|bool|null $entitled
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setEntitled($entitled = null): FieldInterface
+  public function setEntitled(bool|string|null $entitled = null): self
   {
     $this->options['entitled'] = $entitled;
     return $this;
   }
 
   /**
-   * @return string
+   * @inheritDoc
    */
   public function getAttrClass(): string
   {
@@ -338,7 +329,7 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @return string
+   * @inheritDoc
    */
   public function getClassname(): string
   {
@@ -346,7 +337,7 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @return string
+   * @inheritDoc
    */
   public function getSymfonyFormTypeClass(): string
   {
@@ -354,16 +345,15 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @return string
+   * @inheritDoc
    */
   public function getSymfonyFormTypeName(): string
   {
-    return join('', array_slice(explode('\\', $this->getSymfonyFormType()), -1));
+    return $this->getSymfonyFormType() ? join('', array_slice(explode('\\', $this->getSymfonyFormType()), -1)) : '';
   }
 
   /**
-   * Get symfonyFormType
-   * @return string|null
+   * @inheritDoc
    */
   public function getSymfonyFormType(): ?string
   {
@@ -371,34 +361,27 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param string $symfonyFormType
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setSymfonyFormType(string $symfonyFormType): FieldInterface
+  public function setSymfonyFormType(string $symfonyFormType): self
   {
     $this->symfonyFormType = $symfonyFormType;
     return $this;
   }
 
   /**
-   * @param string $key
-   * @param $value
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function addOption(string $key, $value): FieldInterface
+  public function addOption(string $key, $value): self
   {
     $this->options[$key] = $value;
     return $this;
   }
 
   /**
-   * @param Constraint $addConstraint
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function addConstraint(Constraint $addConstraint, bool $replace = false): FieldInterface
+  public function addConstraint(Constraint $addConstraint, bool $replace = false): self
   {
     $addContraintCheck = true;
     foreach($this->constraints as $key => $constraint)
@@ -424,11 +407,12 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param Constraint $constraint
+   * initRequiredByConstraint
    *
+   * @param Constraint $constraint
    * @return void
    */
-  protected function initRequiredByConstraint(Constraint $constraint)
+  protected function initRequiredByConstraint(Constraint $constraint): void
   {
     if($constraint instanceof Constraints\NotNull) {
       $this->setRequired(true);
@@ -436,8 +420,7 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * Get constraints
-   * @return array
+   * @inheritDoc
    */
   public function getConstraints(): array
   {
@@ -445,12 +428,9 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param array $constraints
-   *
-   * @return FieldInterface
-   * @throws \Exception
+   * @inheritDoc
    */
-  public function setConstraints(array $constraints = array()): FieldInterface
+  public function setConstraints(array $constraints = []): self
   {
     /** @var Constraint $constraint */
     foreach($constraints as $constraint) {
@@ -464,11 +444,9 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param int $key
-   *
-   * @return $this
+   * @inheritDoc
    */
-  public function removeContraintByKey(int $key): Field
+  public function removeContraintByKey(int|string $key): self
   {
     if(array_key_exists($key, $this->constraints))
     {
@@ -478,11 +456,9 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param string $contraintClass
-   *
-   * @return $this
+   * @inheritDoc
    */
-  public function removeContraintByClass(string $contraintClass): Field
+  public function removeContraintByClass(string $contraintClass): self
   {
     foreach($this->constraints as $key => $constraint)
     {
@@ -495,9 +471,7 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param string $contraintClass
-   *
-   * @return bool
+   * @inheritDoc
    */
   public function hasContraint(string $contraintClass): bool
   {
@@ -512,8 +486,7 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * Get usedGeneratedForm
-   * @return bool
+   * @inheritDoc
    */
   public function getUsedGeneratedForm(): bool
   {
@@ -521,60 +494,50 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param bool $usedGeneratedForm
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setUsedGeneratedForm(bool $usedGeneratedForm): FieldInterface
+  public function setUsedGeneratedForm(bool $usedGeneratedForm): self
   {
     $this->usedGeneratedForm = $usedGeneratedForm;
     return $this;
   }
 
   /**
-   * @return bool
+   * @inheritDoc
    */
-  public function isInPopin(): bool
+  public function isInModal(): bool
   {
-    return $this->options['popin']["isIn"];
+    return $this->options['modal']["isIn"];
   }
 
   /**
-   * @param bool $isInPopin
-   *
-   * @return Field
+   * @inheritDoc
    */
-  public function setIsInPopin(bool $isInPopin): Field
+  public function setIsInModal(bool $isInModal): self
   {
-    $this->options['popin']["isIn"] = $isInPopin;
+    $this->options['modal']["isIn"] = $isInModal;
     return $this;
   }
 
   /**
-   * Get popinId
-   * @return string|null
+   * @inheritDoc
    */
-  public function getPopinId(): ?string
+  public function getModalId(): ?string
   {
-    return $this->options['popin']["id"];
+    return $this->options['modal']["id"];
   }
 
   /**
-   * set popinId
-   *
-   * @param string|null $popinId
-   *
-   * @return Field
+   * @inheritDoc
    */
-  public function setPopinId(string $popinId = null): Field
+  public function setModalId(?string $modalId = null): self
   {
-    $this->options['popin']["id"] = $popinId;
+    $this->options['modal']["id"] = $modalId;
     return $this;
   }
 
   /**
-   * Get required
-   * @return bool|null
+   * @inheritDoc
    */
   public function getRequired(): ?bool
   {
@@ -582,34 +545,31 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param bool|null $required
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setRequired(?bool $required): FieldInterface
+  public function setRequired(?bool $required): self
   {
     $this->options["required"] = $required;
     return $this;
   }
 
   /**
-   * @return mixed
+   * @inheritDoc
    */
-  public function picto()
+  public function picto(): mixed
   {
     return $this->options['picto'];
   }
 
   /**
-   * Get isView
-   * @return bool
+   * @inheritDoc
    */
   public function getIsView(): bool
   {
     $isView = false;
     if($this->options['isView'] !== null)
     {
-      $isViewFunctionParams = array();
+      $isViewFunctionParams = [];
       if(is_array($this->options['isView']))
       {
         $isViewFunction = $this->options['isView'][0];
@@ -634,21 +594,16 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * Get isView
-   *
-   * @param $isView
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setIsView($isView): FieldInterface
+  public function setIsView($isView): self
   {
     $this->options['isView'] = $isView;
     return $this;
   }
 
   /**
-   * Get autoConstraints
-   * @return bool
+   * @inheritDoc
    */
   public function getAutoConstraints(): bool
   {
@@ -656,18 +611,16 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param bool $autoConstraints
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setAutoConstraints(bool $autoConstraints): FieldInterface
+  public function setAutoConstraints(bool $autoConstraints): self
   {
     $this->options['autoConstraints'] = $autoConstraints;
     return $this;
   }
 
   /**
-   * @return string|null
+   * @inheritDoc
    */
   public function getTemplatePath(): ?string
   {
@@ -675,18 +628,16 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param string $templatePath
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setTemplatePath(string $templatePath): FieldInterface
+  public function setTemplatePath(string $templatePath): self
   {
     $this->options['template']["path"] = $templatePath;
     return $this;
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getTemplateVars(): ?array
   {
@@ -694,29 +645,25 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param array $templateVars
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setTemplateVars(array $templateVars): FieldInterface
+  public function setTemplateVars(array $templateVars): self
   {
     $this->options['template']["vars"] = $templateVars;
     return $this;
   }
 
   /**
-   * @param string|null $size
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setGroupSize(?string $size = null): FieldInterface
+  public function setGroupSize(?string $size = null): self
   {
     $this->options["group"]["size"] = $size;
     return $this;
   }
 
   /**
-   * @return string|null
+   * @inheritDoc
    */
   public function getGroupSize(): ?string
   {
@@ -724,18 +671,16 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param string|null $class
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setGroupClass(?string $class = null): FieldInterface
+  public function setGroupClass(?string $class = null): self
   {
     $this->options["group"]["class"] = $class;
     return $this;
   }
 
   /**
-   * @return string|null
+   * @inheritDoc
    */
   public function getGroupClass(): ?string
   {
@@ -743,7 +688,7 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @return string|null
+   * @inheritDoc
    */
   public function getHelper(): ?string
   {
@@ -751,7 +696,7 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @return array|null
+   * @inheritDoc
    */
   public function getBefore(): ?array
   {
@@ -759,7 +704,7 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @return array|null
+   * @inheritDoc
    */
   public function getAfter(): ?array
   {
@@ -767,18 +712,16 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param string|null $helper
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setHelper(string $helper = null): FieldInterface
+  public function setHelper(?string $helper = null): self
   {
     $this->options['helper'] = $helper;
     return $this;
   }
 
   /**
-   * @return bool
+   * @inheritDoc
    */
   public function isDefaultTemplate(): bool
   {
@@ -786,18 +729,16 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @param bool $isDefaultTemplate
-   *
-   * @return FieldInterface
+   * @inheritDoc
    */
-  public function setDefaultTemplate(bool $isDefaultTemplate): FieldInterface
+  public function setDefaultTemplate(bool $isDefaultTemplate): self
   {
     $this->isDefaultTemplate = $isDefaultTemplate;
     return $this;
   }
 
   /**
-   * @return bool
+   * @inheritDoc
    */
   public function isWidgetInput(): bool
   {
@@ -805,7 +746,7 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getEditorFields(): array
   {
@@ -813,44 +754,16 @@ abstract class Field implements FieldInterface
   }
 
   /**
-   * @return string|null|\Closure|array
+   * executeClosureFunction
+   *
+   * @param \Closure(object|null): mixed|string|array<int, string> $closureOrString
+   * @param EntityInterface<T>|null $object
+   * @param mixed $default
+   * @return mixed
    */
-  protected function executeClosureFunction($closureOrString, $object = null, $default = array())
+  protected function executeClosureFunction(\Closure|string|array $closureOrString, EntityInterface|null $object = null, mixed $default = []): mixed
   {
-    if($closureOrString instanceof \Closure)
-    {
-      if($object)
-      {
-        return $closureOrString->call($this, $object);
-      }
-      return $default;
-    }
-    if($closureOrString)
-    {
-      $value = null;
-      $parameter = null;
-      if(is_array($closureOrString))
-      {
-        list($closureOrString, $parameter) = $closureOrString;
-      }
-      if(is_object($object) && method_exists($object, $closureOrString))
-      {
-        $value = $object->{$closureOrString}($parameter);
-      }
-      else
-      {
-        $getter = AustralTools::createGetterFunction($closureOrString);
-        if(is_object($object) && method_exists($object, $getter))
-        {
-          $value = $object->$getter($parameter);
-        }
-      }
-      if($value instanceof \DateTime) {
-        $value = $value->format($parameter);
-      }
-      return $value;
-    }
-    return $default;
+    return AustralTools::executeFunction($this, $closureOrString, $object, $default);
   }
 
 }

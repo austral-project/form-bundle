@@ -10,35 +10,35 @@
 
 namespace Austral\FormBundle\Mapper;
 
-use Austral\AdminBundle\Module\Module;
 use Austral\FormBundle\Mapper\Base\MapperElement;
 
 use Austral\FormBundle\Event\FormFieldEvent;
 use Austral\FormBundle\Field\Base\FieldInterface;
 
-use Austral\EntityBundle\Entity\EntityInterface;
+use Austral\Contracts\Entity\EntityInterface;
 
 use Austral\FormBundle\Mapper\Base\MapperElementInterface;
-use Austral\ListBundle\Column\Interfaces\ColumnActionInterface;
 use Austral\ToolsBundle\AustralTools;
 
+use Random\RandomException;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * Form Mapper.
+ * @template T of object
+ *
+ * @extends MapperElement<T>
+ * @implements MapperElementInterface<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class FormMapper extends MapperElement implements MapperElementInterface
 {
 
   /**
-   * @var EventDispatcherInterface|null
-   */
-  protected ?EventDispatcherInterface $dispatcher;
-
-  /**
-   * @var EntityInterface|null
+   * @var EntityInterface<T>|null
    */
   protected ?EntityInterface $object = null;
 
@@ -48,27 +48,29 @@ class FormMapper extends MapperElement implements MapperElementInterface
   protected string $name = "form_master";
 
   /**
-   * @var array
+   * @var array<string|int, EntityInterface<T>>
    */
-  protected array $objects = array();
+  protected array $objects = [];
 
-  /** @var ?FormMapper */
+  /**
+   * @var ?FormMapper<T>
+   */
   protected ?FormMapper $parentFormMapper = null;
 
   /**
-   * @var array
+   * @var array<string, FormMapper<T>>
    */
-  protected array $subFormMappers = array();
+  protected array $subFormMappers = [];
 
   /**
-   * @var array
+   * @var array<string, string>
    */
-  protected array $fieldsMapping = array();
+  protected array $fieldsMapping = [];
 
   /**
-   * @var array
+   * @var array<string, FieldInterface<object>|FieldInterface<T>>
    */
-  protected array $allFields = array();
+  protected array $allFields = [];
 
   /**
    * @var string|null
@@ -76,41 +78,30 @@ class FormMapper extends MapperElement implements MapperElementInterface
   protected ?string $pathToTemplateDefault = null;
 
   /**
-   * @var array
+   * @var array<string, Fieldset<T>>
    */
-  protected array $fieldsets = array();
+  protected array $fieldsets = [];
 
   /**
-   * @var array
+   * @var array<string, Modal<T>>
    */
-  protected array $popins = array();
+  protected array $modals = [];
+
 
   /**
-   * @var array
+   * @var array<string, string>
    */
-  protected array $actions = array();
+  protected array $modalKeysByFieldname = [];
 
   /**
-   * @var array
+   * @var array<int, string>
    */
-  protected array $popinKeysByFieldname = array();
+  protected array $uniqueFields = [];
 
   /**
-   * @var array
+   * @var array<string, mixed>
    */
-  protected array $uniqueFields = array();
-
-  /**
-   * @var array
-   */
-  protected array $options = array();
-
-  /**
-   * @var array
-   */
-  protected array $attributes = array(
-    "class" =>  ""
-  );
+  protected array $options = [];
 
   /**
    * @var string|null
@@ -123,11 +114,6 @@ class FormMapper extends MapperElement implements MapperElementInterface
   protected ?string $formStatus = null;
 
   /**
-   * @var Module|null
-   */
-  protected ?Module $module = null;
-
-  /**
    * @var bool
    */
   protected bool $formSend = false;
@@ -138,12 +124,16 @@ class FormMapper extends MapperElement implements MapperElementInterface
   protected string $requestMethod = "GET";
 
   /**
-   * Mapper constructor.
+   * FormMapper constructor
    *
+   * @param EventDispatcherInterface|null $dispatcher
+   * @param string $name
    */
-  public function __construct(EventDispatcherInterface $dispatcher = null)
+  public function __construct(
+    #[Autowire(service: 'event_dispatcher')] protected ?EventDispatcherInterface $dispatcher = null,
+    string $name = "form_master")
   {
-    $this->dispatcher = $dispatcher;
+    parent::__construct($name, null);
     $this->options = array(
       "translation_domain" => "form",
       "html5_validate" => false
@@ -154,42 +144,11 @@ class FormMapper extends MapperElement implements MapperElementInterface
   /**
    * @return $this
    */
-  public function reinit(): FormMapper
+  public function reinit(): self
   {
-    $this->fieldsMapping = array();
-    $this->allFields = array();
-    $this->fieldsets = array();
-    return $this;
-  }
-
-  /**
-   * @return array
-   */
-  public function getAttributes(): array
-  {
-    return $this->attributes;
-  }
-
-  /**
-   * @param array $attributes
-   *
-   * @return FormMapper
-   */
-  public function setAttributes(array $attributes): FormMapper
-  {
-    $this->attributes = $attributes;
-    return $this;
-  }
-
-  /**
-   * @param string $key
-   * @param $value
-   *
-   * @return FormMapper
-   */
-  public function setAttribute(string $key, $value): FormMapper
-  {
-    $this->attributes[$key] = $value;
+    $this->fieldsMapping = [];
+    $this->allFields = [];
+    $this->fieldsets = [];
     return $this;
   }
 
@@ -198,12 +157,12 @@ class FormMapper extends MapperElement implements MapperElementInterface
    *
    * @return $this
    */
-  public function setTranslateDomain(string $value): FormMapper
+  public function setTranslateDomain(string $value): self
   {
     $this->options['translation_domain'] = $value;
     if($this->subFormMappers)
     {
-      /** @var FormMapper $subFormMapper */
+      /** @var FormMapper<T> $subFormMapper */
       foreach($this->subFormMappers as $subFormMapper)
       {
         $subFormMapper->setTranslateDomain($value);
@@ -221,16 +180,16 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param EventDispatcherInterface|null $dispatcher
+   * @param EventDispatcherInterface $dispatcher
    *
    * @return $this
    */
-  public function setDispatcher(EventDispatcherInterface $dispatcher = null): FormMapper
+  public function setDispatcher(EventDispatcherInterface $dispatcher): self
   {
     $this->dispatcher = $dispatcher;
     if($this->subFormMappers)
     {
-      /** @var FormMapper $subFormMapper */
+      /** @var FormMapper<T> $subFormMapper */
       foreach($this->subFormMappers as $subFormMapper)
       {
         $subFormMapper->setDispatcher($this->dispatcher);
@@ -248,7 +207,7 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return ?EntityInterface $object
+   * @return ?EntityInterface<T> $object
    */
   public function getObject(): ?EntityInterface
   {
@@ -256,11 +215,11 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param EntityInterface $object
+   * @param EntityInterface<T> $object
    *
    * @return $this
    */
-  public function setObject(EntityInterface $object): FormMapper
+  public function setObject(EntityInterface $object): self
   {
     $this->object = $object;
     return $this;
@@ -275,30 +234,23 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return string
-   */
-  public function getkeyname(): string
-  {
-    return $this->name;
-  }
-
-  /**
    * @param string $name
    *
-   * @return FormMapper
+   * @return $this
    */
-  public function setName(string $name): FormMapper
+  public function setName(string $name): self
   {
     $this->name = $name;
+    $this->setKeyname($name);
     return $this;
   }
 
   /**
-   * @param array $objects
+   * @param array<string|int, EntityInterface<T>> $objects
    *
    * @return $this
    */
-  public function setObjects(array $objects): FormMapper
+  public function setObjects(array $objects): self
   {
     $this->objects = $objects;
     return $this;
@@ -306,7 +258,7 @@ class FormMapper extends MapperElement implements MapperElementInterface
 
   /**
    * Get fieldsMapping
-   * @return array
+   * @return array<string, string>
    */
   public function getFieldsMapping(): array
   {
@@ -314,11 +266,11 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param array $fieldsMapping
+   * @param array<string, string> $fieldsMapping
    *
-   * @return FormMapper
+   * @return $this
    */
-  public function setFieldsMapping(array $fieldsMapping): FormMapper
+  public function setFieldsMapping(array $fieldsMapping): self
   {
     $this->fieldsMapping = $fieldsMapping;
     return $this;
@@ -327,9 +279,9 @@ class FormMapper extends MapperElement implements MapperElementInterface
   /**
    * @param string $fieldMapping
    *
-   * @return FormMapper
+   * @return $this
    */
-  public function addFieldsMapping(string $fieldMapping): FormMapper
+  public function addFieldsMapping(string $fieldMapping): self
   {
     $this->fieldsMapping[$fieldMapping] = $fieldMapping;
     return $this;
@@ -338,9 +290,9 @@ class FormMapper extends MapperElement implements MapperElementInterface
   /**
    * @param string|null $formTypeAction
    *
-   * @return FormMapper
+   * @return $this
    */
-  public function setFormTypeAction(?string $formTypeAction): FormMapper
+  public function setFormTypeAction(?string $formTypeAction): self
   {
     $this->formTypeAction = $formTypeAction;
     return $this;
@@ -367,9 +319,9 @@ class FormMapper extends MapperElement implements MapperElementInterface
   /**
    * @param string|null $formStatus
    *
-   * @return FormMapper
+   * @return $this
    */
-  public function setFormStatus(?string $formStatus): FormMapper
+  public function setFormStatus(?string $formStatus): self
   {
     $this->formStatus = $formStatus;
     return $this;
@@ -387,9 +339,9 @@ class FormMapper extends MapperElement implements MapperElementInterface
   /**
    * @param bool $formSend
    *
-   * @return FormMapper
+   * @return $this
    */
-  public function setFormSend(bool $formSend): FormMapper
+  public function setFormSend(bool $formSend): self
   {
     $this->formSend = $formSend;
     return $this;
@@ -400,23 +352,23 @@ class FormMapper extends MapperElement implements MapperElementInterface
    */
   public function getObjectSluggerClassname(): string
   {
-    return $this->object->getSluggerClassname();
+    return $this->object?->getSluggerClassname() ?? "";
   }
 
   /**
    * @param string $key
-   * @param null $default
+   * @param mixed $default
    *
-   * @return array|mixed|string|null
+   * @return mixed
    */
-  public function getOption(string $key, $default = null)
+  public function getOption(string $key, mixed $default = null): mixed
   {
-    return AustralTools::getValueByKey($this->options, $key, $default);
+    return AustralTools::valueByKey($this->options, $key, $default);
   }
 
   /**
    * Get options
-   * @return array
+   * @return array<string, mixed>
    */
   public function getOptions(): array
   {
@@ -424,39 +376,36 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param $options
+   * @param array<string, mixed> $options
    *
    * @return $this
    */
-  public function setOptions($options): FormMapper
+  public function setOptions(array $options): FormMapper
   {
     $this->options = array_merge($this->options, $options);
     return $this;
   }
 
   /**
-   * @param FieldInterface $field
+   * @param FieldInterface<T> $field
    *
-   * @return FormMapper
+   * @return $this
    * @throws \Exception
    */
-  public function configField(FieldInterface $field): FormMapper
+  public function configField(FieldInterface $field): self
   {
-    if($this->dispatcher)
-    {
-      $this->dispatcher->dispatch(new FormFieldEvent($this, $field), FormFieldEvent::EVENT_AUSTRAL_FIELD_CONFIGURATION);
-    }
+    $this->dispatcher?->dispatch(new FormFieldEvent($this, $field), FormFieldEvent::EVENT_AUSTRAL_FIELD_CONFIGURATION);
     return $this;
   }
 
   /**
    * @param string $fieldname
    *
-   * @return FieldInterface|null
+   * @return FieldInterface<T>|null
    */
   public function getField(string $fieldname): ?FieldInterface
   {
-    return AustralTools::getValueByKey($this->allFields, $fieldname, null);
+    return AustralTools::valueByKey($this->allFields, $fieldname);
   }
 
   /**
@@ -468,12 +417,22 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param FieldInterface|null $field
+   * @return $this
+   */
+  public function end(): FormMapper
+  {
+    return $this;
+  }
+
+  /**
+   * @param FieldInterface<object>|FieldInterface<T>|null $field
    * @param int|null $sortable
    *
    * @return $this
+   * @throws RandomException
+   * @throws \Exception
    */
-  public function add(?FieldInterface $field, int $sortable = null): FormMapper
+  public function add(?FieldInterface $field, ?int $sortable = null): FormMapper
   {
     if($field)
     {
@@ -491,30 +450,42 @@ class FormMapper extends MapperElement implements MapperElementInterface
    * @param string $name
    * @param string|null $entitled
    *
-   * @return Fieldset
+   * @return Fieldset<T>
+   * @throws RandomException
    */
   public function addFieldset(string $name, ?string $entitled = null): Fieldset
   {
-    $fieldset = new Fieldset($name, $this, $entitled);
-    if(!array_key_exists($fieldset->getKeyname(), $this->fieldsets)) {
-      $this->fields[$fieldset->getKeyname()] = $fieldset;
-      $this->fieldsets[$fieldset->getKeyname()] = $fieldset;
+    $blockFields = new Fieldset($name, $this, $entitled);
+    $create = true;
+    if(array_key_exists($blockFields->getKeyname(), $this->fields)) {
+      $blockFieldExists = $this->fields[$blockFields->getKeyname()];
+      if($blockFieldExists instanceof Fieldset)
+      {
+        $blockFields = $blockFieldExists;
+        $create = false;
+      }
+      else
+      {
+        $blockFields->setKeyname($name."_".AustralTools::random(4));
+      }
     }
-    else {
-      $fieldset = $this->fieldsets[$fieldset->getKeyname()];
+    if($create)
+    {
+      $this->fields[$blockFields->getKeyname()] = $blockFields;
+      $this->fieldsets[$blockFields->getKeyname()] = $blockFields;
     }
-    return $fieldset;
+    return $blockFields;
   }
 
   /**
    * @param string $name
    *
-   * @return Fieldset|null
+   * @return Fieldset<T>|null
    */
   public function getFieldset(string $name): ?Fieldset
   {
     $slugger = new AsciiSlugger();
-    $keyname = "fieldset-".strtolower($slugger->slug($name));
+    $keyname = Fieldset::$keynameBefore.strtolower($slugger->slug($name));
     if(array_key_exists($keyname, $this->fieldsets))
     {
       return $this->fieldsets[$keyname];
@@ -525,13 +496,13 @@ class FormMapper extends MapperElement implements MapperElementInterface
   /**
    * @param string $positionName
    *
-   * @return array
+   * @return array<string|int, Fieldset<T>>
    */
   public function getFieldsetByPosition(string $positionName): array
   {
-    $fieldsets = array();
+    $fieldsets = [];
     $count = 0;
-    /** @var Fieldset $fieldset */
+    /** @var Fieldset<T> $fieldset */
     foreach($this->getFieldsets() as $fieldset)
     {
       if($fieldset->getIsView()) {
@@ -550,35 +521,34 @@ class FormMapper extends MapperElement implements MapperElementInterface
   /**
    * @param string $name
    * @param string|null $fieldname
-   * @param array $attr
-   * @param MapperElementInterface|null $parent
+   * @param array<string, mixed> $attr
+   * @param MapperElementInterface<T>|null $parent
    *
-   * @return Popin
+   * @return Modal<T>
    * @throws \Exception
    */
-  public function addPopin(string $name, string $fieldname = null, array $attr = array(), MapperElementInterface $parent = null): Popin
+  public function addModal(string $name, ?string $fieldname = null, array $attr = [], ?MapperElementInterface $parent = null): Modal
   {
-    $popin = new Popin($name, $parent ?? $this, $fieldname, $attr);
-    if(!array_key_exists($popin->getKeyname(), $this->fields)) {
-      $this->popins[$popin->getKeyname()] = $popin;
+    $modal = new Modal($name, $parent ?? $this, $fieldname, $attr);
+    if(!array_key_exists($modal->getKeyname(), $this->fields)) {
+      $this->modals[$modal->getKeyname()] = $modal;
       if($fieldname)
       {
-        $this->popinKeysByFieldname[$fieldname] = $popin->getKeyname();
-        /** @var FieldInterface $field */
+        $this->modalKeysByFieldname[$fieldname] = $modal->getKeyname();
         if(array_key_exists($fieldname, $this->allFields))
         {
-          $this->allFields[$fieldname]->setPopinId($popin->getKeyname());
+          $this->allFields[$fieldname]->setModalId($modal->getKeyname());
         }
       }
     }
     else {
-      $popin = $this->popins[$popin->getKeyname()];
+      $modal = $this->modals[$modal->getKeyname()];
     }
-    return $popin;
+    return $modal;
   }
 
   /**
-   * @return array
+   * @return array<string, FieldInterface<object>|FieldInterface<T>|MapperElementInterface<T>>
    */
   public function fields(): array
   {
@@ -588,15 +558,15 @@ class FormMapper extends MapperElement implements MapperElementInterface
   /**
    * @param string $key
    *
-   * @return array|mixed|string|null
+   * @return FieldInterface<object>|FieldInterface<T>|MapperElementInterface<T>|null
    */
-  public function fieldsByKey(string $key)
+  public function fieldsByKey(string $key): FieldInterface|MapperElementInterface|null
   {
-    return AustralTools::getValueByKey($this->fields(), $key, array());
+    return AustralTools::valueByKey($this->fields(), $key);
   }
 
   /**
-   * @return array
+   * @return array<string, FieldInterface<object>|FieldInterface<T>|MapperElementInterface<T>>
    */
   public function allFields(): array
   {
@@ -604,7 +574,7 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return array
+   * @return array<string, Fieldset<T>>
    */
   public function getFieldsets(): array
   {
@@ -612,36 +582,35 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return array
+   * @return array<string, Modal<T>>
    */
-  public function getPopins(): array
+  public function getModals(): array
   {
-    return $this->popins;
+    return $this->modals;
   }
 
   /**
    * @param string $key
    *
-   * @return array|Popin
+   * @return Modal<T>|null
    */
-  public function getPopinByKey(string $key)
+  public function getModalByKey(string $key): ?Modal
   {
-    return AustralTools::getValueByKey($this->popins, $key, array());
+    return AustralTools::valueByKey($this->modals, $key);
   }
 
   /**
-   * @param FieldInterface $column
+   * @param FieldInterface<object>|FieldInterface<T> $field
    *
    * @return $this
    */
-  public function addAllFields(FieldInterface $column): FormMapper
+  public function addAllFields(FieldInterface $field): self
   {
-    $column->setFormMapper($this);
-    $this->allFields[$column->getFieldname()] = $column;
-    /** @var FieldInterface $field */
-    if(array_key_exists($column->getFieldname(), $this->popinKeysByFieldname))
+    $field->setFormMapper($this);
+    $this->allFields[$field->getFieldname()] = $field;
+    if(array_key_exists($field->getFieldname(), $this->modalKeysByFieldname))
     {
-      $this->allFields[$column->getFieldname()]->setPopinId($this->popinKeysByFieldname[$column->getFieldname()]);
+      $this->allFields[$field->getFieldname()]->setModalId($this->modalKeysByFieldname[$field->getFieldname()]);
     }
     return $this;
   }
@@ -657,7 +626,7 @@ class FormMapper extends MapperElement implements MapperElementInterface
     {
       unset($this->allFields[$fieldname]);
     }
-    /** @var Fieldset $fieldset */
+    /** @var Fieldset<T> $fieldset */
     foreach ($this->fieldsets as $fieldset)
     {
       $fieldset->removeField($fieldname);
@@ -666,7 +635,7 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return array
+   * @return array<int, string>
    */
   public function getUniqueFields(): array
   {
@@ -685,7 +654,7 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return array
+   * @return array<string, FormMapper<T>>
    */
   public function getSubFormMappers(): array
   {
@@ -696,11 +665,11 @@ class FormMapper extends MapperElement implements MapperElementInterface
    * @param string $subFormMapperKey
    * @param null $default
    *
-   * @return FormMapper|null
+   * @return FormMapper<T>|null
    */
   public function getSubFormMapperByKey(string $subFormMapperKey, $default = null): ?FormMapper
   {
-    return AustralTools::getValueByKey($this->subFormMappers, $subFormMapperKey, $default);
+    return AustralTools::valueByKey($this->subFormMappers, $subFormMapperKey, $default);
   }
 
   /**
@@ -714,11 +683,11 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param array $subFormMappers
+   * @param array<string, FormMapper<T>> $subFormMappers
    *
    * @return $this
    */
-  public function setSubFormMappers(array $subFormMappers): FormMapper
+  public function setSubFormMappers(array $subFormMappers): self
   {
     $this->subFormMappers = $subFormMappers;
     return $this;
@@ -726,25 +695,16 @@ class FormMapper extends MapperElement implements MapperElementInterface
 
   /**
    * @param string $subFormMapperKey
-   * @param FormMapper $subFormMapper
+   * @param FormMapper<T> $subFormMapper
    * @param bool $addDispatcher
    *
    * @return $this
    */
-  public function addSubFormMapper(string $subFormMapperKey, FormMapper $subFormMapper, bool $addDispatcher = true): FormMapper
+  public function addSubFormMapper(string $subFormMapperKey, FormMapper $subFormMapper, bool $addDispatcher = true): self
   {
-    if($addDispatcher)
+    if($addDispatcher && $this->dispatcher)
     {
       $subFormMapper->setDispatcher($this->dispatcher);
-      if($subFormMapper->getSubFormMappers())
-      {
-        /** @var FormMapper $subFormMapperChild */
-        foreach ($subFormMapper->getSubFormMappers() as $subFormMapperChild)
-        {
-          $subFormMapperChild->setDispatcher($this->dispatcher);
-          $subFormMapperChild->setTranslateDomain($this->getTranslateDomain());
-        }
-      }
     }
     $subFormMapper->setPathToTemplateDefault($this->pathToTemplateDefault);
     $subFormMapper->setTranslateDomain($this->getTranslateDomain());
@@ -755,7 +715,7 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return FormMapper|null
+   * @return FormMapper<T>|null
    */
   public function getParentFormMapper(): ?FormMapper
   {
@@ -771,29 +731,27 @@ class FormMapper extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param FormMapper|null $parentFormMapper
+   * @param FormMapper<T>|null $parentFormMapper
    *
-   * @return FormMapper
+   * @return $this
    */
-  public function setParentFormMapper(?FormMapper $parentFormMapper): FormMapper
+  public function setParentFormMapper(?FormMapper $parentFormMapper): self
   {
     $this->parentFormMapper = $parentFormMapper;
     return $this;
   }
 
   /**
-   * @return array
+   * @param array<string, FormMapper<T>> $allSubMappers
+   * @return array<string, FormMapper<T>>
    */
-  public function getAllSubFormMapper(): array
+  public function getAllSubFormMapper(array &$allSubMappers = []): array
   {
-    $allSubMappers = array();
+    $allSubMappers = [];
     foreach($this->getSubFormMappers() as $subFormMapper)
     {
       $allSubMappers[$subFormMapper->getName()] = $subFormMapper;
-      foreach ($subFormMapper->getAllSubFormMapper() as $test)
-      {
-        $allSubMappers[$test->getName()] = $test;
-      }
+      $subFormMapper->getAllSubFormMapper($allSubMappers);
     }
     return $allSubMappers;
   }
@@ -809,37 +767,19 @@ class FormMapper extends MapperElement implements MapperElementInterface
   /**
    * @param string|null $pathToTemplateDefault
    *
-   * @return FormMapper
+   * @return $this
    */
-  public function setPathToTemplateDefault(?string $pathToTemplateDefault): FormMapper
+  public function setPathToTemplateDefault(?string $pathToTemplateDefault = null): self
   {
     $this->pathToTemplateDefault = $pathToTemplateDefault;
     if($this->subFormMappers)
     {
-      /** @var FormMapper $subFormMapper */
+      /** @var FormMapper<T> $subFormMapper */
       foreach($this->subFormMappers as $subFormMapper)
       {
         $subFormMapper->setPathToTemplateDefault($this->pathToTemplateDefault);
       }
     }
-    return $this;
-  }
-
-  /**
-   * @param ColumnActionInterface $action
-   * @param int|null $position
-   *
-   * @return $this
-   */
-  public function addAction(ColumnActionInterface $action, ?int $position = null): FormMapper
-  {
-    if(!$action->translateDomain())
-    {
-      $action->setTranslateDomain($this->getTranslateDomain());
-    }
-    $position = $position > 0 ? $position : count($this->actions)+1;
-    $this->actions["{$position}-{$action->keyname()}"] = $action;
-    ksort($this->actions);
     return $this;
   }
 
@@ -854,38 +794,11 @@ class FormMapper extends MapperElement implements MapperElementInterface
   /**
    * @param string $requestMethod
    *
-   * @return FormMapper
-   */
-  public function setRequestMethod(string $requestMethod): FormMapper
-  {
-    $this->requestMethod = $requestMethod;
-    return $this;
-  }
-
-  /**
-   * @return array
-   */
-  public function actions(): array
-  {
-    return $this->actions;
-  }
-
-  /**
-   * @return Module|null
-   */
-  public function getModule(): ?Module
-  {
-    return $this->module;
-  }
-
-  /**
-   * @param Module|null $module
-   *
    * @return $this
    */
-  public function setModule(?Module $module): FormMapper
+  public function setRequestMethod(string $requestMethod): self
   {
-    $this->module = $module;
+    $this->requestMethod = $requestMethod;
     return $this;
   }
 

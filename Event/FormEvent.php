@@ -16,6 +16,8 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Austral Form Event.
+ * @template T of object
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -30,29 +32,29 @@ class FormEvent extends Event
   const EVENT_AUSTRAL_FORM_INIT_END = "austral.event.form.init_end";
 
   /**
-   * @var FormInterface|null
+   * @var FormInterface<T>|null
    */
   private ?FormInterface $form;
 
   /**
-   * @var FormMapper
+   * @var FormMapper<T>
    */
   private FormMapper $formMapper;
 
   /**
    * FormEvent constructor.
    *
-   * @param FormMapper $formMapper
-   * @param ?FormInterface $form
+   * @param FormMapper<T> $formMapper
+   * @param ?FormInterface<T> $form
    */
-  public function __construct(FormMapper $formMapper, FormInterface $form = null)
+  public function __construct(FormMapper $formMapper, ?FormInterface $form = null)
   {
     $this->form = $form;
     $this->formMapper = $formMapper;
   }
 
   /**
-   * @return FormInterface|null
+   * @return FormInterface<T>|null
    */
   public function getForm(): ?FormInterface
   {
@@ -60,17 +62,18 @@ class FormEvent extends Event
   }
 
   /**
-   * @var FormInterface $form
+   * @param FormInterface<T> $form
+   *
    * @return $this
    */
-  public function setForm(FormInterface $form): FormEvent
+  public function setForm(FormInterface $form): self
   {
     $this->form = $form;
     return $this;
   }
 
   /**
-   * @return FormMapper
+   * @return FormMapper<T>
    */
   public function getFormMapper(): FormMapper
   {
@@ -89,9 +92,9 @@ class FormEvent extends Event
   /**
    * @param string|null $status
    *
-   * @return FormEvent
+   * @return $this
    */
-  public function setStatus(?string $status): FormEvent
+  public function setStatus(?string $status): self
   {
     $this->formMapper->setFormStatus($status);
     return $this;

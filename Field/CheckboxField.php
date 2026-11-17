@@ -12,23 +12,27 @@ namespace Austral\FormBundle\Field;
 
 /**
  * Austral Field checkbox Input.
+ * @template T of object
+ *
+ * @extends SwitchField<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
 class CheckboxField extends SwitchField
 {
   /**
-   * @var array
+   * @var array<string, mixed>
    */
-  protected array $switchOptions;
+  protected array $switchOptions = [];
 
   /**
-   * @param $fieldname
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $options = array()): CheckboxField
+  public static function create(string $fieldname, array $options = []): self
   {
     return new self($fieldname, $options);
   }
@@ -37,9 +41,9 @@ class CheckboxField extends SwitchField
    * CheckboxField constructor.
    *
    * @param string $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, array $options = array())
+  public function __construct(string $fieldname, array $options = [])
   {
     parent::__construct($fieldname, $options);
     if($this->isDefaultTemplate)

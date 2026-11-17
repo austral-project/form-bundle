@@ -17,6 +17,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral Field DatePicker Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @link https://jqueryui.com/datepicker/
  * @final
@@ -25,23 +29,23 @@ class DatePicker extends Field
 {
 
   /**
-   * @param $fieldname
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $options = array()): DatePicker
+  public static function create(string $fieldname, array $options = []): self
   {
     return new self($fieldname, $options);
   }
 
   /**
-   * DatePicker constructor.
+   * AddressAutoCompleteField constructor.
    *
    * @param string $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, array $options = array())
+  public function __construct(string $fieldname, array $options = [])
   {
     parent::__construct($fieldname, $options);
     $this->symfonyFormType = DateType::class;
@@ -54,9 +58,9 @@ class DatePicker extends Field
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  public function configureOptions(OptionsResolver $resolver)
+  public function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefault('date-format', "dd/MM/yyyy");
@@ -72,8 +76,8 @@ class DatePicker extends Field
           "maxDate"                   =>  null,
           "language"                  =>  "en",
           "format"                    =>  "",
-          "datesDisabled"             =>  array(),
-          "daysOfWeekDisabled"        =>  array()
+          "datesDisabled"             =>  [],
+          "daysOfWeekDisabled"        =>  []
         )
       );
       $resolverChild->setAllowedTypes('showWeek', array('boolean'));
@@ -92,7 +96,7 @@ class DatePicker extends Field
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {

@@ -14,16 +14,31 @@ use Austral\FormBundle\Field\Base\FieldInterface;
 use Austral\FormBundle\Field\UploadField;
 use Austral\FormBundle\Mapper\FormMapper;
 use Austral\FormBundle\Mapper\GroupFields;
-use Austral\FormBundle\Mapper\Popin;
+use Austral\FormBundle\Mapper\Modal;
 use Austral\ToolsBundle\AustralTools;
+use Random\RandomException;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * Austral Mapper Element.
+ * @template T of object
+ *
+ * @implements MapperElementInterface<T>
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @abstract
  */
 abstract class MapperElement implements MapperElementInterface
 {
+
+  /**
+   * @var string
+   */
+  public static string $keynameBefore = "";
+
+  /**
+   * @var string
+   */
+  public static string $keynameAfter = "";
 
   /**
    * @var bool
@@ -41,14 +56,14 @@ abstract class MapperElement implements MapperElementInterface
   protected string $keyname;
 
   /**
-   * @var array
+   * @var array<string, FieldInterface<object>|FieldInterface<T>|MapperElementInterface<T>>
    */
-  protected array $fields = array();
+  protected array $fields = [];
 
   /**
-   * @var array
+   * @var array<string, int>
    */
-  protected array $fieldKeynameByPositions = array();
+  protected array $fieldKeynameByPositions = [];
 
   /**
    * @var int|null
@@ -56,65 +71,78 @@ abstract class MapperElement implements MapperElementInterface
   protected ?int $sortable = null;
 
   /**
-   * @var MapperElementInterface
+   * @var array<string, mixed>
    */
-  protected MapperElementInterface $parent;
+  protected array $attr = [];
 
   /**
-   * @return MapperElementInterface
+   * @var MapperElementInterface<T>|null
    */
-  public function parent(): MapperElementInterface
+  protected ?MapperElementInterface $parent = null;
+
+  /**
+   * MapperElement constructor
+   *
+   * @param string $name
+   * @param MapperElementInterface<T>|null $parent
+   */
+  public function __construct(string $name, ?MapperElementInterface $parent = null)
+  {
+    $this->parent = $parent;
+    $this->name = $name;
+    $this->setKeyname($name);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function parent(): ?MapperElementInterface
   {
     return $this->parent;
   }
 
   /**
-   * @return FormMapper
+   * @inheritDoc
    */
-  public function formMapper(): FormMapper
+  public function formMapper(): ?FormMapper
   {
-    if(!$this->parent instanceof FormMapper)
+    if($this instanceof FormMapper)
     {
-      return $this->parent->formMapper();
+      return $this;
     }
-    return $this->parent;
+    return $this->parent?->formMapper();
   }
 
   /**
-   * @return bool
+   * @inheritDoc
    */
-  public function isInPopin(): bool
+  public function isInModal(): bool
   {
-    if($this instanceof Popin)
+    if($this instanceof Modal)
     {
       return true;
     }
-    elseif(!$this->parent instanceof FormMapper)
+    elseif($this->parent && !$this->parent instanceof FormMapper)
     {
-      return $this->parent->isInPopin();
+      return $this->parent->isInModal();
     }
     return false;
   }
 
   /**
-   * @param string $name
-   * @param string|null $fielname
-   * @param array $attr
-   *
-   * @return Popin
-   * @throws \Exception
+   * @inheritDoc
    */
-  public function addPopin(string $name, string $fielname = null, array $attr = array()): Popin
+  public function addModal(string $name, ?string $fieldname = null, array $attr = []): ?Modal
   {
-    return $this->formMapper()->addPopin($name, $fielname, $attr, $this);
+    return $this->formMapper()?->addModal($name, $fieldname, $attr, $this);
   }
 
   /**
-   * @return MapperElementInterface
+   * @inheritDoc
    */
   public function end(): MapperElementInterface
   {
-    return $this->parent;
+    return $this->parent ?? $this;
   }
 
   /**
@@ -134,31 +162,33 @@ abstract class MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return string
+   * setKeyname
+   *
+   * @param string $keyname
+   * @return $this
    */
-  public function getFieldname(): string
+  public function setKeyname(string $keyname): self
   {
-    return $this->keyname;
+    $slugger = new AsciiSlugger();
+    $this->keyname = self::$keynameBefore.strtolower($slugger->slug($keyname)).self::$keynameAfter;
+    return $this;
   }
 
   /**
-   * @param FieldInterface|null $field
-   * @param int|null $sortable
-   *
-   * @return MapperElement
+   * @inheritDoc
    */
-  public function add(?FieldInterface $field, int $sortable = null): MapperElement
+  public function add(?FieldInterface $field, ?int $sortable = null): self
   {
     if($field && $this->isView)
     {
-      $field->setIsInPopin($this->isInPopin());
+      $field->setIsInModal($this->isInModal());
       if($field->getIsView())
       {
-        if(array_key_exists($field->getFieldname(), $this->formMapper()->allFields()))
+        if(array_key_exists($field->getFieldname(), $this->allFields()))
         {
-          $this->formMapper()->removeAllField($field->getFieldname());
+          $this->formMapper()?->removeAllField($field->getFieldname());
         }
-        if($this->isView)
+        if($this->isView !== false)
         {
           $this->configField($field)->addAllFields($field);
           $this->fields[$field->getFieldname()] = $field;
@@ -177,27 +207,36 @@ abstract class MapperElement implements MapperElementInterface
    * @param string $name
    * @param string|null $entitled
    *
-   * @return GroupFields
+   * @return GroupFields<T>
+   * @throws RandomException
    */
-  public function addGroup(string $name, string $entitled = null): GroupFields
+  public function addGroup(string $name, ?string $entitled = null): GroupFields
   {
     $blockFields = new GroupFields($name, $this, $entitled);
-    if(!array_key_exists($blockFields->getKeyname(), $this->fields)) {
-
-      $this->fields[$blockFields->getKeyname()] = $blockFields;
+    $create = true;
+    if(array_key_exists($blockFields->getKeyname(), $this->fields)) {
+      $blockFieldExists = $this->fields[$blockFields->getKeyname()];
+      if($blockFieldExists instanceof GroupFields)
+      {
+        $blockFields = $blockFieldExists;
+        $create = false;
+      }
+      else
+      {
+        $blockFields->setKeyname($name."_".AustralTools::random(4));
+      }
     }
-    else {
-      $blockFields = $this->fields[$blockFields->getKeyname()];
+    if($create)
+    {
+      $this->fields[$blockFields->getKeyname()] = $blockFields;
     }
     return $blockFields;
   }
 
   /**
-   * @var array $fields
-   * @return $this
-   * @throws \Exception
+   * @inheritDoc
    */
-  public function adds(array $fields): MapperElement
+  public function adds(array $fields): self
   {
     foreach ($fields as $field)
     {
@@ -215,13 +254,13 @@ abstract class MapperElement implements MapperElementInterface
 
 
   /**
-   * @param FieldInterface $field
+   * @param FieldInterface<object>|FieldInterface<T> $field
    */
-  protected function uploadFieldEditor(FieldInterface $field)
+  protected function uploadFieldEditor(FieldInterface $field): void
   {
     if($field instanceof UploadField && $field->getEditorFields())
     {
-      /** @var FieldInterface $editorField */
+      /** @var FieldInterface<T> $editorField */
       foreach($field->getEditorFields() as $editorField)
       {
         $this->configField($editorField)->addAllFields($field);
@@ -232,9 +271,19 @@ abstract class MapperElement implements MapperElementInterface
   /**
    * @param string $fieldname
    *
+   * @return FieldInterface<object>|FieldInterface<T>|MapperElementInterface<T>|null
+   */
+  public function getField(string $fieldname): FieldInterface|MapperElementInterface|null
+  {
+    return array_key_exists($fieldname, $this->fields) ? $this->fields[$fieldname] : null;
+  }
+
+  /**
+   * @param string $fieldname
+   *
    * @return $this
    */
-  public function removeField(string $fieldname): MapperElement
+  public function removeField(string $fieldname): self
   {
     if(array_key_exists($fieldname, $this->fields))
     {
@@ -252,61 +301,56 @@ abstract class MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param FieldInterface $field
-   *
-   * @return MapperElement
+   * @inheritDoc
    */
-  public function configField(FieldInterface $field): MapperElement
+  public function configField(FieldInterface $field): self
   {
-    $this->parent()->configField($field);
+    $this->parent()?->configField($field);
     return $this;
   }
 
   /**
-   * @param string $fieldname
-   *
-   * @return FieldInterface|null
+   * @inheritDoc
    */
-  public function getField(string $fieldname): ?FieldInterface
+  public function addAllFields(FieldInterface $field): self
   {
-    return $this->parent()->getField($fieldname);
-  }
-
-  /**
-   * @param FieldInterface $field
-   *
-   * @return MapperElement
-   */
-  public function addAllFields(FieldInterface $field): MapperElement
-  {
-    $this->formMapper()->addAllFields($field);
+    $this->formMapper()?->addAllFields($field);
     return $this;
   }
 
   /**
-   * @param string $fieldname
-   *
-   * @return MapperElement
+   * @inheritDoc
    */
-  public function removeAllField(string $fieldname): MapperElement
+  public function allFields(): array
   {
-    $this->parent()->removeAllField($fieldname);
+    $fields = $this->formMapper()?->allFields();
+    if(!$fields)
+    {
+      $fields = [];
+    }
+    return $fields;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function removeAllField(string $fieldname): self
+  {
+    $this->parent()?->removeAllField($fieldname);
     return $this;
   }
 
   /**
-   * @param string $fieldMapping
-   *
-   * @return MapperElement
+   * @inheritDoc
    */
-  public function addFieldsMapping(string $fieldMapping): MapperElement
+  public function addFieldsMapping(string $fieldMapping): self
   {
-    $this->parent()->addFieldsMapping($fieldMapping);
+    $this->parent()?->addFieldsMapping($fieldMapping);
     return $this;
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFields(): array
   {
@@ -314,18 +358,18 @@ abstract class MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldsSortable(): array
   {
-    $fields = array();
+    $fields = [];
     $count = 0;
-    /** @var FieldInterface|GroupFields $field */
+    /** @var FieldInterface<T>|GroupFields<T> $field */
     foreach($this->fields as $field)
     {
       if($field instanceof FieldInterface)
       {
-        $sortable = AustralTools::getValueByKey($this->fieldKeynameByPositions, $field->getFieldname(), $count);
+        $sortable = AustralTools::valueByKey($this->fieldKeynameByPositions, $field->getFieldname(), $count);
         $keySortable = "{$sortable}-{$field->getFieldname()}";
       }
       else
@@ -341,18 +385,16 @@ abstract class MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param bool $isView
-   *
-   * @return MapperElement
+   * @inheritDoc
    */
-  public function setIsView(bool $isView): MapperElement
+  public function setIsView(bool $isView): self
   {
     $this->isView = $isView;
     return $this;
   }
 
   /**
-   * @return bool
+   * @inheritDoc
    */
   public function getIsView(): bool
   {
@@ -360,7 +402,7 @@ abstract class MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return int|null
+   * @inheritDoc
    */
   public function getSortable(): ?int
   {
@@ -368,14 +410,76 @@ abstract class MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param int|null $sortable
-   *
-   * @return MapperElement
+   * @inheritDoc
    */
-  public function setSortable(int $sortable = null): MapperElement
+  public function setSortable(?int $sortable = null): self
   {
     $this->sortable = $sortable;
     return $this;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function getAttr(): array
+  {
+    return $this->attr;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function setAttr(array $attr): self
+  {
+    $this->attr = $attr;
+    return $this;
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function classCss(): ?string
+  {
+    return AustralTools::valueByKey($this->attr, "class", null);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function attrString(): ?string
+  {
+    $attr = $this->attr;
+    if(array_key_exists("class", $attr))
+    {
+      unset($attr["class"]);
+    }
+    return $this->stringifyArray("", $attr);
+  }
+
+  /**
+   * @param string $value
+   * @param array<string, mixed> $array
+   *
+   * @return string
+   */
+  protected function stringifyArray(string $value = "", array $array = []): string
+  {
+    foreach ($array as $key => $val)
+    {
+      if(is_array($val))
+      {
+        $value = $this->stringifyArray($value, $val);
+      }
+      elseif($val)
+      {
+        $value .= "{$key}={$val} ";
+      }
+      else
+      {
+        $value .= "{$key}";
+      }
+    }
+    return trim($value);
   }
 
 

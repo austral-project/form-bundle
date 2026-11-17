@@ -17,6 +17,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral Field RecaptchaField Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -26,30 +30,30 @@ class RecaptchaField extends Field
   const FIELD_NAME = "_g-recaptcha-response";
 
   /**
-   * @param array $options
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create(array $options = array()): RecaptchaField
+  public static function create(array $options = []): self
   {
     return new self($options);
   }
 
   /**
-   * TextField constructor.
+   * RecaptchaField constructor.
    *
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct(array $options = array())
+  public function __construct(array $options = [])
   {
     parent::__construct(self::FIELD_NAME, $options);
     $this->symfonyFormType = HiddenType::class;
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  public function configureOptions(OptionsResolver $resolver)
+  public function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefault('secretKey', null);
@@ -107,7 +111,7 @@ class RecaptchaField extends Field
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {

@@ -13,6 +13,7 @@ namespace Austral\FormBundle\Validator;
 use Austral\FormBundle\Field\RecaptchaField;
 use Austral\FormBundle\Mapper\FormMapper;
 use Austral\FormBundle\Mapper\FormMappers;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\Exception\UnexpectedTypeException;
 use Symfony\Component\HttpClient\NativeHttpClient;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,6 +24,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * Austral Validator Recaptcha.
+ * @template T of object
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -32,40 +35,51 @@ class RecaptchaValidator extends ConstraintValidator
   /**
    * @var Request|null
    */
-  private ?Request $request;
+  protected ?Request $request = null;
 
   /**
-   * @var FormMappers
-   */
-  private FormMappers $formMappers;
-
-  /**
-   * @var TranslatorInterface
-   */
-  private TranslatorInterface $translator;
-
-  /**
+   * @param FormMappers<T> $formMappers
    * @param RequestStack $requestStack
-   * @param FormMappers $formMappers
+   * @param TranslatorInterface $translator
    */
-  public function __construct(RequestStack $requestStack, FormMappers $formMappers, TranslatorInterface $translator)
+  public function __construct(
+    #[Autowire(service: "austral.form.mappers")] protected FormMappers $formMappers,
+    protected RequestStack $requestStack,
+    protected TranslatorInterface $translator
+  )
   {
-    $this->request = $requestStack->getMainRequest();
-    $this->formMappers = $formMappers;
-    $this->translator = $translator;
+  }
+
+  /**
+   * setRequest
+   *
+   * @param RequestStack $requestStack
+   * @return $this
+   */
+  public function setRequest(RequestStack $requestStack): self
+  {
+    $this->requestStack = $requestStack;
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function validate($value, Constraint $constraint)
+  public function validate(mixed $value, Constraint $constraint): void
   {
-    foreach($this->request->request->keys() as $keyForm)
+    // The request is read at validation time (not when the service is built).
+    $this->request = $this->requestStack->getCurrentRequest();
+    $requestKeys = $this->request?->request->keys();
+    if(!is_iterable($requestKeys))
+    {
+      $requestKeys = [];
+    }
+    foreach($requestKeys as $keyForm)
     {
       /** @var FormMapper $formMapper */
       if($formMapper = $this->formMappers->getFormMapper($keyForm))
       {
-        /** @var RecaptchaField $fieldRecaptcha */
+        /** @var RecaptchaField<T> $fieldRecaptcha */
         if($fieldRecaptcha = $formMapper->getField(RecaptchaField::FIELD_NAME))
         {
           if($recaptchaSecretKey = $fieldRecaptcha->getSecretKey())
@@ -83,10 +97,9 @@ class RecaptchaValidator extends ConstraintValidator
               "body"    =>  array(
                 "secret"    => $recaptchaSecretKey,
                 "response"  => $value,
-                "remoteip"  => $this->request->getClientIp()
+                "remoteip"  => $this->request?->getClientIp()
               )
             );
-
             $response = $httpClient->request("POST", "https://www.google.com/recaptcha/api/siteverify", $requestParameters);
             $responseValue = json_decode($response->getContent(false), true);
             if($responseValue["success"] !== true)

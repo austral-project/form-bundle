@@ -10,51 +10,50 @@
 
 namespace Austral\FormBundle\Mapper;
 
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Form Mappers.
+ * @template T of object
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class FormMappers
 {
 
   /**
-   * @var EventDispatcherInterface|null
+   * @var array<string, FormMapper<T>>
    */
-  protected ?EventDispatcherInterface $dispatcher;
-
-  /**
-   * @var array
-   */
-  protected array $formMappers = array();
+  protected array $formMappers = [];
 
   /**
    * Mapper constructor.
    *
    */
-  public function __construct(EventDispatcherInterface $dispatcher = null)
+  public function __construct(#[Autowire(service: 'event_dispatcher')] protected EventDispatcherInterface $dispatcher)
   {
-    $this->dispatcher = $dispatcher;
   }
 
   /**
    * createFormMapper
    *
-   * @param $formMapperName
-   * @return FormMapper
+   * @param string $formMapperName
+   * @return FormMapper<T>
    */
-  public function createFormMapper($formMapperName): FormMapper
+  public function createFormMapper(string $formMapperName): FormMapper
   {
-    $this->formMappers[$formMapperName] = (new FormMapper($this->dispatcher))->setName($formMapperName);
-    return $this->formMappers[$formMapperName];
+    /** @var FormMapper<T> $formMapper */
+    $formMapper = new FormMapper($this->dispatcher, $formMapperName);
+    $this->formMappers[$formMapperName] = $formMapper;
+    return $formMapper;
   }
 
   /**
    * getFormMapper
    *
    * @param string $formMapperName
-   * @return FormMapper|null
+   * @return FormMapper<T>|null
    */
   public function getFormMapper(string $formMapperName): ?FormMapper
   {
@@ -65,7 +64,7 @@ class FormMappers
    * addFormMapper
    *
    * @param string $formMapperName
-   * @param FormMapper $formMapper
+   * @param FormMapper<T> $formMapper
    * @return $this
    */
   public function addFormMapper(string $formMapperName, FormMapper $formMapper): static
@@ -77,7 +76,7 @@ class FormMappers
   /**
    * getFormMappers
    *
-   * @return array
+   * @return array<string, FormMapper<T>>
    */
   public function getFormMappers(): array
   {

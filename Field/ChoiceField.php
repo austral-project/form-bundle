@@ -18,7 +18,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use function Symfony\Component\String\u;
 
 /**
- * Austral Field ChoiceRadio Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -26,18 +29,18 @@ class ChoiceField extends Field
 {
 
   /**
-   * @var array
+   * @var array<string, mixed>
    */
-  protected array $choices = array();
+  protected array $choices = [];
 
   /**
-   * @param $fieldname
-   * @param array $choices
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $choices
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $choices, array $options = array()): ChoiceField
+  public static function create(string $fieldname, array $choices, array $options = []): self
   {
     return new self($fieldname, $choices, $options);
   }
@@ -46,11 +49,11 @@ class ChoiceField extends Field
    * Choices constructor.
    *
    * @param string $fieldname
-   * @param array $choices
-   * @param array $options
+   * @param array<string, mixed> $choices
+   * @param array<string, mixed> $options
    *
    */
-  public function __construct($fieldname, array $choices, array $options = array())
+  public function __construct($fieldname, array $choices, array $options = [])
   {
     parent::__construct($fieldname, $options);
     $this->symfonyFormType = ChoiceType::class;
@@ -79,7 +82,7 @@ class ChoiceField extends Field
   /**
    * @param bool $value
    *
-   * @return array
+   * @return array<int, mixed>
    */
   protected function getDefaultStyleByValue(bool $value = false): array
   {
@@ -99,25 +102,25 @@ class ChoiceField extends Field
   }
 
   /**
-   * @param $resolver
+   * @param OptionsResolver $resolver
    */
-  protected function configureChoices($resolver)
+  protected function configureChoices(OptionsResolver $resolver): void
   {
     $resolver->setDefaults(array(
         "value"     =>  null,
-        "styles"    =>  array()
+        "styles"    =>  []
       )
     );
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  protected function configureOptions(OptionsResolver $resolver)
+  protected function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefault("choice_style", "full");
-    $resolver->setDefault("choices_styles", array());
+    $resolver->setDefault("choices_styles", []);
     $resolver->setDefault("multiple", false);
     $resolver->setDefault("direction", "horizontal");
   }
@@ -147,11 +150,11 @@ class ChoiceField extends Field
   }
 
   /**
-   * @return array
+   * @return array<string, mixed>
    */
   public function getStylesByChoices(): array
   {
-    $stylesValues = array();
+    $stylesValues = [];
     foreach($this->choices as $key => $values)
     {
       $styles = $values["styles"];
@@ -171,39 +174,36 @@ class ChoiceField extends Field
   /**
    * @param string $key
    *
-   * @return array
+   * @return array<int, mixed>
    */
   public function getStylesByChoiceKey(string $key): array
   {
-    return AustralTools::getValueByKey($this->getStylesByChoices(), $key, array());
+    return AustralTools::valueByKey($this->getStylesByChoices(), $key, []);
   }
 
   /**
-   * return array
+   * @return array<string, mixed>
    */
   public function getChoicesValues(): array
   {
-    $choicesValues = array();
-    foreach($this->choices as $key => $values)
-    {
-      $choicesValues[$key] = $values["value"];
-    }
-    return $choicesValues;
+    return array_map(function ($values) {
+      return $values["value"];
+    }, $this->choices);
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {
     $fieldOptions = parent::getFieldOptions();
 
-    $fieldOptions['choices'] = array_key_exists("choices", $fieldOptions) ? $fieldOptions["choices"] : $this->getChoicesValues();
-    $fieldOptions["multiple"] = array_key_exists("multiple", $fieldOptions) ? $fieldOptions["multiple"] : $this->options["multiple"];
+    $fieldOptions['choices'] = AustralTools::valueByKey($fieldOptions, "choices", $this->getChoicesValues());
+    $fieldOptions["multiple"] = AustralTools::valueByKey($fieldOptions, "multiple", $this->options["multiple"]);
     $fieldOptions["expanded"] = true;
     $fieldOptions["placeholder"] = false;
 
-    $autocomplete = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "autocomplete", "off");
+    $autocomplete = AustralTools::valueByKey(AustralTools::valueByKey($fieldOptions, "attr", []), "autocomplete", "off");
     if(!array_key_exists("choice_attr", $fieldOptions))
     {
       $fieldOptions["choice_attr"] = function($val, $key, $index) use($autocomplete) {

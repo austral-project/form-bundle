@@ -13,37 +13,43 @@ namespace Austral\FormBundle\Mapper;
 use Austral\FormBundle\Mapper\Base\MapperElementInterface;
 use Austral\FormBundle\Mapper\Base\MapperElement;
 
-use Austral\ToolsBundle\AustralTools;
-use Symfony\Component\DomCrawler\Field\FormField;
-use Symfony\Component\String\Slugger\AsciiSlugger;
-
 /**
- * Austral Group Fields Mapper.
+ * Austral Group Mapper.
+ * @template T of object
+ *
+ * @extends MapperElement<T>
+ * @implements MapperElementInterface<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class GroupFields extends MapperElement implements MapperElementInterface
 {
 
-  const STYLE_NONE = null;
-  const STYLE_BOOLEAN = "boolean-content";
-  const STYLE_WHITE = "white";
+  const null STYLE_NONE = null;
+  const string STYLE_BOOLEAN = "boolean-content";
+  const string STYLE_WHITE = "white";
 
-  const DIRECTION_ROW = "group-row";
-  const DIRECTION_COLUMN = "group-column";
+  const string DIRECTION_ROW = "group-row";
+  const string DIRECTION_COLUMN = "group-column";
 
-  const SIZE_AUTO = 'auto';
-  const SIZE_COL_1 = 'col--1';
-  const SIZE_COL_2 = 'col--2';
-  const SIZE_COL_3 = 'col--3';
-  const SIZE_COL_4 = 'col--4';
-  const SIZE_COL_5 = 'col--5';
-  const SIZE_COL_6 = 'col--6';
-  const SIZE_COL_7 = 'col--7';
-  const SIZE_COL_8 = 'col--8';
-  const SIZE_COL_9 = 'col--9';
-  const SIZE_COL_10 = 'col--10';
-  const SIZE_COL_11 = 'col--11';
-  const SIZE_COL_12 = 'col--12';
+  const string SIZE_AUTO = 'auto';
+  const string SIZE_COL_1 = 'col--1';
+  const string SIZE_COL_2 = 'col--2';
+  const string SIZE_COL_3 = 'col--3';
+  const string SIZE_COL_4 = 'col--4';
+  const string SIZE_COL_5 = 'col--5';
+  const string SIZE_COL_6 = 'col--6';
+  const string SIZE_COL_7 = 'col--7';
+  const string SIZE_COL_8 = 'col--8';
+  const string SIZE_COL_9 = 'col--9';
+  const string SIZE_COL_10 = 'col--10';
+  const string SIZE_COL_11 = 'col--11';
+  const string SIZE_COL_12 = 'col--12';
+
+  /**
+   * @var string
+   */
+  public static string $keynameBefore = "group-";
 
   /**
    * @var string|null
@@ -61,11 +67,6 @@ class GroupFields extends MapperElement implements MapperElementInterface
   protected ?string $size = self::SIZE_AUTO;
 
   /**
-   * @var array
-   */
-  protected array $attr = array();
-
-  /**
    * @var string
    */
   protected string $direction = self::DIRECTION_ROW;
@@ -74,16 +75,13 @@ class GroupFields extends MapperElement implements MapperElementInterface
    * Choices constructor.
    *
    * @param string $name
-   * @param MapperElementInterface $parent
+   * @param MapperElementInterface<T> $parent
    * @param string|null $entitled
    */
-  public function __construct(string $name, MapperElementInterface $parent, string $entitled = null)
+  public function __construct(string $name, MapperElementInterface $parent, ?string $entitled = null)
   {
-    $this->name = $name;
+    parent::__construct($name, $parent);
     $this->entitled = $entitled;
-    $slugger = new AsciiSlugger();
-    $this->keyname = "group-".strtolower($slugger->slug($name));
-    $this->parent = $parent;
     $this->isView = true;
   }
 
@@ -96,58 +94,19 @@ class GroupFields extends MapperElement implements MapperElementInterface
   }
 
   /**
+   * @return string
+   */
+  public function getFieldname(): string
+  {
+    return $this->keyname;
+  }
+
+  /**
    * @return string|null
    */
   public function style(): ?string
   {
     return $this->style;
-  }
-
-  /**
-   * @return string|null
-   */
-  public function classCss(): ?string
-  {
-    return AustralTools::getValueByKey($this->attr, "class", null);
-  }
-
-  /**
-   * @return string|null
-   */
-  public function attrString(): ?string
-  {
-    $attr = $this->attr;
-    if(array_key_exists("class", $attr))
-    {
-      unset($attr["class"]);
-    }
-    return $this->stringifyArray("", $attr);
-  }
-
-  /**
-   * @param string $value
-   * @param array $array
-   *
-   * @return string
-   */
-  protected function stringifyArray(string $value = "", array $array = array()): string
-  {
-    foreach ($array as $key => $val)
-    {
-      if(is_array($val))
-      {
-        $value = $this->stringifyArray($value, $val);
-      }
-      elseif($val)
-      {
-        $value .= "{$key}={$val} ";
-      }
-      else
-      {
-        $value .= "{$key}";
-      }
-    }
-    return trim($value);
   }
 
   /**
@@ -189,25 +148,6 @@ class GroupFields extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @return array
-   */
-  public function getAttr(): array
-  {
-    return $this->attr;
-  }
-
-  /**
-   * @param array $attr
-   *
-   * @return $this
-   */
-  public function setAttr(array $attr): GroupFields
-  {
-    $this->attr = $attr;
-    return $this;
-  }
-
-  /**
    * @return string
    */
   public function getDirection(): string
@@ -224,14 +164,6 @@ class GroupFields extends MapperElement implements MapperElementInterface
   {
     $this->direction = $direction;
     return $this;
-  }
-
-  /**
-   * @return MapperElementInterface|FormMapper|FormField|GroupFields
-   */
-  public function end(): MapperElementInterface
-  {
-    return $this->parent;
   }
 
 }

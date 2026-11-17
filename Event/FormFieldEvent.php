@@ -16,6 +16,7 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Austral Form Field Event.
+ * @template T of object
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -26,19 +27,19 @@ class FormFieldEvent extends Event
   const EVENT_AUSTRAL_FORM_PRE_SET_DATA = "austral.event.form.field.pre_set_data";
 
   /**
-   * @var FormMapper
+   * @var FormMapper<T>
    */
   private FormMapper $formMapper;
 
   /**
-   * @var FieldInterface
+   * @var FieldInterface<T>
    */
   private FieldInterface $field;
 
   /**
-   * @var mixed
+   * @var mixed|null
    */
-  private $data;
+  private mixed $data = null;
 
   /**
    * @var bool
@@ -48,11 +49,11 @@ class FormFieldEvent extends Event
   /**
    * FormFieldEvent constructor.
    *
-   * @param FormMapper $formMapper
-   * @param FieldInterface $field
-   * @param null $data
+   * @param FormMapper<T> $formMapper
+   * @param FieldInterface<T> $field
+   * @param mixed|null $data
    */
-  public function __construct(FormMapper $formMapper, FieldInterface $field, $data = null)
+  public function __construct(FormMapper $formMapper, FieldInterface $field, mixed $data = null)
   {
     $this->formMapper = $formMapper;
     $this->field = $field;
@@ -60,7 +61,7 @@ class FormFieldEvent extends Event
   }
 
   /**
-   * @return FormMapper
+   * @return FormMapper<T>
    */
   public function getFormMapper(): FormMapper
   {
@@ -68,7 +69,7 @@ class FormFieldEvent extends Event
   }
 
   /**
-   * @return FieldInterface
+   * @return FieldInterface<T>
    */
   public function getField(): FieldInterface
   {
@@ -76,11 +77,11 @@ class FormFieldEvent extends Event
   }
 
   /**
-   * @param FieldInterface $field
+   * @param FieldInterface<T> $field
    *
-   * @return FormFieldEvent
+   * @return $this
    */
-  public function setField(FieldInterface $field): FormFieldEvent
+  public function setField(FieldInterface $field): self
   {
     $this->field = $field;
     return $this;
@@ -89,17 +90,17 @@ class FormFieldEvent extends Event
   /**
    * @return mixed
    */
-  public function getData()
+  public function getData(): mixed
   {
     return $this->data;
   }
 
   /**
-   * @param mixed $data
+   * @param mixed|null $data
    *
    * @return $this
    */
-  public function setData($data): FormFieldEvent
+  public function setData(mixed $data = null): self
   {
     $this->data = $data;
     return $this;
@@ -118,7 +119,7 @@ class FormFieldEvent extends Event
    *
    * @return $this
    */
-  public function setUpdatePreSetData(bool $updatePreSetData): FormFieldEvent
+  public function setUpdatePreSetData(bool $updatePreSetData): self
   {
     $this->updatePreSetData = $updatePreSetData;
     return $this;

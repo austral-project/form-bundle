@@ -10,29 +10,34 @@
 
 namespace Austral\FormBundle\Field\Base;
 
+use Austral\Contracts\Entity\EntityInterface;
+use Austral\ToolsBundle\AustralTools;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral Base Field Select Input.
+ * @template T of object
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class BaseSelectField extends Field
 {
 
   /**
-   * @var array
+   * @var array<string, mixed>
    */
-  protected array $choices = array();
+  protected array $choices = [];
 
   /**
    * Choices constructor.
    *
    * @param string $fieldname
-   * @param array $choices
-   * @param array $options
+   * @param array<string, mixed> $choices
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, array $choices = array(), array $options = array())
+  public function __construct(string $fieldname, array $choices = [], array $options = [])
   {
     parent::__construct($fieldname, $options);
     $this->symfonyFormType = ChoiceType::class;
@@ -40,9 +45,9 @@ class BaseSelectField extends Field
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  protected function configureOptions(OptionsResolver $resolver)
+  protected function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefault("multiple", false)
@@ -106,14 +111,14 @@ class BaseSelectField extends Field
   }
 
   /**
-   * @return array
+   * @return array<string, mixed>
    */
   public function getFieldOptions(): array
   {
     $fieldOptions = parent::getFieldOptions();
     $fieldOptions['choices'] = array_key_exists("choices", $fieldOptions) ? $fieldOptions["choices"] : $this->choices;
     $fieldOptions["multiple"] = array_key_exists("multiple", $fieldOptions) ? $fieldOptions["multiple"] : $this->options["multiple"];
-
+    $fieldOptions["attr"]['autocomplete'] = AustralTools::valueByKey(AustralTools::valueByKey($fieldOptions, "attr", []), "autocomplete", "off");
     if($this->options["multiple"]) {
       $this->options['select-options']['removeItemButton'] = true;
     }
@@ -140,9 +145,13 @@ class BaseSelectField extends Field
   }
 
   /**
-   * @return string|null|\Closure
+   * getChoicesToTagsActivated
+   *
+   * @param EntityInterface<T>|null $object
+   * @param mixed $default
+   * @return array<string, mixed>
    */
-  public function getChoicesToTagsActivated($object = null, $default = array())
+  public function getChoicesToTagsActivated(?EntityInterface $object = null, mixed $default = []): array
   {
     if($this->options["select-options"]['function'])
     {
@@ -159,11 +168,11 @@ class BaseSelectField extends Field
   }
 
   /**
-   * @param array $choices
+   * @param array<string, mixed> $choices
    *
    * @return $this
    */
-  public function setChoices(array $choices = array()): BaseSelectField
+  public function setChoices(array $choices = []): self
   {
     $this->choices = $choices;
     return $this;

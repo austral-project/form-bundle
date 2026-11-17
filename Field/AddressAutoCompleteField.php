@@ -17,38 +17,42 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral Field AddressAutoComplete Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class AddressAutoCompleteField extends Field
 {
 
   /**
-   * @param $fieldname
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $options = array()): AddressAutoCompleteField
+  public static function create(string $fieldname, array $options = []): self
   {
     return new self($fieldname, $options);
   }
 
   /**
-   * TextField constructor.
+   * AddressAutoCompleteField constructor.
    *
    * @param string $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, array $options = array())
+  public function __construct(string $fieldname, array $options = [])
   {
     parent::__construct($fieldname, $options);
     $this->symfonyFormType = TextType::class;
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  public function configureOptions(OptionsResolver $resolver)
+  public function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefault('autocomplete-options', function (OptionsResolver $resolverChild) {
@@ -68,7 +72,7 @@ class AddressAutoCompleteField extends Field
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {

@@ -10,27 +10,28 @@
 
 namespace Austral\FormBundle\Form\Type;
 
-use Austral\EntityBundle\Entity\Interfaces\FileInterface;
-use Austral\EntityFileBundle\File\Mapping\FieldFileMapping;
 use Austral\FormBundle\Field\Base\FieldInterface;
 use Austral\FormBundle\Field\CollectionEmbedField;
 use Austral\FormBundle\Field\MultiField;
 use Austral\FormBundle\Field\SelectField;
-use Austral\FormBundle\Field\UploadField;
 use Austral\FormBundle\Mapper\FormMapper;
 
 use Austral\ToolsBundle\AustralTools;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Form\FormTypeInterface as SymfonyFormTypeInterface;
 
 /**
  * Austral FormType.
+ * @template T of object
+ *
+ * @implements FormTypeInterface<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class FormType extends AbstractType implements FormTypeInterface
@@ -38,27 +39,22 @@ class FormType extends AbstractType implements FormTypeInterface
   /**
    * @var AuthorizationCheckerInterface|null
    */
-  protected ?AuthorizationCheckerInterface $security;
-
-  /**
-   * @var ContainerInterface|null
-   */
-  protected ?ContainerInterface $container = null;
+  protected ?AuthorizationCheckerInterface $security = null;
 
   /**
    * @var string|null
    */
-  protected ?string $class;
+  protected ?string $class = null;
 
   /**
-   * @var ?FormMapper
+   * @var ?FormMapper<T>
    */
   protected ?FormMapper $formMapper = null;
 
   /**
-   * @var array
+   * @var array<string, FormMapper<T>>
    */
-  protected array $formMappers = array();
+  protected array $formMappers = [];
 
   /**
    * @var bool
@@ -77,8 +73,6 @@ class FormType extends AbstractType implements FormTypeInterface
 
   /**
    * FormType constructor.
-   *
-   * @param ?AuthorizationCheckerInterface $security
    */
   public function __construct()
   {
@@ -90,38 +84,26 @@ class FormType extends AbstractType implements FormTypeInterface
    * @param AuthorizationCheckerInterface|null $security
    * @return $this
    */
-  public function setSecurity(?AuthorizationCheckerInterface $security = null): FormType
+  public function setSecurity(?AuthorizationCheckerInterface $security = null): self
   {
     $this->security = $security;
     return $this;
   }
 
   /**
-   * setContainer
-   *
-   * @param ContainerInterface|null $container
-   * @return $this
+   * @return string|null
    */
-  public function setContainer(ContainerInterface $container = null): FormType
+  public function getBlockPrefix(): ?string
   {
-    $this->container = $container;
-    return $this;
+    return $this->getFormMapper()?->getName();
   }
 
   /**
-   * @return string
-   */
-  public function getBlockPrefix(): string
-  {
-    return $this->getFormMapper()->getName();
-  }
-
-  /**
-   * @param FormMapper $formMapper
+   * @param FormMapper<T> $formMapper
    *
    * @return $this
    */
-  public function setFormMapper(FormMapper $formMapper): FormType
+  public function setFormMapper(FormMapper $formMapper): self
   {
     if(!$this->formMapper)
     {
@@ -132,11 +114,11 @@ class FormType extends AbstractType implements FormTypeInterface
 
   /**
    * @param string $key
-   * @param FormMapper $formMapper
+   * @param FormMapper<T> $formMapper
    *
-   * @return FormType
+   * @return $this
    */
-  public function addFormMappers(string $key, FormMapper $formMapper): FormType
+  public function addFormMappers(string $key, FormMapper $formMapper): self
   {
     $this->formMappers[$key] = $formMapper;
     return $this;
@@ -145,9 +127,9 @@ class FormType extends AbstractType implements FormTypeInterface
   /**
    * @param FormBuilderInterface|null $builder
    *
-   * @return FormMapper
+   * @return FormMapper<T>|null
    */
-  protected function getFormMapper(FormBuilderInterface $builder = null): ?FormMapper
+  protected function getFormMapper(?FormBuilderInterface $builder = null): ?FormMapper
   {
     if($builder)
     {
@@ -158,9 +140,9 @@ class FormType extends AbstractType implements FormTypeInterface
         {
           return $this->formMappers[$attribute["formMapperKey"]];
         }
-        return AustralTools::getValueByKey($this->formMapper->getAllSubFormMapper(), $attribute["formMapperKey"]);
+        return AustralTools::valueByKey($this->formMapper?->getAllSubFormMapper() ?? [], $attribute["formMapperKey"]);
       }
-      else
+      elseif($this->formMapper)
       {
         if(array_key_exists($builder->getName(), $this->formMappers))
         {
@@ -180,127 +162,140 @@ class FormType extends AbstractType implements FormTypeInterface
    *
    * @return $this
    */
-  public function setClass(string $class): FormType
+  public function setClass(string $class): self
   {
     $this->class = $class;
     return $this;
   }
 
   /**
-   * @param $role
+   * @param mixed $role
    *
    * @return bool
    */
-  protected function isGranted($role): bool
+  protected function isGranted(mixed  $role): bool
   {
-    return $this->security->isGranted($role);
+    return $this->security?->isGranted($role) ?? false;
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  public function configureOptions(OptionsResolver $resolver)
+  public function configureOptions(OptionsResolver $resolver): void
   {
     $defaultParameters = array(
-      'validation_groups'   =>  $this->formMapper->getOption("validation_groups"),
-      "attr"                =>  array(),
-      "translation_domain"  =>  $this->formMapper->getOption("translation_domain")
+      'validation_groups'   =>  $this->formMapper?->getOption("validation_groups"),
+      "attr"                =>  [],
+      "translation_domain"  =>  $this->formMapper?->getOption("translation_domain")
     );
-    if(!$this->formMapper->getOption("html5_validate", false))
+    if($this->formMapper)
     {
-      $defaultParameters['attr']["novalidate"] = "novalidate";
-    }
-    if($uniqueFields = $this->formMapper->getUniqueFields())
-    {
-      foreach($uniqueFields as $uniqueField)
+      if(!$this->formMapper->getOption("html5_validate", false))
       {
-        $defaultParameters["constraints"][] = new UniqueEntity(array("fields"=>$uniqueField, "message" => "form.errors.unique"));
+        $defaultParameters['attr']["novalidate"] = "novalidate";
+      }
+      if($uniqueFields = $this->formMapper->getUniqueFields())
+      {
+        foreach($uniqueFields as $uniqueField)
+        {
+          $defaultParameters["constraints"][] = new UniqueEntity(fields: $uniqueField, message: "form.errors.unique");
+        }
       }
     }
+
     $resolver->setDefaults($defaultParameters);
   }
 
   /**
    * @param FormBuilderInterface $builder
-   * @param array $options
+   * @param array<string, mixed> $options
    *
    * @return void
    */
-  public function buildForm(FormBuilderInterface $builder, array $options)
+  public function buildForm(FormBuilderInterface $builder, array $options): void
   {
     $formMapper = $this->getFormMapper($builder);
-    foreach($formMapper->allFields() as $field)
+    if($formMapper)
     {
-      $this->addFieldToBuildForm($builder, $field, $formMapper);
-      $builder->addEventListener(
-        FormEvents::PRE_SUBMIT,
-        function(FormEvent $event) use($field, $formMapper)
-        {
-          $formData = $event->getData() ?? array();
-          if(array_key_exists($field->getFieldname(), $formData))
+      /** @var FieldInterface<T> $field */
+      foreach($formMapper->allFields() as $field)
+      {
+        $this->addFieldToBuildForm($builder, $field);
+        $builder->addEventListener(
+          FormEvents::PRE_SUBMIT,
+          function(FormEvent $event) use($field)
           {
-            $data = $event->getData()[$field->getFieldname()];
-            if($field instanceof SelectField && $field->tagsActivated())
+            $formData = $event->getData() ?? [];
+            if(array_key_exists($field->getFieldname(), $formData))
             {
-              $choices = array();
-              if(is_array($data)){
-                foreach($data as $choice){
-                  $choices[$choice] = $choice;
+              $data = $event->getData()[$field->getFieldname()];
+              if($field instanceof SelectField && $field->tagsActivated())
+              {
+                $choices = [];
+                if(is_array($data)){
+                  foreach($data as $choice){
+                    $choices[$choice] = $choice;
+                  }
                 }
-              }
-              else{
-                $choices[$data] = $data;
-              }
-              $field->setChoices($choices);
-              $options = $field->getFieldOptions();
-              $options["label"] = $field->getEntitled() ?? false;
-              if($contraints = $field->getConstraints())
-              {
-                $options["constraints"] = $contraints;
-              }
-              if($field->getSymfonyFormType())
-              {
-                $event->getForm()->add($field->getFieldname(), $field->getSymfonyFormType(), $options);
-              }
-            }
-          }
-        }
-      );
+                else{
+                  $choices[$data] = $data;
+                }
+                $this->buildFormSelectField($field, $choices, $event);
 
-      $builder->addEventListener(
-        FormEvents::PRE_SET_DATA,
-        function(FormEvent $event) use($field, $formMapper) {
-          if($data = $event->getData())
-          {
-            if($field instanceof SelectField && $field->tagsActivated())
+              }
+            }
+          }
+        );
+        $builder->addEventListener(
+          FormEvents::PRE_SET_DATA,
+          function(FormEvent $event) use($field) {
+            if($data = $event->getData())
             {
-              if($choices = $field->getChoicesToTagsActivated($data))
+              if($field instanceof SelectField && $field->tagsActivated())
               {
-                $field->setChoices($choices);
-                $options = $field->getFieldOptions();
-                $options["label"] = $field->getEntitled() ?? false;
-                if($contraints = $field->getConstraints())
+                if($choices = $field->getChoicesToTagsActivated($data))
                 {
-                  $options["constraints"] = $contraints;
-                }
-                if($field->getSymfonyFormType())
-                {
-                  $event->getForm()->add($field->getFieldname(), $field->getSymfonyFormType(), $options);
+                  $this->buildFormSelectField($field, $choices, $event);
                 }
               }
             }
           }
-        }
-      );
+        );
+      }
+    }
+  }
+
+  /**
+   * buildFormSelectField
+   *
+   * @param SelectField<T> $field
+   * @param array<string, mixed> $choices
+   * @param FormEvent $event
+   *
+   * @return void
+   */
+  protected function buildFormSelectField(SelectField $field, array $choices, FormEvent $event): void
+  {
+    $field->setChoices($choices);
+    $options = $field->getFieldOptions();
+    $options["label"] = $field->getEntitled() ?? false;
+    if($contraints = $field->getConstraints())
+    {
+      $options["constraints"] = $contraints;
+    }
+    if($field->getSymfonyFormType())
+    {
+      $event->getForm()->add($field->getFieldname(), $field->getSymfonyFormType(), $options);
     }
   }
 
   /**
    * @param FormBuilderInterface $builder
-   * @param FieldInterface $field
-   * @param FormMapper $formMapper
+   * @param FieldInterface<T> $field
+   *
+   * @return void
    */
-  protected function addFieldToBuildForm(FormBuilderInterface $builder, FieldInterface $field, FormMapper $formMapper)
+  protected function addFieldToBuildForm(FormBuilderInterface $builder, FieldInterface $field): void
   {
     if($field->getUsedGeneratedForm())
     {
@@ -310,130 +305,37 @@ class FormType extends AbstractType implements FormTypeInterface
       {
         $options["constraints"] = $contraints;
       }
-
-      $object = $builder->getData();
-      if($field instanceof UploadField && $this->container && $object)
+      $symfonyFormType = $field->getSymfonyFormType();
+      if($symfonyFormType && (class_exists($symfonyFormType) && is_subclass_of($symfonyFormType, SymfonyFormTypeInterface::class)))
       {
-        /** @var FieldFileMapping $fieldMapping */
-        if($fieldMapping = $this->container->get("austral.entity.mapping")->getFieldsMappingByFieldname($object->getClassnameForMapping(), FieldFileMapping::class, $field->getFieldname()))
+        $builder->add($field->getFieldname(), $symfonyFormType, $options);
+      }
+      elseif($field instanceof MultiField)
+      {
+        /** @var FieldInterface<T> $subField */
+        foreach($field->getFields() as $subField)
         {
-          if($filePath = $this->filePath($object, $field->getFieldname()))
-          {
-            $parameters = $field->getUploadFileParameters();
-
-            $isImage  = AustralTools::isImage($filePath);
-            $parameters["file"]["reelFilename"] = $fieldMapping->getFilename($object, true);
-            $parameters["file"]['path'] = array(
-              "view"          =>  $isImage ? $this->image($object, $field->getFieldname(), "original", "i", 1000, 1000) : null,
-              "original"      =>  $isImage ? $this->image($object, $field->getFieldname()) : null,
-              "download"      =>  $this->download($object, $field->getFieldname()),
-              "absolute"      =>  $filePath,
-            );
-            $parameters["file"]['infos']["mimeType"] = AustralTools::mimeType($filePath);
-            $parameters["file"]['infos']["extension"] = AustralTools::extension($filePath);
-            $parameters["file"]['infos']["size"] = filesize($filePath);
-            $parameters["file"]['infos']["sizeHuman"] = AustralTools::humanizeSize($filePath);
-            if($isImage)
-            {
-              $imageDimension = $isImage ? AustralTools::imageDimension($filePath, true) : array(
-                "width"             =>  null,
-                "height"            =>  null,
-              );
-              $aspectRatio = null;
-              if(array_key_exists("width", $imageDimension) && array_key_exists("height", $imageDimension))
-              {
-                if($imageDimension["width"] > 0 && $imageDimension["height"] > 0)
-                {
-                  $aspectRatio = $imageDimension["width"]/$imageDimension["height"];
-                }
-              }
-              $parameters["file"]['infos']["imageSize"] = $imageDimension ? implode(" x ", $imageDimension) : null;
-              $parameters["file"]['infos']["imageDimension"] = $imageDimension;
-              $parameters["file"]['infos']["aspectRatio"] = $aspectRatio;
-            }
-            $field->setUploadFileParameters($parameters);
-          }
+          $this->addFieldToBuildForm($builder, $subField);
         }
       }
 
-
-      if($field->getSymfonyFormType())
+      if($field instanceof CollectionEmbedField || AustralTools::usedClass(get_class($field), CollectionEmbedField::class))
       {
-        $builder->add($field->getFieldname(), $field->getSymfonyFormType(), $options);
-      }
-      elseif($field instanceof MultiField && $field->getFields())
-      {
-        foreach($field->getFields() as $field)
-        {
-          $this->addFieldToBuildForm($builder, $field, $formMapper);
-        }
-      }
-
-      if(get_class($field) == CollectionEmbedField::class || AustralTools::usedClass(get_class($field), CollectionEmbedField::class))
-      {
+        /** @var CollectionEmbedField<T> $field */
         if(count($field->getCollectionsForms()) > 0)
         {
-          /** @var FieldInterface $collectionsForm */
+          /** @var FieldInterface<T> $collectionsForm */
           foreach($field->getCollectionsForms() as $collectionsForm)
           {
-            $this->addFieldToBuildForm($builder, $collectionsForm, $formMapper);
+            $this->addFieldToBuildForm($builder, $collectionsForm);
           }
         }
-        else
-        {
-          $builder->add($field->getFieldname(), $field->getSymfonyFormType(), $options);
-        }
+        //elseif($symfonyFormType && (class_exists($symfonyFormType) && is_subclass_of($symfonyFormType, SymfonyFormTypeInterface::class)))
+        //{
+          //$builder->add($field->getFieldname(), $symfonyFormType, $options);
+        //}
       }
     }
-  }
-
-  /**
-   * @param FileInterface|null $object
-   * @param string $fieldname
-   *
-   * @return string|null
-   * @throws \Exception
-   */
-  public function filePath(?FileInterface $object, string $fieldname): ?string
-  {
-    /** @var FieldFileMapping $fieldMapping */
-    if($fieldMapping = $this->container->get("austral.entity.mapping")->getFieldsMappingByFieldname($object->getClassnameForMapping(), FieldFileMapping::class, $fieldname))
-    {
-      return $fieldMapping->getObjectFilePath($object);
-    }
-    return null;
-  }
-
-  /**
-   * Download Url initializations
-   *
-   * @param FileInterface $object
-   * @param string $fieldname
-   * @param array $params
-   *
-   * @return string|null
-   */
-  public function download(FileInterface $object, string $fieldname, array $params = array()): ?string
-  {
-    return $this->container->get('austral.entity_file.link.generator')->download($object, $fieldname, $params);
-  }
-
-  /**
-   * Download Url initializations
-   *
-   * @param FileInterface $object
-   * @param string $fieldname
-   * @param string|null $mode
-   * @param int|null $width
-   * @param int|null $height
-   * @param string|null $type
-   * @param array $params
-   *
-   * @return string|null
-   */
-  public function image(FileInterface $object, string $fieldname, ?string $type = "original", ?string $mode = "resize", int $width = null, int $height = null, array $params = array()): ?string
-  {
-    return $this->container->get('austral.entity_file.link.generator')->image($object, $fieldname, $type, $mode, $width, $height, $params);
   }
 
 }

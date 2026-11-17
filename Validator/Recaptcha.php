@@ -10,19 +10,33 @@
 
 namespace Austral\FormBundle\Validator;
 
+use Symfony\Component\Validator\Attribute\HasNamedArguments;
 use Symfony\Component\Validator\Constraint;
 
 /**
- * @Annotation
- * @Target({"PROPERTY", "METHOD", "ANNOTATION"})
+ * @Attribute
  *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
+#[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 class Recaptcha extends Constraint
 {
-  public $message = 'The Captcha is not valid : {{ reason }}.';
+  public string $message = 'The Captcha is not valid : {{ reason }}.';
 
-  public function __construct(array $options = null, string $message = null, array $groups = null, $payload = null)
+  /**
+   * Recaptcha constructor
+   *
+   * @param mixed|null $options
+   * @param string|null $message
+   * @param string[]|null $groups
+   * @param mixed|null $payload
+   */
+  #[HasNamedArguments]
+  public function __construct(
+    mixed $options = null,
+    ?string $message = null,
+    ?array $groups = null,
+    mixed $payload = null)
   {
     parent::__construct($options ?? [], $groups, $payload);
     $this->message = $message ?? $this->message;

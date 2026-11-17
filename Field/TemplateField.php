@@ -14,6 +14,10 @@ use Austral\FormBundle\Field\Base\Field;
 
 /**
  * Austral Field Template.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -21,19 +25,19 @@ class TemplateField extends Field
 {
 
   /**
-   * @var array 
+   * @var array<string, mixed>
    */
-  protected array $vars = array();
+  protected array $vars = [];
 
   /**
-   * @param $fieldname
+   * @param string $fieldname
    * @param string $templatePath
-   * @param array $options
-   * @param array $vars
+   * @param array<string, mixed> $options
+   * @param array<string, mixed> $vars
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, string $templatePath, array $options = array(), array $vars = array()): TemplateField
+  public static function create(string $fieldname, string $templatePath, array $options = [], array $vars = []): self
   {
     return new self($fieldname, $templatePath, $options, $vars);
   }
@@ -43,10 +47,10 @@ class TemplateField extends Field
    *
    * @param string $fieldname
    * @param string $templatePath
-   * @param array $options
-   * @param array $vars
+   * @param array<string, mixed> $options
+   * @param array<string, mixed> $vars
    */
-  public function __construct($fieldname, string $templatePath, array $options = array(), array $vars = array())
+  public function __construct(string $fieldname, string $templatePath, array $options = [], array $vars = [])
   {
     parent::__construct($fieldname, $options);
     $this->options["template"]["path"] = $templatePath;
@@ -57,7 +61,7 @@ class TemplateField extends Field
   }
 
   /**
-   * @return array
+   * @return array<string, mixed>
    */
   public function getVars(): array
   {
@@ -65,11 +69,11 @@ class TemplateField extends Field
   }
 
   /**
-   * @param array $vars
+   * @param array<string, mixed> $vars
    *
    * @return $this
    */
-  public function setVars(array $vars): TemplateField
+  public function setVars(array $vars): self
   {
     $this->vars = $vars;
     return $this;

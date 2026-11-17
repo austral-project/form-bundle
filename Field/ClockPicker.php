@@ -18,20 +18,24 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral Field ClockPicker Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
- * @link https://seballot.github.io/spectrum/
  * @final
  */
 class ClockPicker extends Field
 {
 
+
   /**
-   * @param $fieldname
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $options = array()): ClockPicker
+  public static function create(string $fieldname, array $options = []): self
   {
     return new self($fieldname, $options);
   }
@@ -40,9 +44,9 @@ class ClockPicker extends Field
    * ClockPicker constructor.
    *
    * @param string $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, array $options = array())
+  public function __construct(string $fieldname, array $options = [])
   {
     parent::__construct($fieldname, $options);
     $this->symfonyFormType = TimeType::class;
@@ -53,9 +57,9 @@ class ClockPicker extends Field
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  public function configureOptions(OptionsResolver $resolver)
+  public function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefault('clockpicker-options', function (OptionsResolver $resolverChild) {
@@ -73,7 +77,7 @@ class ClockPicker extends Field
 
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {
@@ -82,7 +86,7 @@ class ClockPicker extends Field
     $fieldOptions['with_seconds'] = false;
     $fieldOptions['html5'] = false;
     $fieldOptions["attr"]["data-clockpicker"] = true;
-    $fieldOptions["attr"]["class"] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "class")." timepicker-ui-input";
+    $fieldOptions["attr"]["class"] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", []), "class")." timepicker-ui-input";
     $fieldOptions["attr"]["data-clockpicker-options"] = json_encode($this->options['clockpicker-options']);
     return $fieldOptions;
   }

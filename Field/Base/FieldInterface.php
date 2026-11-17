@@ -12,10 +12,13 @@ namespace Austral\FormBundle\Field\Base;
 
 
 use Austral\FormBundle\Mapper\FormMapper;
+use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\Validator\Constraint;
 
 /**
  * Austral Field Interface.
+ * @template T of object
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @abstract
  */
@@ -24,28 +27,28 @@ interface FieldInterface
 
   /**
    * Get options
-   * @return array
+   * @return array<string, mixed>
    */
   public function getOptions(): array;
 
   /**
-   * @param array $options
+   * @param array<string, mixed> $options
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setOptions(array $options): FieldInterface;
+  public function setOptions(array $options): self;
 
   /**
-   * @return array
+   * @return array<string, mixed>
    */
   public function getFieldOptions(): array;
 
   /**
-   * @param array $fieldOptions
+   * @param array<string, mixed> $fieldOptions
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setFieldOptions(array $fieldOptions = array()): FieldInterface;
+  public function setFieldOptions(array $fieldOptions = []): self;
 
   /**
    * Get fieldname
@@ -56,36 +59,36 @@ interface FieldInterface
   /**
    * Get fieldname
    *
-   * @param $fieldname
+   * @param string $fieldname
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setFieldname($fieldname): FieldInterface;
+  public function setFieldname(string $fieldname): self;
 
   /**
-   * @return FormMapper|null
+   * @return FormMapper<T>|null
    */
   public function getFormMapper(): ?FormMapper;
 
   /**
-   * @param FormMapper|null $formMapper
+   * @param FormMapper<T>|null $formMapper
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setFormMapper(FormMapper $formMapper = null): FieldInterface;
+  public function setFormMapper(?FormMapper $formMapper = null): self;
 
   /**
    * Get entitled
    * @return string|bool|null
    */
-  public function getEntitled();
+  public function getEntitled(): bool|string|null;
 
   /**
-   * @param string|bool|null $entitled
+   * @param bool|string|null $entitled
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setEntitled($entitled = null): FieldInterface;
+  public function setEntitled(bool|string|null $entitled = null): self;
 
   /**
    * @return string
@@ -109,59 +112,60 @@ interface FieldInterface
 
   /**
    * Get symfonyFormType
-   * @return string|null
+   * @return class-string<FormTypeInterface>|string|null
    */
   public function getSymfonyFormType(): ?string;
 
   /**
-   * @param string $symfonyFormType
+   * @param class-string<FormTypeInterface> $symfonyFormType
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setSymfonyFormType(string $symfonyFormType): FieldInterface;
+  public function setSymfonyFormType(string $symfonyFormType): self;
 
   /**
    * @param string $key
-   * @param $value
+   * @param mixed $value
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function addOption(string $key, $value): FieldInterface;
+  public function addOption(string $key, mixed $value): self;
 
   /**
    * @param Constraint $addConstraint
+   * @param bool $replace replaces an existing constraint of the same class
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function addConstraint(Constraint $addConstraint): FieldInterface;
+  public function addConstraint(Constraint $addConstraint, bool $replace = false): self;
 
   /**
    * Get constraints
-   * @return array
+   * @return array<string|int, Constraint>
    */
   public function getConstraints(): array;
 
   /**
-   * @param array $constraints
+   * @param array<string|int, Constraint> $constraints
    *
-   * @return FieldInterface
+   * @return $this
    * @throws \Exception
    */
-  public function setConstraints(array $constraints = array()): FieldInterface;
+  public function setConstraints(array $constraints = []): self;
 
   /**
-   * @param int $key
+   * @param int|string $key
    *
    * @return $this
    */
-  public function removeContraintByKey(int $key): FieldInterface;
+  public function removeContraintByKey(int|string $key): self;
 
   /**
    * @param string $contraintClass
    *
    * @return $this
    */
-  public function removeContraintByClass(string $contraintClass): FieldInterface;
+  public function removeContraintByClass(string $contraintClass): self;
 
   /**
    * @param string $contraintClass
@@ -179,36 +183,36 @@ interface FieldInterface
   /**
    * @param bool $usedGeneratedForm
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setUsedGeneratedForm(bool $usedGeneratedForm): FieldInterface;
+  public function setUsedGeneratedForm(bool $usedGeneratedForm): self;
 
   /**
    * @return bool
    */
-  public function isInPopin(): bool;
+  public function isInModal(): bool;
 
   /**
-   * @param bool $isInPopin
+   * @param bool $isInModal
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setIsInPopin(bool $isInPopin): FieldInterface;
+  public function setIsInModal(bool $isInModal): self;
 
   /**
-   * Get popinId
+   * Get modalId
    * @return string|null
    */
-  public function getPopinId(): ?string;
+  public function getModalId(): ?string;
 
   /**
-   * set popinId
+   * set modalId
    *
-   * @param string|null $popinId
+   * @param string|null $modalId
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setPopinId(string $popinId = null): FieldInterface;
+  public function setModalId(?string $modalId = null): self;
 
   /**
    * Get required
@@ -219,14 +223,14 @@ interface FieldInterface
   /**
    * @param bool|null $required
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setRequired(?bool $required): FieldInterface;
+  public function setRequired(?bool $required): self;
 
   /**
    * @return mixed
    */
-  public function picto();
+  public function picto(): mixed;
 
   /**
    * Get isView
@@ -236,9 +240,11 @@ interface FieldInterface
 
   /**
    * Get isView
+   * @param bool $isView
+   *
    * @return $this
    */
-  public function setIsView($isView): FieldInterface;
+  public function setIsView(bool $isView): self;
 
   /**
    * Get autoConstraints
@@ -249,9 +255,9 @@ interface FieldInterface
   /**
    * @param bool $autoConstraints
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setAutoConstraints(bool $autoConstraints): FieldInterface;
+  public function setAutoConstraints(bool $autoConstraints): self;
 
   /**
    * @return string|null
@@ -261,16 +267,31 @@ interface FieldInterface
   /**
    * @param string $templatePath
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setTemplatePath(string $templatePath): FieldInterface;
+  public function setTemplatePath(string $templatePath): self;
+
+  /**
+   * getTemplateVars
+   *
+   * @return array<string, mixed>|null
+   */
+  public function getTemplateVars(): ?array;
+
+  /**
+   * setTemplateVars
+   * @param array<string, mixed> $templateVars
+   *
+   * @return $this
+   */
+  public function setTemplateVars(array $templateVars): self;
 
   /**
    * @param string|null $size
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setGroupSize(?string $size = null): FieldInterface;
+  public function setGroupSize(?string $size = null): self;
 
   /**
    * @return string|null
@@ -280,25 +301,40 @@ interface FieldInterface
   /**
    * @param string|null $class
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setGroupClass(?string $class = null): FieldInterface;
+  public function setGroupClass(?string $class = null): self;
 
   /**
    * @return string|null
    */
   public function getGroupClass(): ?string;
+
   /**
    * @return string|null
    */
   public function getHelper(): ?string;
 
   /**
+   * Content displayed before the field (path, html, twigComponent).
+   *
+   * @return array<string, mixed>|null
+   */
+  public function getBefore(): ?array;
+
+  /**
+   * Content displayed after the field (path, html, twigComponent).
+   *
+   * @return array<string, mixed>|null
+   */
+  public function getAfter(): ?array;
+
+  /**
    * @param string|null $helper
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setHelper(string $helper = null): FieldInterface;
+  public function setHelper(?string $helper = null): self;
 
   /**
    * @return bool
@@ -308,9 +344,9 @@ interface FieldInterface
   /**
    * @param bool $isDefaultTemplate
    *
-   * @return FieldInterface
+   * @return $this
    */
-  public function setDefaultTemplate(bool $isDefaultTemplate): FieldInterface;
+  public function setDefaultTemplate(bool $isDefaultTemplate): self;
 
   /**
    * @return bool
@@ -318,7 +354,7 @@ interface FieldInterface
   public function isWidgetInput(): bool;
 
   /**
-   * @return array
+   * @return array<string, mixed>
    */
   public function getEditorFields(): array;
 

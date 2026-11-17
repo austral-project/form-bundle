@@ -16,6 +16,10 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 
 /**
  * Austral Field Number Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -23,12 +27,12 @@ class IntegerField extends Field
 {
 
   /**
-   * @param $fieldname
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $options = array()): IntegerField
+  public static function create(string $fieldname, array $options = []): self
   {
     return new self($fieldname, $options);
   }
@@ -37,9 +41,9 @@ class IntegerField extends Field
    * IntegerField constructor.
    *
    * @param string $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, array $options = array())
+  public function __construct(string $fieldname, array $options = [])
   {
     parent::__construct($fieldname, $options);
     $this->symfonyFormType = IntegerType::class;

@@ -16,6 +16,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral Field Multi Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -23,30 +27,30 @@ class MultiField extends Field
 {
 
   /**
-   * @var array
+   * @var array<string, FieldInterface<T>>
    */
-  protected array $fields = array();
+  protected array $fields = [];
 
   /**
-   * @param $fieldname
-   * @param array $fields
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, FieldInterface<T>> $fields
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $fields, array $options = array()): MultiField
+  public static function create(string $fieldname, array $fields, array $options = []): self
   {
     return new self($fieldname, $fields, $options);
   }
 
   /**
-   * SymfonyField constructor.
+   * MultiField constructor.
    *
    * @param string $fieldname
-   * @param array $fields
-   * @param array $options
+   * @param array<string, FieldInterface<T>> $fields
+   * @param array<string, mixed> $options
    */
-  public function __construct(string $fieldname, array $fields, array $options = array())
+  public function __construct(string $fieldname, array $fields, array $options = [])
   {
     parent::__construct($fieldname, $options);
 
@@ -55,10 +59,7 @@ class MultiField extends Field
       $this->options["template"]["path"] = "multi-fields.html.twig";
     }
 
-    /**
-     * @var string $name
-     * @var FieldInterface $field
-     */
+    /** @var FieldInterface<T> $field */
     foreach($fields as $field)
     {
       if($field->getEntitled() == "fields.{$field->getFieldname()}.entitled")
@@ -71,22 +72,25 @@ class MultiField extends Field
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  public function configureOptions(OptionsResolver $resolver)
+  public function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefault('separator', null);
     $resolver->setAllowedTypes('separator', array('string', 'null'));
   }
 
-  public function getFieldSeparator()
+  /**
+   * @return string|null
+   */
+  public function getFieldSeparator(): ?string
   {
     return $this->options["separator"];
   }
 
   /**
-   * @return array
+   * @return array<string, FieldInterface<T>>
    */
   public function getFields(): array
   {

@@ -29,13 +29,15 @@ use function Symfony\Component\String\u;
 
 /**
  * Austral FormSubscriber.
+ * @template T of object
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
 class FormSubscriber implements EventSubscriberInterface
 {
   /**
-   * @return array
+   * @return array<string, string|array{0: string, 1: int}|list<array{0: string, 1?: int}>>
    */
   public static function getSubscribedEvents(): array
   {
@@ -51,48 +53,56 @@ class FormSubscriber implements EventSubscriberInterface
   }
 
   /**
-   * @param FormEvent $formEvent
+   * @param FormEvent<T> $formEvent
+   *
+   * @return void
    */
-  public function formValidate(FormEvent $formEvent)
+  public function formValidate(FormEvent $formEvent): void
   {
     $this->dispatchEventSubFormMapper($formEvent, FormEvent::EVENT_AUSTRAL_FORM_VALIDATE);
   }
 
   /**
-   * @param FormEvent $formEvent
+   * @param FormEvent<T> $formEvent
+   *
+   * @return void
    */
-  public function formAddAutoFields(FormEvent $formEvent)
+  public function formAddAutoFields(FormEvent $formEvent): void
   {
     $this->dispatchEventSubFormMapper($formEvent, FormEvent::EVENT_AUSTRAL_FORM_ADD_AUTO_FIELDS_AFTER);
   }
 
   /**
-   * @param FormEvent $formEvent
+   * @param FormEvent<T> $formEvent
+   *
+   * @return void
    */
-  public function formUpdateBefore(FormEvent $formEvent)
+  public function formUpdateBefore(FormEvent $formEvent): void
   {
     $this->dispatchEventSubFormMapper($formEvent, FormEvent::EVENT_AUSTRAL_FORM_UPDATE_BEFORE);
   }
 
   /**
-   * @param FormEvent $formEvent
+   * @param FormEvent<T> $formEvent
+   *
+   * @return void
    */
-  public function formUpdateAfter(FormEvent $formEvent)
+  public function formUpdateAfter(FormEvent $formEvent): void
   {
     $this->dispatchEventSubFormMapper($formEvent, FormEvent::EVENT_AUSTRAL_FORM_UPDATE_AFTER);
   }
 
   /**
-   * @param FormEvent $formEvent
-   * @param $eventName
+   * @param FormEvent<T> $formEvent
+   * @param string|null $eventName
    *
    * @return void
    */
-  protected function dispatchEventSubFormMapper(FormEvent $formEvent, $eventName)
+  protected function dispatchEventSubFormMapper(FormEvent $formEvent, ?string $eventName = null): void
   {
     if($formEvent->getFormMapper()->getSubFormMappers())
     {
-      /** @var FormMapper $subMapper */
+      /** @var FormMapper<T> $subMapper */
       foreach ($formEvent->getFormMapper()->getSubFormMappers() as $subMapper)
       {
         $subFormEvent = new FormEvent($subMapper);
@@ -100,19 +110,21 @@ class FormSubscriber implements EventSubscriberInterface
         {
           $subFormEvent->setForm($formEvent->getForm()->get($subMapper->getName()));
         }
-        $subMapper->getDispatcher()->dispatch($subFormEvent, $eventName);
+        $subMapper->getDispatcher()?->dispatch($subFormEvent, $eventName);
       }
     }
   }
 
   /**
-   * @param FormEvent $formEvent
+   * @param FormEvent<T> $formEvent
+   *
+   * @return void
    */
-  public function formInitEnd(FormEvent $formEvent)
+  public function formInitEnd(FormEvent $formEvent): void
   {
-    if(strpos($formEvent->getFormMapper()->getName(), "austral") !== false)
+    if(str_contains($formEvent->getFormMapper()->getName(), "austral"))
     {
-      /** @var FieldInterface $field */
+      /** @var FieldInterface<T> $field */
       foreach($formEvent->getFormMapper()->allFields() as $field)
       {
         $this->hydrateTemplateDefault($field, $formEvent->getFormMapper()->getPathToTemplateDefault());
@@ -122,16 +134,15 @@ class FormSubscriber implements EventSubscriberInterface
   }
 
   /**
-   * @param array $subFormMappers
+   * @param array<mixed, FormMapper<T>> $subFormMappers
    *
    * @return void
    */
-  protected function hydrateTemplateDefaultBySubFormMapper(array $subFormMappers = array())
+  protected function hydrateTemplateDefaultBySubFormMapper(array $subFormMappers = []): void
   {
-    /** @var FormMapper $subMapper */
     foreach($subFormMappers as $subMapper)
     {
-      /** @var FieldInterface $field */
+      /** @var FieldInterface<T> $field */
       foreach($subMapper->allFields() as $field)
       {
         $this->hydrateTemplateDefault($field, $subMapper->getPathToTemplateDefault());
@@ -141,14 +152,14 @@ class FormSubscriber implements EventSubscriberInterface
   }
 
   /**
-   * @param FieldInterface $field
-   * @param $pathToTemplate
+   * @param FieldInterface<T> $field
+   * @param string|null $pathToTemplate
    *
    * @return void
    */
-  protected function hydrateTemplateDefault(FieldInterface $field, $pathToTemplate)
+  protected function hydrateTemplateDefault(FieldInterface $field, ?string $pathToTemplate = null): void
   {
-    if(($templatePath = $field->getTemplatePath()) && $field->isDefaultTemplate())
+    if(($templatePath = $field->getTemplatePath()) && $field->isDefaultTemplate() && $pathToTemplate)
     {
       $field->setTemplatePath(u('/')->join(array(
             u($pathToTemplate)->trimEnd("/")->toString(),
@@ -161,7 +172,7 @@ class FormSubscriber implements EventSubscriberInterface
   }
 
   /**
-   * @var array
+   * @var array<string, string>
    */
   protected array $contraintsByTypes = array(
     "string"  =>  "string",
@@ -170,94 +181,73 @@ class FormSubscriber implements EventSubscriberInterface
   );
 
   /**
-   * @param FormFieldEvent $formFieldEvent
+   * @param FormFieldEvent<T> $formFieldEvent
+   *
+   * @return void
    */
-  public function fieldPreSetData(FormFieldEvent $formFieldEvent)
+  public function fieldPreSetData(FormFieldEvent $formFieldEvent): void
   {
 
   }
 
   /**
-   * @param FormFieldEvent $formFieldEvent
+   * @param FormFieldEvent<T> $formFieldEvent
+   *
+   * @return void
    */
-  public function fieldConfiguration(FormFieldEvent $formFieldEvent)
+  public function fieldConfiguration(FormFieldEvent $formFieldEvent): void
   {
     $field = $formFieldEvent->getField();
     $fieldsMapping = $formFieldEvent->getFormMapper()->getFieldsMapping();
 
     if($field->getAutoConstraints()) {
 
-      if($mapping = AustralTools::getValueByKey($fieldsMapping, $field->getFieldname())) {
-        if(AustralTools::getValueByKey($mapping, "nullable", true) === false) {
+      if($mapping = AustralTools::valueByKey($fieldsMapping, $field->getFieldname())) {
+        if(AustralTools::valueByKey($mapping, "nullable", true) === false) {
           if($field->getRequired() !== "no") {
             $field->setRequired(true);
           }
         }
 
-        $fieldTypeMapping = AustralTools::getValueByKey($mapping, "type", null) ;
-        if($fieldTypeMapping === "string" && !array_key_exists("enumType", $mapping)) {
-          $field->addConstraint(new Constraints\Length(array(
-                "max" => AustralTools::getValueByKey($mapping, "length"),
-                "maxMessage" => "errors.length.max"
-              )
-            )
-          );
+        $fieldTypeMapping = AustralTools::valueByKey($mapping, "type") ;
+        // An enum field (enumType) has no length constraint: the value is an enum case.
+        if($fieldTypeMapping === "string" && AustralTools::valueByKey($mapping, "enumType") === null) {
+          $length = (int) AustralTools::valueByKey($mapping, "length");
+          $field->addConstraint(new Constraints\Length(max: $length > 0 ? $length : null, maxMessage: "errors.length.max"));
         }
 
         if($field instanceof TextField) {
-          $messageErrorByTypeKey = "errors.type.{$fieldTypeMapping}";
+          $messageErrorByTypeKey = "errors.type.$fieldTypeMapping";
           if(array_key_exists($fieldTypeMapping, $this->contraintsByTypes))
           {
-            $field->addConstraint(new Constraints\Type(array(
-                  "type"=> $this->contraintsByTypes[$fieldTypeMapping],
-                  "message" => $messageErrorByTypeKey
-                )
-              )
-            );
+            $field->addConstraint(new Constraints\Type(type: $this->contraintsByTypes[$fieldTypeMapping], message: $messageErrorByTypeKey));
           }
           elseif($fieldTypeMapping === "datetime") {
-            $field->addConstraint(new Constraints\DateTime(array(
-                  "message" => $messageErrorByTypeKey
-                )
-              )
-            );
+            $field->addConstraint(new Constraints\DateTime(message: $messageErrorByTypeKey));
           }
-          if(AustralTools::getValueByKey($mapping, "unique", null) === true) {
+          if(AustralTools::valueByKey($mapping, "unique") === true) {
             $formFieldEvent->getFormMapper()->addUniqueField($field->getFieldname());
           }
         }
-        elseif($formFieldEvent->getField() instanceof UploadField) {
-          $field = $formFieldEvent->getField();
-          $field->addConstraint(new Constraints\File(array(
-                'maxSize' => $field->getMaxSize(),
-              )
-            )
-          );
+        elseif($field instanceof UploadField) {
+          $maxSize = $field->getMaxSize();
+          $field->addConstraint(new Constraints\File(maxSize: $maxSize));
         }
       }
 
       if($field->getRequired()) {
-        $field->addConstraint(new Constraints\NotNull(array(
-          "message" =>  "errors.not_null"
-        )));
+        $field->addConstraint(new Constraints\NotNull(message: "errors.not_null"));
       }
 
       if($field instanceof PasswordField) {
         $field->setRequired(true);
         if($pregMatch = $field->pregMatch())
         {
-          $field->addConstraint(new Constraints\Regex(array(
-                "pattern" => $pregMatch,
-                "message" => "errors.{$field->getFieldname()}.regex"
-              )
-            )
-          );
+          $field->addConstraint(new Constraints\Regex(pattern: $pregMatch,message: "errors.{$field->getFieldname()}.regex"));
         }
       }
       if($field instanceof RecaptchaField) {
-        $field->addConstraint(new Recaptcha(array(
-          "message" =>  "errors.captcha"
-        )));
+        $field->addConstraint(new Recaptcha(message: "errors.captcha"));
       }
     }
     foreach ($field->getConstraints() as $contraint)

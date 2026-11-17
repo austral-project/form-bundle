@@ -14,16 +14,24 @@ use Austral\FormBundle\Mapper\Base\MapperElementInterface;
 use Austral\FormBundle\Mapper\Base\MapperElement;
 
 use Ramsey\Uuid\Uuid;
-use Symfony\Component\DomCrawler\Field\FormField;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
- * Austral Popin Mapper.
+ * Austral Modal Mapper.
+ * @template T of object
+ *
+ * @extends MapperElement<T>
+ * @implements MapperElementInterface<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
-class Popin extends MapperElement implements MapperElementInterface
+class Modal extends MapperElement implements MapperElementInterface
 {
+
+  /**
+   * @var string
+   */
+  public static string $keynameBefore = "modal-";
 
   /**
    * @var string|null
@@ -31,33 +39,32 @@ class Popin extends MapperElement implements MapperElementInterface
   protected ?string $fieldname = null;
 
   /**
-   * @var string|null
+   * @var string
    */
-  protected ?string $popinKeyId = null;
+  protected string $modalKeyId;
 
   /**
-   * @var array
+   * @var array<string, mixed>
    */
-  protected array $options = array();
+  protected array $options = [];
 
   /**
    * Choices constructor.
    *
    * @param string $name
-   * @param MapperElementInterface $parent
+   * @param MapperElementInterface<T> $parent
    * @param string|null $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    *
    * @throws \Exception
    */
-  public function __construct(string $name, MapperElementInterface $parent, string $fieldname = null, array $options = array())
+  public function __construct(string $name, MapperElementInterface $parent, ?string $fieldname = null, array $options = [])
   {
-    $this->name = $name;
+    self::$keynameAfter = "_".Uuid::uuid4()->toString();
+    parent::__construct($name, $parent);
     $this->isView = true;
     $this->fieldname = $fieldname;
-    $slugger = new AsciiSlugger();
-    $this->keyname = "popin-".strtolower($slugger->slug($name))."_".Uuid::uuid4()->toString();
-    $this->popinKeyId = $this->keyname;
+    $this->modalKeyId = $this->keyname;
     $this->parent = $parent;
 
     $resolver = new OptionsResolver();
@@ -68,10 +75,10 @@ class Popin extends MapperElement implements MapperElementInterface
   /**
    * @param OptionsResolver $resolver
    */
-  protected function configureOptions(OptionsResolver $resolver)
+  protected function configureOptions(OptionsResolver $resolver): void
   {
-    $resolver->setDefault('attr', array());
-    $resolver->setDefault('popin', function (OptionsResolver $resolverChild) {
+    $resolver->setDefault('attr', []);
+    $resolver->setDefault('modal', function (OptionsResolver $resolverChild) {
       $resolverChild->setDefaults(array(
           "id"            =>  "master",
           "class"         =>  null,
@@ -87,7 +94,7 @@ class Popin extends MapperElement implements MapperElementInterface
           "entitled"            =>  "",
           "picto"               =>  "austral-picto-edit",
           "class"               =>  "button-picto",
-          "data"                =>  array()
+          "data"                =>  []
         )
       );
       $resolverChild->setAllowedTypes('entitled', array('string', "null"));
@@ -98,72 +105,48 @@ class Popin extends MapperElement implements MapperElementInterface
   }
 
   /**
-   * @param string $popinKeyId
+   * @param string $modalKeyId
    *
    * @return $this
    */
-  public function setPopinKeyId(string $popinKeyId): Popin
+  public function setModalKeyId(string $modalKeyId): Modal
   {
-    $this->popinKeyId = $popinKeyId;
+    $this->modalKeyId = $modalKeyId;
     return $this;
   }
 
   /**
    * @return string
    */
-  public function getPopinKeyId(): string
+  public function getModalKeyId(): string
   {
-    return $this->popinKeyId;
-  }
-
-  /**
-   * @return mixed
-   */
-  public function getPopin()
-  {
-    return $this->options['popin'];
-  }
-
-  public function getButton()
-  {
-    return $this->options['button'];
-  }
-
-  /**
-   * @return array
-   */
-  public function getAttr(): array
-  {
-    return $this->options['attr'];
+    return $this->modalKeyId;
   }
 
   /**
    * @return string
    */
-  public function getAttrString(): string
+  public function getModal(): string
   {
-    $attrString = "";
-    foreach($this->getAttr() as $key => $value)
-    {
-      $attrString .= $key."=".(is_array($value) ? json_encode($value) : $value);
-    }
-    return $attrString;
+    return $this->options['modal'];
+  }
+
+  /**
+   * getButton
+   *
+   * @return array<string, mixed>
+   */
+  public function getButton(): array
+  {
+    return $this->options['button'];
   }
 
   /**
    * @return string|null
    */
-  public function getFieldname(): string
+  public function getFieldname(): ?string
   {
     return $this->fieldname;
-  }
-
-  /**
-   * @return MapperElementInterface|FormMapper|FormField|GroupFields
-   */
-  public function end(): MapperElementInterface
-  {
-    return $this->parent;
   }
 
 }

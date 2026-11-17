@@ -17,6 +17,10 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 
 /**
  * Austral Field Textarea Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -33,13 +37,13 @@ class TextareaField extends Field
   protected string $size = self::SIZE_MIDDLE;
 
   /**
-   * @param $fieldname
+   * @param string $fieldname
    * @param string|null $size
-   * @param array $options
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, ?string $size = self::SIZE_MIDDLE, array $options = array()): TextareaField
+  public static function create(string $fieldname, ?string $size = self::SIZE_MIDDLE, array $options = []): self
   {
     return new self($fieldname, $size, $options);
   }
@@ -49,9 +53,9 @@ class TextareaField extends Field
    *
    * @param string $fieldname
    * @param string|null $size
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, ?string $size = self::SIZE_MIDDLE, array $options = array())
+  public function __construct(string $fieldname, ?string $size = self::SIZE_MIDDLE, array $options = [])
   {
     parent::__construct($fieldname, $options);
     $this->size = $size ?? self::SIZE_MIDDLE;
@@ -59,7 +63,7 @@ class TextareaField extends Field
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {
@@ -68,7 +72,7 @@ class TextareaField extends Field
     {
       $fieldOptions['attr']['rows'] = 2;
     }
-    $fieldOptions["attr"]["class"] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", array()), "class")." {$this->size}";
+    $fieldOptions["attr"]["class"] = AustralTools::valueByKey(AustralTools::valueByKey($fieldOptions, "attr", []), "class")." {$this->size}";
     return $fieldOptions;
   }
 

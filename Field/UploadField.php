@@ -19,6 +19,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Austral Field Upload File Input.
+ * @template T of object
+ *
+ * @extends Field<T>
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  * @final
  */
@@ -40,12 +44,12 @@ class UploadField extends Field
 
 
   /**
-   * @param $fieldname
-   * @param array $options
+   * @param string $fieldname
+   * @param array<string, mixed> $options
    *
-   * @return $this
+   * @return self<object>
    */
-  public static function create($fieldname, array $options = array()): UploadField
+  public static function create(string $fieldname, array $options = []): self
   {
     return new self($fieldname, $options);
   }
@@ -54,12 +58,12 @@ class UploadField extends Field
    * Choices constructor.
    *
    * @param string $fieldname
-   * @param array $options
+   * @param array<string, mixed> $options
    */
-  public function __construct($fieldname, array $options = array())
+  public function __construct(string $fieldname, array $options = [])
   {
-    $maxUpload = AustralTools::unHumanizeSize(ini_get('upload_max_filesize'));
-    $postMaxSize = AustralTools::unHumanizeSize(ini_get('post_max_size'));
+    $maxUpload = AustralTools::unHumanizeSize(ini_get('upload_max_filesize') === false ? null : ini_get('upload_max_filesize'));
+    $postMaxSize = AustralTools::unHumanizeSize(ini_get('post_max_size') === false ? null : ini_get('post_max_size'));
     $memoryLimit = AustralTools::unHumanizeSize(ini_get('memory_limit'));
     $maxUploadDefault = min($maxUpload, $postMaxSize, $memoryLimit);
     $this->maxSizeDefault = AustralTools::humanizeSize($maxUploadDefault, "Ko", 1, false)."k";
@@ -101,34 +105,34 @@ class UploadField extends Field
   }
 
   /**
-   * @param OptionsResolver $resolver
+   * @inheritDoc
    */
-  public function configureOptions(OptionsResolver $resolver)
+  public function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
     $resolver->setDefault('upload-file-parameters', function (OptionsResolver $resolverChild) {
       $this->resolverConfigureUploadFileParameters($resolverChild);
     });
     $resolver->setDefault('blockSize', self::DETAIL);
-    $resolver->setDefault('cropper', array());
+    $resolver->setDefault('cropper', []);
     $resolver->setDefault('cropperFieldKey', null);
   }
 
   /**
    * @param OptionsResolver $resolver
    */
-  protected function resolverConfigureUploadFileParameters(OptionsResolver $resolver)
+  protected function resolverConfigureUploadFileParameters(OptionsResolver $resolver): void
   {
     $resolver->setDefaults(array(
         "maxSize"             =>  null,
-        "imageSizes"          =>  array(),
-        "mimeTypes"           =>  array(),
+        "imageSizes"          =>  [],
+        "mimeTypes"           =>  [],
         "mimeTypesMessage"    =>  null,
         "maxSizeMessage"      =>  null,
         "extensions"          =>  null
       )
     );
-    $resolver->setAllowedTypes('maxSize', array('string', "null"));
+    $resolver->setAllowedTypes('maxSize', array('string', 'int', "null"));
     $resolver->setAllowedTypes('imageSizes', array('array', "null"));
     $resolver->setAllowedTypes('mimeTypes', array('array', "null"));
     $resolver->setAllowedTypes('mimeTypesMessage', array('string', "null"));
@@ -142,7 +146,7 @@ class UploadField extends Field
   /**
    * @param OptionsResolver $resolver
    */
-  protected function resolverConfigureImageSizes(OptionsResolver $resolver)
+  protected function resolverConfigureImageSizes(OptionsResolver $resolver): void
   {
     $resolver->setDefaults(array(
         "minWidth"    =>  null,
@@ -160,7 +164,7 @@ class UploadField extends Field
   /**
    * @param OptionsResolver $resolver
    */
-  protected function resolverConfigureInfos(OptionsResolver $resolver)
+  protected function resolverConfigureInfos(OptionsResolver $resolver): void
   {
     $resolver->setDefaults(array(
         "mimeType"        =>  null,
@@ -177,7 +181,7 @@ class UploadField extends Field
     });
     $resolver->setAllowedTypes('mimeType', array('string', "null"));
     $resolver->setAllowedTypes('extension', array('string', "null"));
-    $resolver->setAllowedTypes('size', array('int', "null"));
+    $resolver->setAllowedTypes('size', array('int', 'float', "null"));
     $resolver->setAllowedTypes('sizeHuman', array('string', "null"));
     $resolver->setAllowedTypes('imageSize', array('string', "null"));
     $resolver->setAllowedTypes('aspectRatio', array('int', 'float', "null"));
@@ -186,7 +190,7 @@ class UploadField extends Field
   /**
    * @param OptionsResolver $resolver
    */
-  protected function resolverConfigureFile(OptionsResolver $resolver)
+  protected function resolverConfigureFile(OptionsResolver $resolver): void
   {
     $resolver->setDefaults(array(
         "reelFilename"  =>  null,
@@ -215,7 +219,7 @@ class UploadField extends Field
   /**
    * @param OptionsResolver $resolver
    */
-  protected function resolverConfigureCropper(OptionsResolver $resolver)
+  protected function resolverConfigureCropper(OptionsResolver $resolver): void
   {
     $resolver->setDefaults(array(
         "picto"       =>  null,
@@ -230,9 +234,9 @@ class UploadField extends Field
   }
 
   /**
-   * @param array $fileParameters
+   * @param array<string, mixed> $fileParameters
    */
-  public function setFileParameters(array $fileParameters)
+  public function setFileParameters(array $fileParameters): void
   {
     $resolver = new OptionsResolver();
     $this->resolverConfigureFile($resolver);
@@ -240,7 +244,7 @@ class UploadField extends Field
   }
 
   /**
-   * @return array
+   * @return array<string, mixed>
    */
   public function getFileParameters(): array
   {
@@ -248,9 +252,10 @@ class UploadField extends Field
   }
 
   /**
-   * @param array $cropper
+   * @param array<string, mixed> $cropper
+   * @return $this
    */
-  public function setCropper(array $cropper)
+  public function setCropper(array $cropper): self
   {
     $resolver = new OptionsResolver();
     $this->resolverConfigureCropper($resolver);
@@ -272,10 +277,11 @@ class UploadField extends Field
       }
       $this->options['cropper'][$key] = $values;
     }
+    return $this;
   }
 
   /**
-   * @return array
+   * @return array<string, mixed>
    */
   public function getCropper(): array
   {
@@ -283,9 +289,9 @@ class UploadField extends Field
   }
 
   /**
-   * @return array|mixed
+   * @return array<string, mixed>
    */
-  public function getUploadFileParameters()
+  public function getUploadFileParameters(): array
   {
     $mimetypesString = implode(" ", $this->options['upload-file-parameters']['mimeTypes']);
     $this->options['upload-file-parameters']["extensions"] = preg_replace('/(\w{0,}\/)/', ".", $mimetypesString);
@@ -295,43 +301,45 @@ class UploadField extends Field
   /**
    * setUploadFileParameters
    *
-   * @param array $uploadFileParameters
-   * @return void
+   * @param array<string, mixed> $uploadFileParameters
+   * @return $this
    */
-  public function setUploadFileParameters(array $uploadFileParameters)
+  public function setUploadFileParameters(array $uploadFileParameters): self
   {
     $resolver = new OptionsResolver();
     $this->resolverConfigureUploadFileParameters($resolver);
     $this->options['upload-file-parameters'] = $resolver->resolve($uploadFileParameters);
+    return $this;
   }
 
   /**
-   * @param false $humanize
-   *
-   * @return float|string
+   * @param bool $humanize
+   * @param bool $useDefault
+   * @return positive-int|string
    */
-  public function getMaxSize(bool $humanize = false, $default = true)
+  public function getMaxSize(bool $humanize = false, bool $useDefault = true): int|string
   {
     $value = $this->options['upload-file-parameters']['maxSize'];
-    if(!$value && $default)
+    if(!$value && $useDefault)
     {
       $value = $this->maxSizeDefault;
     }
-    return $humanize ? AustralTools::unHumanizeSize($value) : $value;
+    $maxSize = $humanize ? AustralTools::unHumanizeSize($value) : $value;
+    return is_int($maxSize) ? (max($maxSize, 1)) : $maxSize;
   }
 
   /**
-   * @var string $maxSize
-   * @return UploadField
+   * @param positive-int|string $maxSize
+   * @return $this
    */
-  public function setMaxSize(string $maxSize): UploadField
+  public function setMaxSize(int|string $maxSize): self
   {
     $this->options['upload-file-parameters']['maxSize'] = $maxSize;
     return $this;
   }
 
   /**
-   * @return array
+   * @return array<string, mixed>
    */
   public function getImageSizes(): array
   {
@@ -339,11 +347,11 @@ class UploadField extends Field
   }
 
   /**
-   * @param array $imageSizes
+   * @param array{minWidth: int|null, maxWidth: int|null, minHeight: int|null, maxHeight: int|null} $imageSizes
    *
-   * @return UploadField
+   * @return $this
    */
-  public function setImageSizes(array $imageSizes): UploadField
+  public function setImageSizes(array $imageSizes): self
   {
     $resolver = new OptionsResolver();
     $this->resolverConfigureImageSizes($resolver);
@@ -352,7 +360,7 @@ class UploadField extends Field
   }
 
   /**
-   * @return array
+   * @return array<int, string>
    */
   public function getMimeTypes(): array
   {
@@ -360,24 +368,24 @@ class UploadField extends Field
   }
 
   /**
-   * @var array $mimeTypes
-   * @return UploadField
+   * @param array<int, string> $mimeTypes
+   * @return $this
    */
-  public function setMimeTypes(array $mimeTypes): UploadField
+  public function setMimeTypes(array $mimeTypes): self
   {
     $this->options['upload-file-parameters']['mimeTypes'] = $mimeTypes;
     return $this;
   }
 
   /**
-   * @return array
+   * @return array<string, string>
    */
   public function extensions(): array
   {
-    $extensions = array();
+    $extensions = [];
     foreach ($this->getMimeTypes() as $mimeType)
     {
-      if(strpos($mimeType, "/") !== false)
+      if(str_contains($mimeType, "/"))
       {
         list($mime, $extension) = explode("/", $mimeType);
         $extensions[$extension] = $extension;
@@ -401,10 +409,10 @@ class UploadField extends Field
   }
 
   /**
-   * @var string $maxSizeMessage
-   * @return UploadField
+   * @param string $maxSizeMessage
+   * @return $this
    */
-  public function setMaxSizeMessage(string $maxSizeMessage): UploadField
+  public function setMaxSizeMessage(string $maxSizeMessage): self
   {
     $this->options['upload-file-parameters']['maxSizeMessage'] = $maxSizeMessage;
     return $this;
@@ -421,10 +429,10 @@ class UploadField extends Field
   }
 
   /**
-   * @var string $mimeTypesMessage
-   * @return UploadField
+   * @param string $mimeTypesMessage
+   * @return $this
    */
-  public function setMimeTypesMessage(string $mimeTypesMessage): UploadField
+  public function setMimeTypesMessage(string $mimeTypesMessage): self
   {
     $this->options['upload-file-parameters']['mimeTypesMessage'] = $mimeTypesMessage;
     return $this;
@@ -439,7 +447,7 @@ class UploadField extends Field
   }
 
   /**
-   * @return array
+   * @inheritDoc
    */
   public function getFieldOptions(): array
   {
