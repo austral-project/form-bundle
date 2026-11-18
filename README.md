@@ -2,9 +2,9 @@
 
 [![Version](https://img.shields.io/packagist/v/austral/form-bundle?label=version)](https://packagist.org/packages/austral/form-bundle)
 [![CI](https://github.com/austral-project/form-bundle/actions/workflows/ci.yml/badge.svg?branch=4.x)](https://github.com/austral-project/form-bundle/actions/workflows/ci.yml)
-[![PHP](https://img.shields.io/packagist/dependency-v/austral/form-bundle/php)](https://packagist.org/packages/austral/form-bundle)
+[![PHP](https://img.shields.io/packagist/dependency-v/austral/form-bundle/php?version=4.x-dev)](https://packagist.org/packages/austral/form-bundle)
 [![Symfony](https://img.shields.io/badge/symfony-7.4-black)](https://symfony.com/releases/7.4)
-[![License](https://img.shields.io/packagist/l/austral/form-bundle)](LICENSE)
+[![License](https://img.shields.io/github/license/austral-project/form-bundle)](LICENSE)
 
 Form builder and mapper for Austral
 
