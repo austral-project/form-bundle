@@ -24,12 +24,12 @@ use Symfony\Contracts\EventDispatcher\Event;
 class FormEvent extends Event
 {
 
-  const EVENT_AUSTRAL_FORM_VALIDATE = "austral.event.form.validate";
-  const EVENT_AUSTRAL_FORM_UPDATE_BEFORE = "austral.event.form.update_before";
-  const EVENT_AUSTRAL_FORM_UPDATE_AFTER = "austral.event.form.update_after";
-  const EVENT_AUSTRAL_FORM_ADD_AUTO_FIELDS_BEFORE = "austral.event.form.add_auto_fields_before";
-  const EVENT_AUSTRAL_FORM_ADD_AUTO_FIELDS_AFTER = "austral.event.form.add_auto_fields_after";
-  const EVENT_AUSTRAL_FORM_INIT_END = "austral.event.form.init_end";
+  const string EVENT_AUSTRAL_FORM_VALIDATE = "austral.event.form.validate";
+  const string EVENT_AUSTRAL_FORM_UPDATE_BEFORE = "austral.event.form.update_before";
+  const string EVENT_AUSTRAL_FORM_UPDATE_AFTER = "austral.event.form.update_after";
+  const string EVENT_AUSTRAL_FORM_ADD_AUTO_FIELDS_BEFORE = "austral.event.form.add_auto_fields_before";
+  const string EVENT_AUSTRAL_FORM_ADD_AUTO_FIELDS_AFTER = "austral.event.form.add_auto_fields_after";
+  const string EVENT_AUSTRAL_FORM_INIT_END = "austral.event.form.init_end";
 
   /**
    * @var FormInterface<T>|null

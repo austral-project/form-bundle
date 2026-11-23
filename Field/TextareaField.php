@@ -27,9 +27,9 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 class TextareaField extends Field
 {
 
-  const SIZE_MIDDLE = "middle";
-  const SIZE_AUTO = "auto";
-  const SIZE_BIG = "big";
+  const string SIZE_MIDDLE = "middle";
+  const string SIZE_AUTO = "auto";
+  const string SIZE_BIG = "big";
 
   /**
    * @var string

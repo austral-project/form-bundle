@@ -29,14 +29,14 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class UploadField extends Field
 {
 
-  const DETAIL = "detail";
-  const LIGHT = "little";
+  const string DETAIL = "detail";
+  const string LIGHT = "little";
 
   /**
    * @var string
    */
   protected string $maxSizeDefault;
-  
+
   /**
    * @var string|null
    */
@@ -84,7 +84,7 @@ class UploadField extends Field
       $this->options["template"]["path"] = "upload-file.html.twig";
     }
   }
-  
+
   /**
    * @param string $typeFile
    *
@@ -95,7 +95,7 @@ class UploadField extends Field
     $this->typeFile = $typeFile;
     return $this;
   }
-  
+
   /**
    * @return string|null
    */

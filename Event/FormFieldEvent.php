@@ -23,8 +23,8 @@ use Symfony\Contracts\EventDispatcher\Event;
 class FormFieldEvent extends Event
 {
 
-  const EVENT_AUSTRAL_FIELD_CONFIGURATION = "austral.event.form.field.configuration";
-  const EVENT_AUSTRAL_FORM_PRE_SET_DATA = "austral.event.form.field.pre_set_data";
+  const string EVENT_AUSTRAL_FIELD_CONFIGURATION = "austral.event.form.field.configuration";
+  const string EVENT_AUSTRAL_FORM_PRE_SET_DATA = "austral.event.form.field.pre_set_data";
 
   /**
    * @var FormMapper<T>

@@ -27,7 +27,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class RecaptchaField extends Field
 {
 
-  const FIELD_NAME = "_g-recaptcha-response";
+  const string FIELD_NAME = "_g-recaptcha-response";
 
   /**
    * @param array<string, mixed> $options
