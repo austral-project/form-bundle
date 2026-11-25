@@ -77,12 +77,16 @@ final class AustralFormType extends AbstractType
     ]);
     $resolver->setDefault('entry_vars', null);
     $resolver->setAllowedTypes('entry_vars', ['null', \Closure::class]);
-    $resolver->addNormalizer('constraints', function (Options $options, mixed $constraints): array {
-      return array_merge(
-        \is_array($constraints) ? $constraints : [$constraints],
-        $this->constraintGuesser->guessClassConstraints($options['data_class'], $options['mapper']),
-      );
-    });
+    // "constraints" comes from the validator extension of the form component (always there in an application).
+    if ($resolver->isDefined('constraints'))
+    {
+      $resolver->addNormalizer('constraints', function (Options $options, mixed $constraints): array {
+        return array_merge(
+          \is_array($constraints) ? $constraints : [$constraints],
+          $this->constraintGuesser->guessClassConstraints($options['data_class'], $options['mapper']),
+        );
+      });
+    }
   }
 
   /**

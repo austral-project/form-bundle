@@ -1,0 +1,132 @@
+{#
+ # This file is part of the Austral Form Bundle package.
+ #
+ # (c) Austral <support@austral.dev>
+ #
+ # For the full copyright and license information, please view the LICENSE
+ # file that was distributed with this source code.
+ #}
+{#
+ # Minimal theme of the Austral forms: semantic HTML, no style, no Twig component. It renders the view contract
+ # (form.vars.austral_layout and form.vars.austral) and is the reference for the themes of design-bundle.
+ #
+ #   twig:
+ #     form_themes: ['@AustralForm/form/austral_layout.html.twig']
+ #
+ # A slot (before / after) with a "component" is not rendered here: Twig components belong to design-bundle.
+ #}
+{% use 'form_div_layout.html.twig' with form_row as base_form_row %}
+
+{# Root form and every entry of a collection (block prefix austral_form) #}
+{%- block austral_form_widget -%}
+  {%- import _self as austral -%}
+  {#- novalidate belongs to the <form> tag only -#}
+  {%- set attr = attr|filter((value, name) => name != 'novalidate') -%}
+  <div {{ block('widget_container_attributes') }}>
+    {%- if form is rootform -%}
+      {{- form_errors(form) -}}
+    {%- endif -%}
+    {%- for node in austral_layout -%}
+      {{- austral.node(node, form) -}}
+    {%- endfor -%}
+    {{- form_rest(form) -}}
+  </div>
+{%- endblock austral_form_widget -%}
+
+{# A field of an Austral form: its presentation (form.vars.austral) around the Symfony row #}
+{%- block form_row -%}
+  {%- if austral is defined and austral is not null -%}
+    {%- import _self as austral_macros -%}
+    {%- set row_classes = ['austral-row', austral.field_class, austral.container_class, austral.size]|filter(value => value) -%}
+    {%- set widget_attr = austral.class ? attr|merge({class: ((attr.class ?? '') ~ ' ' ~ austral.class)|trim}) : attr -%}
+    <div class="{{ row_classes|join(' ') }}" data-label-position="{{ austral.label_position }}">
+      {{- austral_macros.slot(austral.before, form, 'before') -}}
+      {{- form_label(form) -}}
+      {%- if austral.picto -%}
+        <span class="austral-picto {{ austral.picto }}" aria-hidden="true"></span>
+      {%- endif -%}
+      {{- form_widget(form, {attr: widget_attr}) -}}
+      {%- if austral.helper -%}
+        <p class="austral-helper">{{ austral.helper|trans({}, translation_domain) }}</p>
+      {%- endif -%}
+      {{- form_errors(form) -}}
+      {{- austral_macros.slot(austral.after, form, 'after') -}}
+    </div>
+  {%- else -%}
+    {{- block('base_form_row') -}}
+  {%- endif -%}
+{%- endblock form_row -%}
+
+{# ---- Macros ---- #}
+
+{% macro node(node, form) -%}
+  {%- import _self as austral -%}
+  {%- set translation_domain = form.vars.translation_domain -%}
+  {%- set attributes = node.attr ?? {} -%}
+  {%- if node.type == 'fieldset' -%}
+    <fieldset id="{{ node.id }}" class="austral-fieldset austral-fieldset--{{ node.position }}{{ node.collapse ? ' austral-fieldset--collapse' }}"{{ austral.attributes(attributes) }}>
+      {%- if node.show_label and node.label is not same as(false) and node.label is not null -%}
+        <legend>{{ node.label|trans(node.label_parameters, translation_domain) }}</legend>
+      {%- endif -%}
+      {{- austral.children(node.children, form) -}}
+    </fieldset>
+  {%- elseif node.type == 'group' -%}
+    <div id="{{ node.id }}" class="{{ ['austral-group', node.direction, node.size, node.style]|filter(value => value)|join(' ') }}"{{ austral.attributes(attributes) }}>
+      {%- if node.label is not same as(false) and node.label is not null -%}
+        <p class="austral-group__label">{{ node.label|trans({}, translation_domain) }}</p>
+      {%- endif -%}
+      {{- austral.children(node.children, form) -}}
+    </div>
+  {%- elseif node.type == 'modal' -%}
+    {%- set button_label = node.button.label ?? node.label -%}
+    <button type="button" class="{{ node.button.class }}" data-austral-modal="{{ node.id }}"{% for name, value in node.button.data %} data-{{ name }}="{{ value }}"{% endfor %}>
+      {%- if node.button.picto -%}<span class="{{ node.button.picto }}" aria-hidden="true"></span>{%- endif -%}
+      {%- if button_label is not same as(false) and button_label is not null -%}{{ button_label|trans({}, translation_domain) }}{%- endif -%}
+    </button>
+    <dialog id="{{ node.id }}" class="austral-modal{{ node.modal.class ? ' ' ~ node.modal.class }}"{{ austral.attributes(attributes) }}>
+      {%- if node.label is not same as(false) and node.label is not null -%}
+        <h2 class="austral-modal__title">{{ node.label|trans({}, translation_domain) }}</h2>
+      {%- endif -%}
+      {{- austral.children(node.children, form) -}}
+    </dialog>
+  {%- elseif node.type == 'template' -%}
+    {%- if node.template -%}
+      {{- include(node.template, node.template_vars|merge({form: form, austral: node.austral})) -}}
+    {%- endif -%}
+  {%- elseif node.type == 'variants' -%}
+    <div id="{{ node.id }}" class="austral-variants">
+      {%- for name in node.children -%}
+        {{- form_row(form[name]) -}}
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro children(children, form) -%}
+  {%- import _self as austral -%}
+  {%- for child in children -%}
+    {%- if child is iterable -%}
+      {{- austral.node(child, form) -}}
+    {%- else -%}
+      {{- form_row(form[child]) -}}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endmacro %}
+
+{% macro slot(slot, form, position) -%}
+  {%- if slot is not null and (slot.html or slot.template) -%}
+    <div class="austral-slot austral-slot--{{ position }}">
+      {%- if slot.html -%}
+        {{- slot.html|raw -}}
+      {%- else -%}
+        {{- include(slot.template, slot.parameters|merge({form: form})) -}}
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro attributes(attributes) -%}
+  {%- for name, value in attributes -%}
+    {{- ' ' -}}{{ name }}="{{ value }}"
+  {%- endfor -%}
+{%- endmacro %}
