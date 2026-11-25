@@ -74,7 +74,7 @@ final class ThemeTest extends TestCase
 
   public function testNoValidateOnTheForm(): void
   {
-    $xpath = $this->render($this->form((new FormMapper('form_austral'))->add(TextField::create('title')), null));
+    $xpath = $this->render($this->form(new FormMapper('form_austral')->add(TextField::create('title')), null));
 
     self::assertSame('novalidate', $this->attribute($xpath, '//form', 'novalidate'));
     self::assertSame(0, $xpath->query('//div[@novalidate]')->length);
@@ -82,7 +82,7 @@ final class ThemeTest extends TestCase
 
   public function testSlots(): void
   {
-    $mapper = (new FormMapper('form_austral'))->add(TextField::create('title', [
+    $mapper = new FormMapper('form_austral')->add(TextField::create('title', [
       'before' => '<strong class="slot-html">Before</strong>',
       'after' => ['template' => 'slot.html.twig', 'parameters' => ['text' => 'After']],
     ]));
@@ -113,7 +113,7 @@ final class ThemeTest extends TestCase
     $items->addFieldset('item', 'fieldsets.item')
       ->setLabelParametersResolver(static fn (Fieldset $fieldset, ?object $item): array => ['%label%' => $item instanceof GalleryItem ? $item->label : ''])
       ->add(TextField::create('label'));
-    $mapper = (new FormMapper('form_austral', Gallery::class))->add(CollectionEmbedField::create('items', ['entry' => ['mapper' => $items]]));
+    $mapper = new FormMapper('form_austral', Gallery::class)->add(CollectionEmbedField::create('items', ['entry' => ['mapper' => $items]]));
     $gallery = new Gallery();
     $gallery->items = [new GalleryItem('First'), new GalleryItem('Second')];
 
@@ -129,13 +129,13 @@ final class ThemeTest extends TestCase
   public function testVariants(): void
   {
     $variant = static fn (string $type): CollectionEmbedField => CollectionEmbedField::create("items_{$type}", [
-      'entry' => ['mapper' => (new FormMapper($type, GalleryItem::class))->add(TextField::create('label'))],
+      'entry' => ['mapper' => new FormMapper($type, GalleryItem::class)->add(TextField::create('label'))],
       'getter' => static fn (Gallery $gallery): array => $gallery->getItemsByType($type),
       'setter' => static function (Gallery $gallery, array $items) use ($type): void {
         $gallery->setItemsByType($type, $items);
       },
     ]);
-    $mapper = (new FormMapper('form_austral', Gallery::class))->add(CollectionEmbedField::create('items')->addVariant('image', $variant('image'))->addVariant('text', $variant('text')));
+    $mapper = new FormMapper('form_austral', Gallery::class)->add(CollectionEmbedField::create('items')->addVariant('image', $variant('image'))->addVariant('text', $variant('text')));
     $gallery = new Gallery();
     $gallery->items = [new GalleryItem('Photo', 1, 'image')];
 
@@ -168,7 +168,7 @@ final class ThemeTest extends TestCase
    */
   private function render(FormInterface $form): \DOMXPath
   {
-    $bridge = \dirname((string) (new \ReflectionClass(AppVariable::class))->getFileName());
+    $bridge = \dirname((string) new \ReflectionClass(AppVariable::class)->getFileName());
     $twig = new Environment(new FilesystemLoader([
       $bridge.'/Resources/views/Form',
       __DIR__.'/../../src/Resources/views/form',

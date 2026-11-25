@@ -71,11 +71,13 @@ final class ChoiceField extends Field
       'choice_style' => 'full',
       'choices_styles' => [],
     ]);
+
     $resolver->setAllowedTypes('choices', 'array')
       ->setAllowedTypes('multiple', 'bool')
       ->setAllowedValues('direction', [self::DIRECTION_HORIZONTAL, self::DIRECTION_VERTICAL])
       ->setAllowedTypes('choice_style', ['null', 'string'])
       ->setAllowedTypes('choices_styles', 'string[]');
+
     $resolver->setNormalizer('choices', static function ($options, array $choices): array {
       $normalized = [];
       foreach ($choices as $label => $choice)

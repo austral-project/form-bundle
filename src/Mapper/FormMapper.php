@@ -228,6 +228,8 @@ final class FormMapper
    * @param int|null   $order
    *
    * @return $this
+   *
+   * @throws RandomException
    */
   public function add(?Field $field, ?int $order = null): self
   {
@@ -240,6 +242,8 @@ final class FormMapper
    * @param iterable<Field|null> $fields
    *
    * @return $this
+   *
+   * @throws RandomException
    */
   public function adds(iterable $fields): self
   {
@@ -255,6 +259,8 @@ final class FormMapper
    * @param string|false|null $label
    *
    * @return Group
+   *
+   * @throws RandomException
    */
   public function addGroup(string $name, string|false|null $label = null): Group
   {
@@ -443,7 +449,6 @@ final class FormMapper
 
   /**
    * @return Fieldset
-   * @throws RandomException
    */
   private function defaultFieldset(): Fieldset
   {

@@ -196,7 +196,7 @@ final class CollectionIntegrationTest extends TestCase
    */
   private function variant(string $type): CollectionEmbedField
   {
-    $mapper = (new FormMapper($type, GalleryItem::class))
+    $mapper = new FormMapper($type, GalleryItem::class)
       ->add(TextField::create('label'))
       ->add(TextField::create('position'));
 
@@ -217,7 +217,7 @@ final class CollectionIntegrationTest extends TestCase
    */
   private function form(Gallery $gallery, CollectionEmbedField $field): FormInterface
   {
-    $mapper = (new FormMapper('form_austral', Gallery::class))->add($field);
+    $mapper = new FormMapper('form_austral', Gallery::class)->add($field);
 
     return Forms::createFormFactoryBuilder()
       ->addExtension(new ValidatorExtension(Validation::createValidator()))

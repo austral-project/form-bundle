@@ -55,7 +55,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testNamedFormKeepsTheHtmlNames(): void
   {
-    $mapper = (new FormMapper('form_austral', Article::class))->add(TextLikeField::create('title'));
+    $mapper = new FormMapper('form_austral', Article::class)->add(TextLikeField::create('title'));
 
     $view = $this->create($mapper, new Article())->createView();
 
@@ -74,7 +74,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testOptionsFromTheMapper(): void
   {
-    $mapper = (new FormMapper('form_austral', Article::class))
+    $mapper = new FormMapper('form_austral', Article::class)
       ->setTranslationDomain('austral')
       ->setValidationGroups(['Default', 'admin']);
 
@@ -87,7 +87,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testOptionsGivenToTheFormWin(): void
   {
-    $mapper = (new FormMapper('form_austral', Article::class))->setTranslationDomain('austral');
+    $mapper = new FormMapper('form_austral', Article::class)->setTranslationDomain('austral');
 
     $form = $this->create($mapper, null, ['translation_domain' => 'messages', 'data_class' => null]);
 
@@ -106,7 +106,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testFieldsAddedWithTheirSymfonyOptions(): void
   {
-    $mapper = (new FormMapper('form_austral', Article::class))
+    $mapper = new FormMapper('form_austral', Article::class)
       ->add(TextLikeField::create('title', ['label' => 'Title', 'required' => true, 'attr' => ['maxlength' => 120]]));
 
     $title = $this->create($mapper)->get('title')->getConfig();
@@ -120,7 +120,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testPresentationInTheViewOfEachField(): void
   {
-    $mapper = (new FormMapper('form_austral'))->add(TextLikeField::create('title', ['picto' => 'austral-picto-text', 'size' => 'col--6']));
+    $mapper = new FormMapper('form_austral')->add(TextLikeField::create('title', ['picto' => 'austral-picto-text', 'size' => 'col--6']));
 
     $austral = $this->create($mapper)->createView()['title']->vars['austral'];
 
@@ -141,7 +141,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testDisplayOnlyFieldIsNotPartOfTheForm(): void
   {
-    $mapper = (new FormMapper('form_austral'))
+    $mapper = new FormMapper('form_austral')
       ->add(TextLikeField::create('title'))
       ->add(TemplateLikeField::create('information', '@AustralForm/information.html.twig'));
 
@@ -150,7 +150,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testInvisibleFieldIsNotPartOfTheForm(): void
   {
-    $mapper = (new FormMapper('form_austral'))
+    $mapper = new FormMapper('form_austral')
       ->add(TextLikeField::create('title'))
       ->add(TextLikeField::create('slug', ['visible' => static fn (): bool => false]));
 
@@ -162,7 +162,7 @@ final class AustralFormTypeTest extends TestCase
    */
   public function testInvisibleFieldKeepsItsData(): void
   {
-    $mapper = (new FormMapper('form_austral', Article::class))
+    $mapper = new FormMapper('form_austral', Article::class)
       ->add(TextLikeField::create('title'))
       ->add(TextLikeField::create('slug', ['visible' => false]));
     $article = new Article();
@@ -186,7 +186,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testFieldWithoutSymfonyType(): void
   {
-    $mapper = (new FormMapper('form_austral'))->add(new class('title') extends Field {});
+    $mapper = new FormMapper('form_austral')->add(new class('title') extends Field {});
 
     $this->expectException(\LogicException::class);
     $this->expectExceptionMessage('The field "title"');
@@ -196,7 +196,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testGuessedFieldConstraintsAdded(): void
   {
-    $mapper = (new FormMapper('form_austral', Article::class))->add(TextLikeField::create('title'));
+    $mapper = new FormMapper('form_austral', Article::class)->add(TextLikeField::create('title'));
     $guesser = $this->guesser(field: [new Length(max: 120)]);
 
     $title = $this->create($mapper, null, [], $guesser)->get('title');
@@ -208,7 +208,7 @@ final class AustralFormTypeTest extends TestCase
   public function testGuessedConstraintDoesNotReplaceTheOneOfTheField(): void
   {
     $field = TextLikeField::create('title')->addConstraint(new Length(max: 50));
-    $mapper = (new FormMapper('form_austral', Article::class))->add($field);
+    $mapper = new FormMapper('form_austral', Article::class)->add($field);
 
     $constraints = $this->create($mapper, null, [], $this->guesser(field: [new Length(max: 120)]))->get('title')->getConfig()->getOption('constraints');
 
@@ -219,7 +219,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testBuildingTheFormTwiceAddsNothing(): void
   {
-    $mapper = (new FormMapper('form_austral', Article::class))->add(TextLikeField::create('title', ['required' => true]));
+    $mapper = new FormMapper('form_austral', Article::class)->add(TextLikeField::create('title', ['required' => true]));
     $guesser = $this->guesser(field: [new Length(max: 120), new NotNull()]);
 
     $this->create($mapper, null, [], $guesser);
@@ -230,7 +230,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testGuessedNotNullMakesTheFieldRequired(): void
   {
-    $mapper = (new FormMapper('form_austral', Article::class))->add(TextLikeField::create('title'));
+    $mapper = new FormMapper('form_austral', Article::class)->add(TextLikeField::create('title'));
 
     $title = $this->create($mapper, null, [], $this->guesser(field: [new NotNull()]))->get('title');
 
@@ -250,7 +250,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testSubmitAndValidation(): void
   {
-    $mapper = (new FormMapper('form_austral', Article::class))
+    $mapper = new FormMapper('form_austral', Article::class)
       ->add(TextLikeField::create('title', ['required' => true]))
       ->add(TextLikeField::create('summary'));
     $article = new Article();
@@ -335,7 +335,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testLayoutSkipsInvisibleFields(): void
   {
-    $mapper = (new FormMapper('form_austral'))
+    $mapper = new FormMapper('form_austral')
       ->add(TextLikeField::create('title'))
       ->add(TextLikeField::create('slug', ['visible' => false]))
       ->add(TemplateLikeField::create('information', 'information.html.twig', ['visible' => false]));
@@ -350,7 +350,7 @@ final class AustralFormTypeTest extends TestCase
 
   public function testLayoutIdsFollowTheNameOfTheForm(): void
   {
-    $mapper = (new FormMapper('form_austral'))->add(TextLikeField::create('title'));
+    $mapper = new FormMapper('form_austral')->add(TextLikeField::create('title'));
 
     $view = $this->factory()->createNamed('seo_url_12', AustralFormType::class, null, ['mapper' => $mapper])->createView();
 

@@ -56,7 +56,7 @@ class Fieldset extends LayoutNode
   /**
    * @param string            $name
    * @param FormMapper        $mapper
-   * @param string|false|null $label  Translation key; the name when null
+   * @param string|false|null $label    Translation key; the name when null
    * @param string            $position
    */
   public function __construct(string $name, FormMapper $mapper, string|false|null $label = null, string $position = self::POSITION_MASTER)

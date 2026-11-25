@@ -35,9 +35,8 @@ final class FormHandler
   /**
    * @param EventDispatcherInterface $dispatcher
    */
-  public function __construct(
-    private readonly EventDispatcherInterface $dispatcher,
-  ) {
+  public function __construct(private readonly EventDispatcherInterface $dispatcher)
+  {
   }
 
   /**

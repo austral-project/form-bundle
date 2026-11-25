@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the Austral Form Bundle package.
  *
@@ -9,13 +10,14 @@
  */
 
 namespace Austral\FormBundle;
+
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
  * Austral Form Bundle.
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class AustralFormBundle extends Bundle
 {
-
 }

@@ -127,7 +127,7 @@ final class PasswordField extends Field
   {
     return [
       'repeat' => $this->options['repeat'],
-      'type_class' => u((new \ReflectionClass($this->options['type']))->getShortName())->camel()->toString(),
+      'type_class' => u(new \ReflectionClass($this->options['type'])->getShortName())->camel()->toString(),
     ];
   }
 }

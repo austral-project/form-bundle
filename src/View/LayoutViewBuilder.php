@@ -106,7 +106,8 @@ final class LayoutViewBuilder
       'children' => $children,
     ];
 
-    return match (true) {
+    return match (true)
+    {
       $node instanceof Fieldset => $built + [
         'position' => $node->getPosition(),
         'collapse' => $node->isCollapse(),

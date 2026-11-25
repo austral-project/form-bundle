@@ -72,6 +72,7 @@ class CollectionEmbedField extends Field
       'between_insert' => false,
       'error_bubbling' => true,
     ]);
+
     $resolver->setAllowedTypes('title', ['null', 'string'])
       ->setAllowedTypes('button', ['null', 'string'])
       ->setAllowedTypes('color', 'int')
@@ -79,6 +80,7 @@ class CollectionEmbedField extends Field
       ->setAllowedTypes('view_position', 'bool')
       ->setAllowedTypes('between_insert', 'bool')
       ->setAllowedTypes('error_bubbling', 'bool');
+
     $resolver->setOptions('entry', static function (OptionsResolver $entry): void {
       $entry->setDefaults(['mapper' => null, 'type' => null, 'label' => false, 'attr' => []])
         ->setAllowedTypes('mapper', ['null', FormMapper::class])
@@ -86,27 +88,32 @@ class CollectionEmbedField extends Field
         ->setAllowedTypes('label', ['null', 'bool', 'string'])
         ->setAllowedTypes('attr', 'array');
     });
+
     $resolver->setOptions('allow', static function (OptionsResolver $allow): void {
       $allow->setDefaults(['child' => false, 'add' => true, 'delete' => true])
         ->setAllowedTypes('child', 'bool')
         ->setAllowedTypes('add', 'bool')
         ->setAllowedTypes('delete', 'bool');
     });
+
     $resolver->setOptions('children_parameters', static function (OptionsResolver $children): void {
       $children->setDefaults(['min' => null, 'max' => null])
         ->setAllowedTypes('min', ['null', 'int'])
         ->setAllowedTypes('max', ['null', 'int']);
     });
+
     $resolver->setOptions('prototype', static function (OptionsResolver $prototype): void {
       $prototype->setDefaults(['data' => null, 'name' => '__name__'])
         ->setAllowedTypes('name', 'string');
     });
+
     $resolver->setOptions('sortable', static function (OptionsResolver $sortable): void {
       $sortable->setDefaults(['value' => null, 'editable' => false, 'key_after' => false])
         ->setAllowedTypes('value', ['null', 'string', \Closure::class])
         ->setAllowedTypes('editable', 'bool')
         ->setAllowedTypes('key_after', 'bool');
     });
+
     $resolver->setOptions('collections', static function (OptionsResolver $collections): void {
       $collections->setDefaults(['choices' => [], 'objects' => null, 'children' => null])
         ->setAllowedTypes('choices', 'array')

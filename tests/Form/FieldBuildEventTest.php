@@ -41,7 +41,7 @@ final class FieldBuildEventTest extends TestCase
         $event->getField()->setOptions(['picto' => 'austral-picto-text'])->addConstraint(new NotBlank());
       }
     });
-    $mapper = (new FormMapper('form_austral', Gallery::class))->add(TextField::create('title', ['required' => true]));
+    $mapper = new FormMapper('form_austral', Gallery::class)->add(TextField::create('title', ['required' => true]));
 
     $form = $this->factory($dispatcher)->createNamed('form_austral', AustralFormType::class, new Gallery(), ['mapper' => $mapper]);
 
@@ -56,8 +56,8 @@ final class FieldBuildEventTest extends TestCase
     $dispatcher->addListener(FormEvents::FIELD_BUILD, static function (FieldBuildEvent $event) use (&$built): void {
       $built[] = $event->getMapper()->getName().'.'.$event->getField()->getName().'@'.$event->getBuilder()->getName();
     });
-    $items = (new FormMapper('item', GalleryItem::class))->add(TextField::create('label'));
-    $mapper = (new FormMapper('form_austral', Gallery::class))
+    $items = new FormMapper('item', GalleryItem::class)->add(TextField::create('label'));
+    $mapper = new FormMapper('form_austral', Gallery::class)
       ->add(TextField::create('title'))
       ->add(CollectionEmbedField::create('items', ['entry' => ['mapper' => $items]]));
     $gallery = new Gallery();
@@ -73,7 +73,7 @@ final class FieldBuildEventTest extends TestCase
 
   public function testWithoutDispatcher(): void
   {
-    $mapper = (new FormMapper('form_austral'))->add(TextField::create('title'));
+    $mapper = new FormMapper('form_austral')->add(TextField::create('title'));
 
     $form = $this->factory(null)->createNamed('form_austral', AustralFormType::class, null, ['mapper' => $mapper]);
 

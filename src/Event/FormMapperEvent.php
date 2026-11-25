@@ -25,10 +25,8 @@ final class FormMapperEvent extends Event
    * @param FormMapper      $mapper
    * @param FormMapper|null $parent Mapper of the form that contains this one (collection), null for the root
    */
-  public function __construct(
-    private readonly FormMapper $mapper,
-    private readonly ?FormMapper $parent = null,
-  ) {
+  public function __construct(private readonly FormMapper $mapper, private readonly ?FormMapper $parent = null)
+  {
   }
 
   /**

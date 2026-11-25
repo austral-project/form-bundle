@@ -62,6 +62,7 @@ final class SwitchField extends Field
         ->setAllowedTypes('enabled', ['null', 'string'])
         ->setAllowedTypes('disabled', ['null', 'string']);
     });
+
     $resolver->setOptions('button_colors', static function (OptionsResolver $colors): void {
       $colors->setDefaults(['enabled' => 'var(--color-white-force)', 'disabled' => 'var(--color-white-force)'])
         ->setAllowedTypes('enabled', ['null', 'string'])

@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the Austral Form Bundle package.
  *
@@ -17,13 +18,16 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 /**
  * Austral Form Extension.
+ *
  * @author Matthieu Beurel <matthieu@austral.dev>
+ *
  * @final
  */
 class AustralFormExtension extends Extension
 {
   /**
    * {@inheritdoc}
+   *
    * @throws \Exception
    */
   public function load(array $configs, ContainerBuilder $container): void
@@ -39,5 +43,4 @@ class AustralFormExtension extends Extension
   {
     return 'https://austral.dev/schema/dic/austral_form_mapper';
   }
-
 }

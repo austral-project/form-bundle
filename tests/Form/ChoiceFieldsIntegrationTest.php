@@ -132,7 +132,7 @@ final class ChoiceFieldsIntegrationTest extends TestCase
    */
   private function form(Product $product, SelectField|ChoiceField $field): FormInterface
   {
-    $mapper = (new FormMapper('form_austral', Product::class))->add($field);
+    $mapper = new FormMapper('form_austral', Product::class)->add($field);
 
     return Forms::createFormFactoryBuilder()
       ->addExtension(new ValidatorExtension(Validation::createValidator()))

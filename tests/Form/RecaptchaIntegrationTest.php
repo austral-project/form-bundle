@@ -71,7 +71,7 @@ final class RecaptchaIntegrationTest extends TestCase
     $validator = Validation::createValidatorBuilder()
       ->setConstraintValidatorFactory(new ConstraintValidatorFactory([RecaptchaValidator::class => $recaptchaValidator]))
       ->getValidator();
-    $mapper = (new FormMapper('contact'))
+    $mapper = new FormMapper('contact')
       ->add(TextField::create('email'))
       ->add(RecaptchaField::create(['public_key' => 'public', 'secret_key' => 'secret', 'action' => 'contact']));
 

@@ -28,7 +28,7 @@ final class FormMapperFactoryTest extends TestCase
   {
     $gallery = new Gallery();
 
-    $mapper = (new FormMapperFactory(new EventDispatcher()))->create('form_austral', null, $gallery);
+    $mapper = new FormMapperFactory(new EventDispatcher())->create('form_austral', null, $gallery);
 
     self::assertSame('form_austral', $mapper->getName());
     self::assertSame(Gallery::class, $mapper->getDataClass());
@@ -48,7 +48,7 @@ final class FormMapperFactoryTest extends TestCase
       self::assertTrue($event->isRoot());
     });
 
-    (new FormMapperFactory($dispatcher))->create('form_austral', Gallery::class, null, static function (FormMapper $mapper) use (&$calls): void {
+    new FormMapperFactory($dispatcher)->create('form_austral', Gallery::class, null, static function (FormMapper $mapper) use (&$calls): void {
       $calls[] = 'configure';
       $mapper->add(TextField::create('title'));
     });
@@ -68,7 +68,7 @@ final class FormMapperFactoryTest extends TestCase
     $items->add(CollectionEmbedField::create('tags', ['entry' => ['mapper' => $tags]]));
     $variant = new FormMapper('image', GalleryItem::class);
 
-    (new FormMapperFactory($dispatcher))->create('form_austral', Gallery::class, null, static function (FormMapper $mapper) use ($items, $variant): void {
+    new FormMapperFactory($dispatcher)->create('form_austral', Gallery::class, null, static function (FormMapper $mapper) use ($items, $variant): void {
       $mapper->add(CollectionEmbedField::create('items', ['entry' => ['mapper' => $items]]));
       $mapper->add(CollectionEmbedField::create('blocks')->addVariant('image', CollectionEmbedField::create('blocks_image', ['entry' => ['mapper' => $variant]])));
       $mapper->add(CollectionEmbedField::create('sameItems', ['entry' => ['mapper' => $items]]));
@@ -80,7 +80,7 @@ final class FormMapperFactoryTest extends TestCase
   public function testSubMappers(): void
   {
     $items = new FormMapper('item');
-    $mapper = (new FormMapper())
+    $mapper = new FormMapper()
       ->add(TextField::create('title'))
       ->add(CollectionEmbedField::create('items', ['entry' => ['mapper' => $items]]))
       ->add(CollectionEmbedField::create('keywords'));

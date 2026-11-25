@@ -37,14 +37,14 @@ final class FormMapperTest extends TestCase
   {
     $object = new \ArrayObject();
 
-    self::assertSame(\ArrayObject::class, (new FormMapper('form_austral', null, $object))->getDataClass());
-    self::assertSame(\ArrayObject::class, (new FormMapper())->setObject($object)->getDataClass());
-    self::assertSame(\stdClass::class, (new FormMapper('form', \stdClass::class))->setObject($object)->getDataClass());
+    self::assertSame(\ArrayObject::class, new FormMapper('form_austral', null, $object)->getDataClass());
+    self::assertSame(\ArrayObject::class, new FormMapper()->setObject($object)->getDataClass());
+    self::assertSame(\stdClass::class, new FormMapper('form', \stdClass::class)->setObject($object)->getDataClass());
   }
 
   public function testSetters(): void
   {
-    $mapper = (new FormMapper())
+    $mapper = new FormMapper()
       ->setName('form_austral')
       ->setDataClass(\stdClass::class)
       ->setTranslationDomain('austral')
@@ -113,7 +113,7 @@ final class FormMapperTest extends TestCase
 
   public function testFieldsAddedToTheMapperGoToTheDefaultFieldset(): void
   {
-    $mapper = (new FormMapper())->add(TextLikeField::create('id'));
+    $mapper = new FormMapper()->add(TextLikeField::create('id'));
     $default = $mapper->getFieldset(FormMapper::DEFAULT_FIELDSET);
 
     self::assertInstanceOf(Fieldset::class, $default);
@@ -125,7 +125,7 @@ final class FormMapperTest extends TestCase
 
   public function testAddsAndAddGroupOnTheMapperUseTheDefaultFieldset(): void
   {
-    $mapper = (new FormMapper())->adds([TextLikeField::create('a'), null, TextLikeField::create('b')]);
+    $mapper = new FormMapper()->adds([TextLikeField::create('a'), null, TextLikeField::create('b')]);
     $group = $mapper->addGroup('group');
 
     self::assertSame(['a', 'b'], array_keys($mapper->getFields()));

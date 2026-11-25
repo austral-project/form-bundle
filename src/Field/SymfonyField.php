@@ -24,9 +24,9 @@ use Symfony\Component\Form\FormTypeInterface;
 final class SymfonyField extends Field
 {
   /**
-   * @param string                         $name
+   * @param string                          $name
    * @param string|FormTypeInterface<mixed> $type    Class of a form type, or a form type; anything else is rejected
-   * @param array<string, mixed>           $options
+   * @param array<string, mixed>            $options
    */
   public function __construct(string $name, string|FormTypeInterface $type, array $options = [])
   {
@@ -40,9 +40,9 @@ final class SymfonyField extends Field
   }
 
   /**
-   * @param string                         $name
+   * @param string                          $name
    * @param string|FormTypeInterface<mixed> $type
-   * @param array<string, mixed>           $options
+   * @param array<string, mixed>            $options
    *
    * @return self
    */

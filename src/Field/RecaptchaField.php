@@ -62,10 +62,12 @@ final class RecaptchaField extends Field
       'mapped' => false,
       'action' => 'registry',
     ]);
+
     $resolver->setRequired(['secret_key', 'public_key']);
     $resolver->setAllowedTypes('secret_key', 'string')
       ->setAllowedTypes('public_key', 'string')
       ->setAllowedTypes('action', 'string');
+
     $resolver->setOptions('score', static function (OptionsResolver $score): void {
       $score->setDefaults(['limit' => 0.7, 'message' => 'bot-detected'])
         ->setAllowedTypes('limit', ['float', 'int'])

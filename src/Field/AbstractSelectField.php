@@ -42,13 +42,16 @@ abstract class AbstractSelectField extends Field
       'multiple' => false,
       'null_value' => false,
     ]);
+
     $resolver->setAllowedTypes('multiple', 'bool')
       ->setAllowedTypes('null_value', 'bool');
+
     $resolver->setOptions('theme', static function (OptionsResolver $theme): void {
       $theme->setDefaults(['name' => self::THEME_DEFAULT, 'direction' => null])
         ->setAllowedValues('name', [self::THEME_DEFAULT, self::THEME_CHOICE_LIST, self::THEME_CHOICE_ELEMENT])
         ->setAllowedValues('direction', [null, self::DIRECTION_VERTICAL, self::DIRECTION_HORIZONTAL]);
     });
+
     $resolver->setOptions('select_options', static function (OptionsResolver $select): void {
       $select->setDefaults([
         'enabled' => true,

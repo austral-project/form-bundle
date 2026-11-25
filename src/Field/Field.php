@@ -121,6 +121,7 @@ abstract class Field
       ->setAllowedTypes('visible', ['bool', 'callable', 'array'])
       ->setAllowedTypes('auto_constraints', 'bool')
       ->setAllowedTypes('form_options', 'array');
+
     $resolver->setNormalizer('before', static fn ($options, mixed $value): ?array => self::normalizeSlot($value));
     $resolver->setNormalizer('after', static fn ($options, mixed $value): ?array => self::normalizeSlot($value));
   }
@@ -574,7 +575,7 @@ abstract class Field
       'size' => $this->options['size'],
       'class' => $this->options['class'],
       'container_class' => $this->options['container_class'],
-      'field_class' => u((new \ReflectionClass($this))->getShortName())->camel()->toString(),
+      'field_class' => u(new \ReflectionClass($this)->getShortName())->camel()->toString(),
       'label_position' => $this->options['label_position'],
       'before' => $this->options['before'],
       'after' => $this->options['after'],

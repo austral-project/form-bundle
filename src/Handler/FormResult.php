@@ -28,10 +28,8 @@ final class FormResult
    * @param FormInterface<mixed> $form
    * @param string               $status One of the STATUS_* constants
    */
-  public function __construct(
-    private readonly FormInterface $form,
-    private readonly string $status,
-  ) {
+  public function __construct(private readonly FormInterface $form, private readonly string $status)
+  {
   }
 
   /**

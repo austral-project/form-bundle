@@ -34,7 +34,7 @@ final class LayoutTest extends TestCase
 
   public function testChildrenKeepTheInsertionOrder(): void
   {
-    $fieldset = (new FormMapper())->addFieldset('main');
+    $fieldset = new FormMapper()->addFieldset('main');
     $fieldset->add(TextLikeField::create('a'));
     $group = $fieldset->addGroup('group');
     $fieldset->add(TextLikeField::create('b'));
@@ -46,7 +46,7 @@ final class LayoutTest extends TestCase
 
   public function testAnExplicitOrderCompetesWithTheInsertionIndex(): void
   {
-    $fieldset = (new FormMapper())->addFieldset('main');
+    $fieldset = new FormMapper()->addFieldset('main');
     $fieldset->add(TextLikeField::create('a'))
       ->add(TextLikeField::create('b'))
       ->add(TextLikeField::create('first'), -1)
@@ -57,7 +57,7 @@ final class LayoutTest extends TestCase
 
   public function testTheOrderOfANodeCanBeChangedAfterItsCreation(): void
   {
-    $fieldset = (new FormMapper())->addFieldset('main');
+    $fieldset = new FormMapper()->addFieldset('main');
     $fieldset->add(TextLikeField::create('a'));
     $group = $fieldset->addGroup('group');
     $group->setOrder(-1);
@@ -67,7 +67,7 @@ final class LayoutTest extends TestCase
 
   public function testAddGroupAndAddModalReturnTheExistingNodeOfTheSameName(): void
   {
-    $fieldset = (new FormMapper())->addFieldset('main');
+    $fieldset = new FormMapper()->addFieldset('main');
 
     self::assertSame($fieldset->addGroup('dates'), $fieldset->addGroup('dates'));
     self::assertSame($fieldset->addModal('editor'), $fieldset->addModal('editor'));
@@ -89,7 +89,7 @@ final class LayoutTest extends TestCase
 
   public function testRemoveFieldSearchesTheDescendants(): void
   {
-    $fieldset = (new FormMapper())->addFieldset('main');
+    $fieldset = new FormMapper()->addFieldset('main');
     $group = $fieldset->addGroup('dates')->add(TextLikeField::create('start'));
 
     self::assertTrue($fieldset->removeField('start'));
@@ -99,7 +99,7 @@ final class LayoutTest extends TestCase
 
   public function testFindNodeSearchesTheDescendants(): void
   {
-    $fieldset = (new FormMapper())->addFieldset('main');
+    $fieldset = new FormMapper()->addFieldset('main');
     $modal = $fieldset->addGroup('dates')->addModal('picker');
 
     self::assertSame($modal, $fieldset->findNode('modal-picker'));
@@ -108,7 +108,7 @@ final class LayoutTest extends TestCase
 
   public function testVisibilityAcceptsABooleanOrAClosure(): void
   {
-    $fieldset = (new FormMapper())->addFieldset('main');
+    $fieldset = new FormMapper()->addFieldset('main');
 
     self::assertTrue($fieldset->isVisible());
     self::assertFalse($fieldset->setVisible(false)->isVisible());
@@ -117,7 +117,7 @@ final class LayoutTest extends TestCase
 
   public function testFieldsetDefaults(): void
   {
-    $fieldset = (new FormMapper())->addFieldset('fieldset.seo');
+    $fieldset = new FormMapper()->addFieldset('fieldset.seo');
 
     self::assertSame('fieldset.seo', $fieldset->getLabel());
     self::assertSame(Fieldset::POSITION_MASTER, $fieldset->getPosition());
@@ -128,7 +128,7 @@ final class LayoutTest extends TestCase
 
   public function testFieldsetSetters(): void
   {
-    $fieldset = (new FormMapper())->addFieldset('seo', false, Fieldset::POSITION_RIGHT)
+    $fieldset = new FormMapper()->addFieldset('seo', false, Fieldset::POSITION_RIGHT)
       ->setCollapse()
       ->setShowLabel(false)
       ->setAttr(['class' => 'fieldset-seo']);
@@ -143,7 +143,7 @@ final class LayoutTest extends TestCase
 
   public function testLabelParametersAreResolvedWithTheDataOfTheForm(): void
   {
-    $fieldset = (new FormMapper())->addFieldset('fieldset.content_by_domain')
+    $fieldset = new FormMapper()->addFieldset('fieldset.content_by_domain')
       ->setLabelParameters(['%domainName%' => '', '%static%' => 'kept'])
       ->setLabelParametersResolver(static fn (Fieldset $fieldset, ?object $data): array => ['%domainName%' => $data->name ?? 'none']);
 
@@ -153,7 +153,7 @@ final class LayoutTest extends TestCase
 
   public function testGroupDefaultsAndSetters(): void
   {
-    $group = (new FormMapper())->addFieldset('main')->addGroup('dates');
+    $group = new FormMapper()->addFieldset('main')->addGroup('dates');
 
     self::assertNull($group->getLabel());
     self::assertSame(Group::DIRECTION_ROW, $group->getDirection());
@@ -169,7 +169,7 @@ final class LayoutTest extends TestCase
 
   public function testModalOptions(): void
   {
-    $modal = (new FormMapper())->addFieldset('main')->addModal('linkEditor', 'link', [
+    $modal = new FormMapper()->addFieldset('main')->addModal('linkEditor', 'link', [
       'label' => 'modal.link',
       'modal' => ['class' => 'modal-large'],
       'button' => ['label' => 'button.edit'],
@@ -184,12 +184,12 @@ final class LayoutTest extends TestCase
   public function testModalRejectsAnUnknownOption(): void
   {
     $this->expectException(UndefinedOptionsException::class);
-    (new FormMapper())->addModal('editor', null, ['popin' => []]);
+    new FormMapper()->addModal('editor', null, ['popin' => []]);
   }
 
   public function testModalIsALayoutNode(): void
   {
-    $modal = (new FormMapper())->addModal('editor')->add(TextLikeField::create('content'));
+    $modal = new FormMapper()->addModal('editor')->add(TextLikeField::create('content'));
 
     self::assertInstanceOf(Modal::class, $modal);
     self::assertSame(['content'], $modal->getFieldNames());

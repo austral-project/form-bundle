@@ -98,7 +98,7 @@ final class FieldsIntegrationTest extends TestCase
    */
   private function form(Product $product): FormInterface
   {
-    $mapper = (new FormMapper('form_austral', Product::class))
+    $mapper = new FormMapper('form_austral', Product::class)
       ->add(TextField::create('name', ['required' => true]))
       ->add(TextareaField::create('description'))
       ->add(NumberField::create('price'))

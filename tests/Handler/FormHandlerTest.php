@@ -175,8 +175,8 @@ final class FormHandlerTest extends TestCase
    */
   private function form(Gallery $gallery): FormInterface
   {
-    $items = (new FormMapper('item', GalleryItem::class))->add(TextField::create('label'));
-    $mapper = (new FormMapper('form_austral', Gallery::class))
+    $items = new FormMapper('item', GalleryItem::class)->add(TextField::create('label'));
+    $mapper = new FormMapper('form_austral', Gallery::class)
       ->add(TextField::create('title', ['required' => true]))
       ->add(CollectionEmbedField::create('items', ['entry' => ['mapper' => $items]]));
 

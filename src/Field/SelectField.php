@@ -32,9 +32,9 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 final class SelectField extends AbstractSelectField
 {
   /**
-   * @param string                   $name
-   * @param array<array-key, mixed>  $choices Label => value (option "choices")
-   * @param array<string, mixed>     $options
+   * @param string                  $name
+   * @param array<array-key, mixed> $choices Label => value (option "choices")
+   * @param array<string, mixed>    $options
    */
   public function __construct(string $name, array $choices = [], array $options = [])
   {

@@ -15,6 +15,7 @@ use Austral\FormBundle\Field\Field;
 use Austral\FormBundle\Mapper\FormMapper;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\FieldMapping;
+use Doctrine\ORM\Mapping\MappingException;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -50,9 +51,8 @@ final class DoctrineConstraintGuesser implements ConstraintGuesserInterface
   /**
    * @param ManagerRegistry|null $registry
    */
-  public function __construct(
-    private readonly ?ManagerRegistry $registry = null,
-  ) {
+  public function __construct(private readonly ?ManagerRegistry $registry = null)
+  {
   }
 
   /**
@@ -120,6 +120,8 @@ final class DoctrineConstraintGuesser implements ConstraintGuesserInterface
    * @param Field             $field
    *
    * @return FieldMapping|null
+   *
+   * @throws MappingException
    */
   private function fieldMapping(?string $dataClass, Field $field): ?FieldMapping
   {

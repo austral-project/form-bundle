@@ -62,12 +62,14 @@ final class ColorField extends Field
       ])
         ->setAllowedTypes('preview', 'bool')
         ->setAllowedTypes('swatches', ['null', 'string[]']);
+
       $picker->setOptions('components', static function (OptionsResolver $components): void {
         $components->setDefaults(['palette' => false, 'opacity' => false, 'hue' => false])
           ->setAllowedTypes('palette', 'bool')
           ->setAllowedTypes('opacity', 'bool')
           ->setAllowedTypes('hue', 'bool');
       });
+
       $picker->setOptions('interaction', static function (OptionsResolver $interaction): void {
         foreach (['hex', 'rgba', 'hsla', 'hsva', 'cmyk', 'input', 'clear', 'save'] as $key)
         {

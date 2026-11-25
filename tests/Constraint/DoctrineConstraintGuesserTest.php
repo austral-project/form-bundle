@@ -174,7 +174,7 @@ final class DoctrineConstraintGuesserTest extends TestCase
 
   public function testUniqueColumnOfATextFieldAddsUniqueEntity(): void
   {
-    $mapper = (new FormMapper('form', Article::class))
+    $mapper = new FormMapper('form', Article::class)
       ->add(TextLikeField::create('slug'))
       ->add(TextLikeField::create('title'));
 
@@ -190,13 +190,13 @@ final class DoctrineConstraintGuesserTest extends TestCase
   {
     $guesser = $this->guesser();
 
-    $mapper = (new FormMapper('form', Article::class))->add(TextareaLikeField::create('slug'));
+    $mapper = new FormMapper('form', Article::class)->add(TextareaLikeField::create('slug'));
     self::assertSame([], $guesser->guessClassConstraints(Article::class, $mapper));
 
-    $mapper = (new FormMapper('form', Article::class))->add(TextLikeField::create('slug', ['auto_constraints' => false]));
+    $mapper = new FormMapper('form', Article::class)->add(TextLikeField::create('slug', ['auto_constraints' => false]));
     self::assertSame([], $guesser->guessClassConstraints(Article::class, $mapper));
 
-    self::assertSame([], (new DoctrineConstraintGuesser())->guessClassConstraints(Article::class, (new FormMapper())->add(TextLikeField::create('slug'))));
+    self::assertSame([], new DoctrineConstraintGuesser()->guessClassConstraints(Article::class, new FormMapper()->add(TextLikeField::create('slug'))));
   }
 
   /**

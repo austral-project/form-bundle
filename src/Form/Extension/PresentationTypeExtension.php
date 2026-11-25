@@ -47,17 +47,11 @@ final class PresentationTypeExtension extends AbstractTypeExtension
     'widget' => [],
   ];
 
-  /**
-   * {@inheritdoc}
-   */
   public static function getExtendedTypes(): iterable
   {
     return [FormType::class];
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function configureOptions(OptionsResolver $resolver): void
   {
     $resolver->setDefault('austral', null);
@@ -76,9 +70,6 @@ final class PresentationTypeExtension extends AbstractTypeExtension
     });
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function buildView(FormView $view, FormInterface $form, array $options): void
   {
     $view->vars['austral'] = $options['austral'];

@@ -83,7 +83,7 @@ abstract class LayoutNode
    */
   public static function slug(string $name): string
   {
-    return strtolower((new AsciiSlugger())->slug($name)->toString());
+    return strtolower(new AsciiSlugger()->slug($name)->toString());
   }
 
   /**

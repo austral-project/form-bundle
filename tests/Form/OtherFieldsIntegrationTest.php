@@ -134,7 +134,7 @@ final class OtherFieldsIntegrationTest extends TestCase
    */
   private function form(Account $account, Field ...$fields): FormInterface
   {
-    $mapper = (new FormMapper('form_austral', Account::class))->adds($fields);
+    $mapper = new FormMapper('form_austral', Account::class)->adds($fields);
 
     return Forms::createFormFactoryBuilder()
       ->addExtension(new ValidatorExtension(Validation::createValidator()))

@@ -69,13 +69,16 @@ final class UploadField extends Field
       ->setAllowedTypes('type_file', ['null', 'string'])
       ->setAllowedTypes('cropper', 'array')
       ->setAllowedTypes('cropper_field_key', ['null', 'string']);
+
     $resolver->setNormalizer('cropper', static fn ($options, array $croppers): array => array_map(self::resolveCropper(...), $croppers));
+
     $resolver->setOptions('image_sizes', static function (OptionsResolver $sizes): void {
       foreach (['min_width', 'max_width', 'min_height', 'max_height'] as $key)
       {
         $sizes->setDefault($key, null)->setAllowedTypes($key, ['null', 'int']);
       }
     });
+
     $resolver->setOptions('file', static function (OptionsResolver $file): void {
       $file->setDefault('reel_filename', null)->setAllowedTypes('reel_filename', ['null', 'string']);
       $file->setOptions('path', static function (OptionsResolver $path): void {
@@ -84,6 +87,7 @@ final class UploadField extends Field
           $path->setDefault($key, null)->setAllowedTypes($key, ['null', 'string']);
         }
       });
+
       $file->setOptions('infos', static function (OptionsResolver $infos): void {
         $infos->setDefaults([
           'mime_type' => null,
@@ -124,7 +128,7 @@ final class UploadField extends Field
    */
   public function getMaxSizeInBytes(): int
   {
-    return (int) (new File(maxSize: $this->getMaxSize()))->maxSize;
+    return (int) new File(maxSize: $this->getMaxSize())->maxSize;
   }
 
   /**
