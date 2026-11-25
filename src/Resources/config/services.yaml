@@ -41,3 +41,12 @@ services:
   austral.form.handler:
     alias: Austral\FormBundle\Handler\FormHandler
     public: true
+
+##### Validator
+  Austral\FormBundle\Validator\RecaptchaValidator:
+    arguments:
+      $httpClient: '@http_client'
+      $requestStack: '@request_stack'
+      $translator: '@?translator'
+    tags:
+      - { name: validator.constraint_validator }
