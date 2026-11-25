@@ -503,6 +503,17 @@ abstract class Field
   }
 
   /**
+   * Constraints the field adds by itself when its option "auto_constraints" is true (File for an upload,
+   * Regex for a password...), next to the ones of the constraint guesser.
+   *
+   * @return list<Constraint>
+   */
+  public function getAutoConstraints(): array
+  {
+    return [];
+  }
+
+  /**
    * Adds the field to the form being built (called by AustralFormType with the final options). A field that
    * needs form listeners (SelectField with tags) overrides it, calls the parent and adds them to $builder.
    *

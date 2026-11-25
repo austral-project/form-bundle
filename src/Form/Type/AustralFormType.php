@@ -111,6 +111,13 @@ final class AustralFormType extends AbstractType
       {
         $field->addConstraint($constraint);
       }
+      if ($field->hasAutoConstraints())
+      {
+        foreach ($field->getAutoConstraints() as $constraint)
+        {
+          $field->addConstraint($constraint);
+        }
+      }
       // Step 4: event austral.form.field.build, before the field is added.
       $field->addToForm($builder, $field->getSymfonyOptions() + ['austral' => $field->getPresentation()]);
     }
