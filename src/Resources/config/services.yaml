@@ -1,0 +1,50 @@
+services:
+  Austral\FormBundle\Twig\:
+    resource: '../../Twig/*'
+
+##### Form Mappers
+  Austral\FormBundle\Mapper\FormMappers:
+    arguments:
+      $dispatcher:    '@event_dispatcher'
+
+  austral.form.mappers:
+    alias:          Austral\FormBundle\Mapper\FormMappers
+    public:         true
+
+##### Form Mapper
+  Austral\FormBundle\Mapper\FormMapper:
+    arguments:
+      $dispatcher:    '@event_dispatcher'
+
+  austral.form.mapper:
+    class:          Austral\FormBundle\Mapper\FormMapper
+    public:         true
+
+##### Event Subscriber
+  Austral\FormBundle\EventSubscriber\FormSubscriber:
+    tags:
+      - { name: kernel.event_subscriber }
+
+##### Form Type
+  Austral\FormBundle\Form\Type\FormType:
+    calls:
+      - [ setSecurity, [ "@security.authorization_checker" ] ]
+    tags:
+      - { name: form.type , alias: austral_form_type }
+
+  austral.form.type.master:
+    alias:          Austral\FormBundle\Form\Type\FormType
+    public:         true
+
+##### Validator
+  Austral\FormBundle\Validator\RecaptchaValidator:
+    arguments:
+      $formMappers:     '@austral.form.mappers'
+      $requestStack:    '@request_stack'
+      $translator:      '@translator'
+    tags:
+      - { name: validator.constraint_validator }
+
+  austral.form.validator.recaptcha:
+    alias:          Austral\FormBundle\Validator\RecaptchaValidator
+    public:         true

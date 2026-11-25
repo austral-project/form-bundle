@@ -13,7 +13,6 @@ namespace Austral\FormBundle\Validator;
 use Austral\FormBundle\Field\RecaptchaField;
 use Austral\FormBundle\Mapper\FormMapper;
 use Austral\FormBundle\Mapper\FormMappers;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Form\Exception\UnexpectedTypeException;
 use Symfony\Component\HttpClient\NativeHttpClient;
 use Symfony\Component\HttpFoundation\Request;
@@ -43,7 +42,7 @@ class RecaptchaValidator extends ConstraintValidator
    * @param TranslatorInterface $translator
    */
   public function __construct(
-    #[Autowire(service: "austral.form.mappers")] protected FormMappers $formMappers,
+    protected FormMappers $formMappers,
     protected RequestStack $requestStack,
     protected TranslatorInterface $translator
   )
