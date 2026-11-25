@@ -17,6 +17,7 @@ use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Validator\Constraints\Image;
 
 final class UploadFieldTest extends TestCase
 {
@@ -50,6 +51,60 @@ final class UploadFieldTest extends TestCase
     self::assertCount(1, $constraints);
     self::assertInstanceOf(File::class, $constraints[0]);
     self::assertSame(5000000, $constraints[0]->maxSize);
+    self::assertSame([], $constraints[0]->mimeTypes);
+    self::assertSame([], $constraints[0]->extensions);
+    self::assertSame('file.error.maxSize', $constraints[0]->maxSizeMessage);
+    self::assertSame('file.error.mimeTypes', $constraints[0]->mimeTypesMessage);
+  }
+
+  public function testFileConstraintWithMimeTypesAndMessages(): void
+  {
+    $constraints = UploadField::create('image', [
+      'mime_types' => ['image/png', 'image/jpeg'],
+      'max_size_message' => 'errors.image.size',
+      'mime_types_message' => 'errors.image.type',
+    ])->getAutoConstraints();
+
+    self::assertInstanceOf(File::class, $constraints[0]);
+    self::assertSame(['image/png', 'image/jpeg'], $constraints[0]->mimeTypes);
+    self::assertContains('png', $constraints[0]->extensions);
+    self::assertContains('jpg', $constraints[0]->extensions);
+    self::assertContains('jpeg', $constraints[0]->extensions);
+    self::assertSame('errors.image.size', $constraints[0]->maxSizeMessage);
+    self::assertSame('errors.image.type', $constraints[0]->mimeTypesMessage);
+  }
+
+  public function testImageConstraintWhenASizeIsLimited(): void
+  {
+    $field = UploadField::create('image', ['image_sizes' => ['min_width' => 800, 'max_height' => 2000]]);
+    $constraints = $field->getAutoConstraints();
+
+    self::assertTrue($field->hasImageSizes());
+    self::assertCount(2, $constraints);
+    self::assertInstanceOf(Image::class, $constraints[1]);
+    self::assertSame(800, $constraints[1]->minWidth);
+    self::assertNull($constraints[1]->maxWidth);
+    self::assertSame(2000, $constraints[1]->maxHeight);
+    self::assertFalse(UploadField::create('image')->hasImageSizes());
+  }
+
+  /**
+   * A listener (entity-file) only fills what the Admin class did not give.
+   */
+  public function testWhatWasGiven(): void
+  {
+    $field = UploadField::create('image');
+
+    self::assertFalse($field->hasMaxSize());
+    self::assertFalse($field->hasMaxSizeMessage());
+    self::assertFalse($field->hasMimeTypesMessage());
+
+    $field->setMaxSize('1M')->setMaxSizeMessage('errors.size')->setMimeTypesMessage('errors.type');
+
+    self::assertTrue($field->hasMaxSize());
+    self::assertSame('errors.size', $field->getMaxSizeMessage());
+    self::assertSame('errors.type', $field->getMimeTypesMessage());
+    self::assertSame('file.error.maxSize', $field->setMaxSizeMessage(null)->getMaxSizeMessage());
   }
 
   public function testMimeTypesAndExtensions(): void

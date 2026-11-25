@@ -12,15 +12,18 @@
 namespace Austral\FormBundle\Field;
 
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Mime\MimeTypes;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Validator\Constraints\Image;
 
 /**
  * Austral Upload Field.
  *
  * FileType with the parameters of the upload (size, MIME types, image sizes, croppers) and the description of
  * the current file ("file": names, paths, infos), filled by entity-file-bundle. Everything is exposed as
- * form.vars.austral.widget. With "auto_constraints", the field adds File(maxSize).
+ * form.vars.austral.widget. With "auto_constraints", the field adds File (size, MIME types and their extensions,
+ * messages) and Image when an image size is limited, computed after the event field.build.
  *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
@@ -28,6 +31,9 @@ final class UploadField extends Field
 {
   public const string BLOCK_SIZE_DETAIL = 'detail';
   public const string BLOCK_SIZE_LIGHT = 'little';
+
+  public const string DEFAULT_MAX_SIZE_MESSAGE = 'file.error.maxSize';
+  public const string DEFAULT_MIME_TYPES_MESSAGE = 'file.error.mimeTypes';
 
   /**
    * @var class-string|null
@@ -53,18 +59,18 @@ final class UploadField extends Field
     parent::configureOptions($resolver);
     $resolver->setDefaults([
       'max_size' => null,
-      'max_size_message' => 'file.error.maxSize',
+      'max_size_message' => null,
       'mime_types' => [],
-      'mime_types_message' => 'file.error.mimeTypes',
+      'mime_types_message' => null,
       'block_size' => self::BLOCK_SIZE_DETAIL,
       'type_file' => null,
       'cropper' => [],
       'cropper_field_key' => null,
     ]);
     $resolver->setAllowedTypes('max_size', ['null', 'int', 'string'])
-      ->setAllowedTypes('max_size_message', 'string')
+      ->setAllowedTypes('max_size_message', ['null', 'string'])
       ->setAllowedTypes('mime_types', 'string[]')
-      ->setAllowedTypes('mime_types_message', 'string')
+      ->setAllowedTypes('mime_types_message', ['null', 'string'])
       ->setAllowedValues('block_size', [self::BLOCK_SIZE_DETAIL, self::BLOCK_SIZE_LIGHT])
       ->setAllowedTypes('type_file', ['null', 'string'])
       ->setAllowedTypes('cropper', 'array')
@@ -177,19 +183,65 @@ final class UploadField extends Field
   }
 
   /**
-   * @return string
+   * Whether a maximum size is given (otherwise the size allowed by the server is used).
+   *
+   * @return bool
    */
-  public function getMaxSizeMessage(): string
+  public function hasMaxSize(): bool
   {
-    return $this->options['max_size_message'];
+    return null !== $this->options['max_size'];
   }
 
   /**
-   * @return string
+   * @return string The given message, otherwise file.error.maxSize
+   */
+  public function getMaxSizeMessage(): string
+  {
+    return $this->options['max_size_message'] ?? self::DEFAULT_MAX_SIZE_MESSAGE;
+  }
+
+  /**
+   * @return bool
+   */
+  public function hasMaxSizeMessage(): bool
+  {
+    return null !== $this->options['max_size_message'];
+  }
+
+  /**
+   * @param string|null $message
+   *
+   * @return $this
+   */
+  public function setMaxSizeMessage(?string $message): static
+  {
+    return $this->setOptions(['max_size_message' => $message]);
+  }
+
+  /**
+   * @return string The given message, otherwise file.error.mimeTypes
    */
   public function getMimeTypesMessage(): string
   {
-    return $this->options['mime_types_message'];
+    return $this->options['mime_types_message'] ?? self::DEFAULT_MIME_TYPES_MESSAGE;
+  }
+
+  /**
+   * @return bool
+   */
+  public function hasMimeTypesMessage(): bool
+  {
+    return null !== $this->options['mime_types_message'];
+  }
+
+  /**
+   * @param string|null $message
+   *
+   * @return $this
+   */
+  public function setMimeTypesMessage(?string $message): static
+  {
+    return $this->setOptions(['mime_types_message' => $message]);
   }
 
   /**
@@ -198,6 +250,16 @@ final class UploadField extends Field
   public function getImageSizes(): array
   {
     return $this->options['image_sizes'];
+  }
+
+  /**
+   * Whether at least one image size is limited.
+   *
+   * @return bool
+   */
+  public function hasImageSizes(): bool
+  {
+    return [] !== array_filter($this->options['image_sizes'], static fn (?int $size): bool => null !== $size);
   }
 
   /**
@@ -279,7 +341,31 @@ final class UploadField extends Field
    */
   public function getAutoConstraints(): array
   {
-    return [new File(maxSize: $this->getMaxSize())];
+    $mimeTypes = $this->options['mime_types'];
+    $extensions = [];
+    foreach ($mimeTypes as $mimeType)
+    {
+      array_push($extensions, ...MimeTypes::getDefault()->getExtensions($mimeType));
+    }
+    $constraints = [new File(
+      maxSize: $this->getMaxSize(),
+      mimeTypes: $mimeTypes ?: null,
+      maxSizeMessage: $this->getMaxSizeMessage(),
+      mimeTypesMessage: $this->getMimeTypesMessage(),
+      extensions: $extensions ? array_values(array_unique($extensions)) : null,
+    )];
+    if ($this->hasImageSizes())
+    {
+      $sizes = $this->options['image_sizes'];
+      $constraints[] = new Image(
+        minWidth: $sizes['min_width'],
+        maxWidth: $sizes['max_width'],
+        minHeight: $sizes['min_height'],
+        maxHeight: $sizes['max_height'],
+      );
+    }
+
+    return $constraints;
   }
 
   /**
@@ -302,9 +388,9 @@ final class UploadField extends Field
       'block_size' => $this->options['block_size'],
       'type_file' => $this->options['type_file'],
       'max_size' => $this->getMaxSizeInBytes(),
-      'max_size_message' => $this->options['max_size_message'],
+      'max_size_message' => $this->getMaxSizeMessage(),
       'mime_types' => $this->options['mime_types'],
-      'mime_types_message' => $this->options['mime_types_message'],
+      'mime_types_message' => $this->getMimeTypesMessage(),
       'extensions' => $this->getExtensions(),
       'image_sizes' => $this->options['image_sizes'],
       'cropper' => $this->options['cropper'],

@@ -287,7 +287,7 @@ design-bundle). The theme reads the view contract (see the README) instead of th
 - A field with `mapped: false` ignores the Doctrine mapping (only the "required" rule applies).
 - A column that is not nullable makes the field required; to avoid it, set `auto_constraints: false` on the
   field (`required: 'no'` no longer exists).
-- `UploadField` gets `File(maxSize)` even when its property is not mapped by Doctrine.
+- `UploadField` adds `File` (maximum size, MIME types and their extensions, messages) and `Image` (image sizes) itself, even when its property is not mapped by Doctrine. They are computed after `field.build`, so a listener only configures the field (`setMimeTypes()`, `setMaxSize()`…); `getMaxSizeMessage()` and `getMimeTypesMessage()` return `file.error.maxSize` / `file.error.mimeTypes` until a message is given (`hasMaxSizeMessage()`, `hasMimeTypesMessage()`).
 - As in 3.x, a field that is not visible is not part of the form; this now also applies to the fields of a
   fieldset, group or modal that is not visible. A hidden field filled by JavaScript must stay visible: use
   `SymfonyField::create($name, HiddenType::class)` or hide it with CSS.

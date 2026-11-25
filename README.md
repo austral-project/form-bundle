@@ -124,8 +124,9 @@ rendered nor submitted, so its data is never changed.
 
 With `auto_constraints` (default), a field receives constraints deduced from the Doctrine mapping of the data
 class (`DoctrineConstraintGuesser`): `NotNull` for a required field or a column that is not nullable, `Length`
-for a string column, `Type` / `DateTime` and `UniqueEntity` for a text field. Some fields add their own: `File`
-for `UploadField`, `Regex` for `PasswordField`. A `NotNull` constraint makes the field required.
+for a string column, `Type` / `DateTime` and `UniqueEntity` for a text field. Some fields add their own, computed
+after the `field.build` event: `File` and `Image` for `UploadField`, `Regex` for `PasswordField`. A `NotNull`
+constraint makes the field required.
 
 ### Collections
 
@@ -203,7 +204,7 @@ The names are the constants of `Austral\FormBundle\Event\FormEvents`.
 |-------|---------------|--------|
 | `austral.form.configure_before` | `FormMapperFactory::create()`, before the configuration | `FormMapperEvent` |
 | `austral.form.configure_after` | after the configuration, for the mapper and each mapper of its collections | `FormMapperEvent` |
-| `austral.form.field.build` | `AustralFormType`, for each field before it is added (the field can still change) | `FieldBuildEvent` |
+| `austral.form.field.build` | `AustralFormType`, for each field before it is added, after the constraints of the guesser and before the ones of the field (the field can still change) | `FieldBuildEvent` |
 | `austral.form.submit` | `FormHandler`, the request being handled, before the validity is read | `FormProcessEvent` |
 | `austral.form.save_before` | `FormHandler`, the form being valid, before the save | `FormProcessEvent` |
 | `austral.form.save_after` | `FormHandler`, after the save | `FormProcessEvent` |

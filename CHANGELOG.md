@@ -18,7 +18,7 @@ correspondence between the 3.x API and the 4.0 API.
 - View contract: `form.vars.austral_layout`, `form.vars.austral` (with `widget`, the display data of a field) and `form.vars.austral_entry`.
 - `PresentationTypeExtension`: option `austral` on every form type.
 - `DoctrineConstraintGuesser` (`austral.form.constraint_guesser`, `ConstraintGuesserInterface`): the automatic constraints read the Doctrine mapping themselves.
-- `Field::getAutoConstraints()` and `Field::addToForm()`: a field adds its own constraints and form listeners.
+- `Field::getAutoConstraints()` (computed after `field.build`) and `Field::addToForm()`: a field adds its own constraints and form listeners.
 - Events `FormEvents::CONFIGURE_BEFORE`, `CONFIGURE_AFTER`, `FIELD_BUILD`, `SUBMIT`, `SAVE_BEFORE`, `SAVE_AFTER`, dispatched to the sub-forms without relay.
 - `CollectionEmbedField`: option `entry.mapper`, variants (`addVariant()`, `setVariants()`), position of each entry in `form.vars.austral_entry.sortable`.
 - `SelectField` option `enum`, `tag_choices`; `NumberField` option `integer`; `SwitchField` option `appearance`; `TimeField` option `picker`.
@@ -34,7 +34,7 @@ correspondence between the 3.x API and the 4.0 API.
 - `submit`, `save_before` and `save_after` are dispatched for each entry of a collection with the mapper, the form and the data of the entry (in 3.x, once with the form of the whole collection).
 - An exception thrown by a listener or by the save is no longer turned into a form status.
 - `RecaptchaValidator` uses the injected HTTP client (TLS verified) and refuses the value whenever it cannot be verified (no secret key, no token, Google unreachable, unreadable answer).
-- `File(maxSize)` is added to an `UploadField` even without Doctrine mapping.
+- `UploadField` adds `File` (size, MIME types and their extensions, messages) and `Image` (when an image size is limited) itself, even without Doctrine mapping; its messages are `null` until given (`hasMaxSizeMessage()`, `hasMimeTypesMessage()`, `hasMaxSize()`, `hasImageSizes()`).
 - Explicit services, no autowiring nor autoconfiguration.
 - The dependencies used by the bundle are declared; `austral/contracts`, `austral/entity-bundle`, `austral/tools-bundle` and `symfony/routing` are no longer required.
 

@@ -114,6 +114,8 @@ final class AustralFormType extends AbstractType
       {
         $field->addConstraint($constraint);
       }
+      // A listener can configure the field (upload parameters...) before the field computes its own constraints.
+      $this->dispatcher?->dispatch(new FieldBuildEvent($mapper, $field, $builder), FormEvents::FIELD_BUILD);
       if ($field->hasAutoConstraints())
       {
         foreach ($field->getAutoConstraints() as $constraint)
@@ -121,7 +123,6 @@ final class AustralFormType extends AbstractType
           $field->addConstraint($constraint);
         }
       }
-      $this->dispatcher?->dispatch(new FieldBuildEvent($mapper, $field, $builder), FormEvents::FIELD_BUILD);
       $field->addToForm($builder, $field->getSymfonyOptions() + ['austral' => $field->getPresentation()]);
     }
   }

@@ -31,8 +31,9 @@ final class FormEvents
   public const string CONFIGURE_AFTER = 'austral.form.configure_after';
 
   /**
-   * AustralFormType, for each field just before it is added to the form, after the automatic constraints
-   * (FieldBuildEvent). Replaces austral.event.form.field.configuration.
+   * AustralFormType, for each field before it is added to the form (FieldBuildEvent): after the constraints of
+   * the guesser, before the constraints the field adds itself (Field::getAutoConstraints()), so a listener can
+   * configure the field they are computed from. Replaces austral.event.form.field.configuration.
    */
   public const string FIELD_BUILD = 'austral.form.field.build';
 

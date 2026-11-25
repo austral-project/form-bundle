@@ -16,6 +16,7 @@ use Austral\FormBundle\Event\FieldBuildEvent;
 use Austral\FormBundle\Event\FormEvents;
 use Austral\FormBundle\Field\CollectionEmbedField;
 use Austral\FormBundle\Field\TextField;
+use Austral\FormBundle\Field\UploadField;
 use Austral\FormBundle\Form\Extension\PresentationTypeExtension;
 use Austral\FormBundle\Form\Type\AustralFormType;
 use Austral\FormBundle\Mapper\FormMapper;
@@ -26,6 +27,7 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\Form\Extension\Validator\ValidatorExtension;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\Forms;
+use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
 use Symfony\Component\Validator\Validation;
@@ -47,6 +49,31 @@ final class FieldBuildEventTest extends TestCase
 
     self::assertSame('austral-picto-text', $form->createView()['title']->vars['austral']['picto']);
     self::assertSame([NotNull::class, NotBlank::class], array_map(static fn (object $constraint): string => $constraint::class, $form->get('title')->getConfig()->getOption('constraints')));
+  }
+
+  /**
+   * The field computes its own constraints after the event, from what the listeners configured.
+   */
+  public function testFieldConstraintsComputedAfterTheEvent(): void
+  {
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addListener(FormEvents::FIELD_BUILD, static function (FieldBuildEvent $event): void {
+      $field = $event->getField();
+      if ($field instanceof UploadField && !$field->hasMaxSize())
+      {
+        $field->setMaxSize('3M')->setMimeTypes(['application/pdf']);
+      }
+    });
+    $mapper = new FormMapper('form_austral', Gallery::class)->add(UploadField::create('file', ['mapped' => false]));
+
+    $form = $this->factory($dispatcher)->createNamed('form_austral', AustralFormType::class, new Gallery(), ['mapper' => $mapper]);
+    $constraints = $form->get('file')->getConfig()->getOption('constraints');
+
+    self::assertCount(1, $constraints);
+    self::assertInstanceOf(File::class, $constraints[0]);
+    self::assertSame(3000000, $constraints[0]->maxSize);
+    self::assertSame(['application/pdf'], $constraints[0]->mimeTypes);
+    self::assertSame(['pdf'], $constraints[0]->extensions);
   }
 
   public function testDispatchedForTheFieldsOfTheEntries(): void
