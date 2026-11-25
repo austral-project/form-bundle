@@ -16,9 +16,28 @@ services:
   Austral\FormBundle\Form\Type\AustralFormType:
     arguments:
       $constraintGuesser: '@Austral\FormBundle\Constraint\ConstraintGuesserInterface'
+      $dispatcher: '@event_dispatcher'
     tags:
       - { name: form.type }
 
   Austral\FormBundle\Form\Extension\PresentationTypeExtension:
     tags:
       - { name: form.type_extension }
+
+##### Mapper factory
+  Austral\FormBundle\Mapper\FormMapperFactory:
+    arguments:
+      $dispatcher: '@event_dispatcher'
+
+  austral.form.mapper_factory:
+    alias: Austral\FormBundle\Mapper\FormMapperFactory
+    public: true
+
+##### Handler
+  Austral\FormBundle\Handler\FormHandler:
+    arguments:
+      $dispatcher: '@event_dispatcher'
+
+  austral.form.handler:
+    alias: Austral\FormBundle\Handler\FormHandler
+    public: true

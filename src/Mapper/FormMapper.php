@@ -11,6 +11,7 @@
 
 namespace Austral\FormBundle\Mapper;
 
+use Austral\FormBundle\Field\CollectionEmbedField;
 use Austral\FormBundle\Field\Field;
 use Austral\FormBundle\Layout\Fieldset;
 use Austral\FormBundle\Layout\Group;
@@ -397,6 +398,25 @@ final class FormMapper
   public function getFields(): array
   {
     return $this->fields;
+  }
+
+  /**
+   * Mappers of the entries of the collections of this form (and of their variants), not recursive.
+   *
+   * @return list<FormMapper>
+   */
+  public function getSubMappers(): array
+  {
+    $mappers = [];
+    foreach ($this->fields as $field)
+    {
+      if ($field instanceof CollectionEmbedField)
+      {
+        array_push($mappers, ...$field->getMappers());
+      }
+    }
+
+    return $mappers;
   }
 
   /**

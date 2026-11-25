@@ -12,6 +12,8 @@
 namespace Austral\FormBundle\Form\Type;
 
 use Austral\FormBundle\Constraint\ConstraintGuesserInterface;
+use Austral\FormBundle\Event\FieldBuildEvent;
+use Austral\FormBundle\Event\FormEvents;
 use Austral\FormBundle\Field\Field;
 use Austral\FormBundle\Layout\LayoutNode;
 use Austral\FormBundle\Mapper\FormMapper;
@@ -22,6 +24,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Austral Form Type.
@@ -43,10 +46,12 @@ final class AustralFormType extends AbstractType
   public const string BLOCK_PREFIX = 'austral_form';
 
   /**
-   * @param ConstraintGuesserInterface $constraintGuesser
+   * @param ConstraintGuesserInterface    $constraintGuesser
+   * @param EventDispatcherInterface|null $dispatcher        Dispatches austral.form.field.build
    */
   public function __construct(
     private readonly ConstraintGuesserInterface $constraintGuesser,
+    private readonly ?EventDispatcherInterface $dispatcher = null,
   ) {
   }
 
@@ -112,7 +117,7 @@ final class AustralFormType extends AbstractType
           $field->addConstraint($constraint);
         }
       }
-      // Step 4: event austral.form.field.build, before the field is added.
+      $this->dispatcher?->dispatch(new FieldBuildEvent($mapper, $field, $builder), FormEvents::FIELD_BUILD);
       $field->addToForm($builder, $field->getSymfonyOptions() + ['austral' => $field->getPresentation()]);
     }
   }
