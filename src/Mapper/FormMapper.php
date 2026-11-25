@@ -336,11 +336,20 @@ final class FormMapper
   }
 
   /**
+   * Root nodes in display order: same rule as the children of a node (explicit order, otherwise insertion order).
+   *
    * @return list<LayoutNode>
    */
   public function getNodes(): array
   {
-    return array_values($this->nodes);
+    $nodes = [];
+    foreach (array_values($this->nodes) as $index => $node)
+    {
+      $nodes[] = [$node, $node->getOrder() ?? $index, $index];
+    }
+    usort($nodes, static fn (array $a, array $b): int => [$a[1], $a[2]] <=> [$b[1], $b[2]]);
+
+    return array_map(static fn (array $node): LayoutNode => $node[0], $nodes);
   }
 
   /**

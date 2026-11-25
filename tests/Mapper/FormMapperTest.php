@@ -196,4 +196,15 @@ final class FormMapperTest extends TestCase
 
     self::assertSame($mapper, $mapper->end());
   }
+
+  public function testRootNodesInDisplayOrder(): void
+  {
+    $mapper = new FormMapper();
+    $content = $mapper->addFieldset('content');
+    $seo = $mapper->addFieldset('seo')->setOrder(-1);
+    $modal = $mapper->addModal('editor');
+    $dev = $mapper->addFieldset('dev')->setOrder(1000);
+
+    self::assertSame([$seo, $content, $modal, $dev], $mapper->getNodes());
+  }
 }
