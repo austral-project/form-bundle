@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the Austral Form Bundle package.
  *
@@ -10,73 +11,42 @@
 
 namespace Austral\FormBundle\Field;
 
-use Austral\FormBundle\Field\Base\Field;
-
 /**
- * Austral Field Template.
- * @template T of object
+ * Austral Template Field.
  *
- * @extends Field<T>
+ * Display only: rendered from its template at its place in the layout, never added to the Symfony form.
+ * A relative template is resolved by the theme, an absolute one (@Bundle/...) is used as it is.
  *
  * @author Matthieu Beurel <matthieu@austral.dev>
- * @final
  */
-class TemplateField extends Field
+final class TemplateField extends Field
 {
-
   /**
-   * @var array<string, mixed>
+   * @var bool
    */
-  protected array $vars = [];
+  protected bool $displayOnly = true;
 
   /**
-   * @param string $fieldname
-   * @param string $templatePath
+   * @param string               $name
+   * @param string               $template
+   * @param array<string, mixed> $options
+   * @param array<string, mixed> $vars     Variables given to the template (option "template_vars")
+   */
+  public function __construct(string $name, string $template, array $options = [], array $vars = [])
+  {
+    parent::__construct($name, ['template' => $template] + ($vars ? ['template_vars' => $vars] : []) + $options);
+  }
+
+  /**
+   * @param string               $name
+   * @param string               $template
    * @param array<string, mixed> $options
    * @param array<string, mixed> $vars
    *
-   * @return self<object>
+   * @return self
    */
-  public static function create(string $fieldname, string $templatePath, array $options = [], array $vars = []): self
+  public static function create(string $name, string $template, array $options = [], array $vars = []): self
   {
-    return new self($fieldname, $templatePath, $options, $vars);
+    return new self($name, $template, $options, $vars);
   }
-
-  /**
-   * Choices constructor.
-   *
-   * @param string $fieldname
-   * @param string $templatePath
-   * @param array<string, mixed> $options
-   * @param array<string, mixed> $vars
-   */
-  public function __construct(string $fieldname, string $templatePath, array $options = [], array $vars = [])
-  {
-    parent::__construct($fieldname, $options);
-    $this->options["template"]["path"] = $templatePath;
-    $this->isDefaultTemplate = false;
-    $this->symfonyFormType = "template";
-    $this->usedGeneratedForm = false;
-    $this->vars = $vars;
-  }
-
-  /**
-   * @return array<string, mixed>
-   */
-  public function getVars(): array
-  {
-    return $this->vars;
-  }
-
-  /**
-   * @param array<string, mixed> $vars
-   *
-   * @return $this
-   */
-  public function setVars(array $vars): self
-  {
-    $this->vars = $vars;
-    return $this;
-  }
-  
 }

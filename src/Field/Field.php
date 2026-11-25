@@ -554,6 +554,18 @@ abstract class Field
       'after' => $this->options['after'],
       'template' => $this->options['template'],
       'template_vars' => $this->options['template_vars'],
+      'widget' => $this->getWidget(),
     ];
+  }
+
+  /**
+   * Display data specific to the field (labels of a switch, options of a JS widget...), exposed as
+   * form.vars.austral.widget. Empty for most fields.
+   *
+   * @return array<string, mixed>
+   */
+  protected function getWidget(): array
+  {
+    return [];
   }
 }

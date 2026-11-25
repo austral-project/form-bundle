@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the Austral Form Bundle package.
  *
@@ -10,72 +11,79 @@
 
 namespace Austral\FormBundle\Field;
 
-use Austral\FormBundle\Field\Base\Field;
-use Austral\ToolsBundle\AustralTools;
-
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Austral Field Textarea Input.
- * @template T of object
+ * Austral Textarea Field.
  *
- * @extends Field<T>
+ * The height is a CSS class added to the textarea (same values as the 3.x SIZE_* constants).
  *
  * @author Matthieu Beurel <matthieu@austral.dev>
- * @final
  */
-class TextareaField extends Field
+final class TextareaField extends Field
 {
-
-  const string SIZE_MIDDLE = "middle";
-  const string SIZE_AUTO = "auto";
-  const string SIZE_BIG = "big";
+  public const string HEIGHT_AUTO = 'auto';
+  public const string HEIGHT_MIDDLE = 'middle';
+  public const string HEIGHT_BIG = 'big';
 
   /**
-   * @var string
+   * @var class-string|null
    */
-  protected string $size = self::SIZE_MIDDLE;
+  protected ?string $symfonyType = TextareaType::class;
 
   /**
-   * @param string $fieldname
-   * @param string|null $size
+   * @param string               $name
+   * @param string|null          $height  One of the HEIGHT_* constants, HEIGHT_MIDDLE when null
    * @param array<string, mixed> $options
    *
-   * @return self<object>
+   * @return self
    */
-  public static function create(string $fieldname, ?string $size = self::SIZE_MIDDLE, array $options = []): self
+  public static function create(string $name, ?string $height = self::HEIGHT_MIDDLE, array $options = []): self
   {
-    return new self($fieldname, $size, $options);
+    return new self($name, ['height' => $height ?? self::HEIGHT_MIDDLE] + $options);
   }
 
   /**
-   * TextareaField constructor.
-   *
-   * @param string $fieldname
-   * @param string|null $size
-   * @param array<string, mixed> $options
+   * {@inheritdoc}
    */
-  public function __construct(string $fieldname, ?string $size = self::SIZE_MIDDLE, array $options = [])
+  protected function configureOptions(OptionsResolver $resolver): void
   {
-    parent::__construct($fieldname, $options);
-    $this->size = $size ?? self::SIZE_MIDDLE;
-    $this->symfonyFormType = TextareaType::class;
+    parent::configureOptions($resolver);
+    $resolver->setDefault('height', self::HEIGHT_MIDDLE);
+    $resolver->setAllowedValues('height', [self::HEIGHT_AUTO, self::HEIGHT_MIDDLE, self::HEIGHT_BIG]);
   }
 
   /**
-   * @inheritDoc
+   * @return string
    */
-  public function getFieldOptions(): array
+  public function getHeight(): string
   {
-    $fieldOptions = parent::getFieldOptions();
-    if($this->size == self::SIZE_AUTO)
+    return $this->options['height'];
+  }
+
+  /**
+   * @param string $height
+   *
+   * @return $this
+   */
+  public function setHeight(string $height): static
+  {
+    return $this->setOptions(['height' => $height]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSymfonyOptions(): array
+  {
+    $options = parent::getSymfonyOptions();
+    $options['attr']['class'] = trim(($options['attr']['class'] ?? '').' '.$this->options['height']);
+    if (self::HEIGHT_AUTO === $this->options['height'])
     {
-      $fieldOptions['attr']['rows'] = 2;
+      $options['attr'] += ['rows' => 2];
     }
-    $fieldOptions["attr"]["class"] = AustralTools::valueByKey(AustralTools::valueByKey($fieldOptions, "attr", []), "class")." {$this->size}";
-    return $fieldOptions;
+
+    return $options;
   }
-
-
-
 }

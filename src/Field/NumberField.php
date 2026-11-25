@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the Austral Form Bundle package.
  *
@@ -10,44 +11,54 @@
 
 namespace Austral\FormBundle\Field;
 
-use Austral\FormBundle\Field\Base\Field;
-
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Austral Field Number Input.
- * @template T of object
+ * Austral Number Field.
  *
- * @extends Field<T>
+ * NumberType, or IntegerType with the option "integer" (replaces the 3.x IntegerField). The options of the
+ * Symfony type (scale, rounding_mode, html5...) go in "form_options".
  *
  * @author Matthieu Beurel <matthieu@austral.dev>
- * @final
  */
-class NumberField extends Field
+final class NumberField extends Field
 {
-
   /**
-   * @param string $fieldname
+   * @param string               $name
    * @param array<string, mixed> $options
    *
-   * @return self<object>
+   * @return self
    */
-  public static function create(string $fieldname, array $options = []): self
+  public static function create(string $name, array $options = []): self
   {
-    return new self($fieldname, $options);
+    return new self($name, $options);
   }
 
   /**
-   * NumberField constructor.
-   *
-   * @param string $fieldname
-   * @param array<string, mixed> $options
+   * {@inheritdoc}
    */
-  public function __construct(string $fieldname, array $options = [])
+  protected function configureOptions(OptionsResolver $resolver): void
   {
-    parent::__construct($fieldname, $options);
-    $this->symfonyFormType = NumberType::class;
+    parent::configureOptions($resolver);
+    $resolver->setDefault('integer', false);
+    $resolver->setAllowedTypes('integer', 'bool');
   }
 
+  /**
+   * @return class-string
+   */
+  public function getSymfonyType(): string
+  {
+    return $this->options['integer'] ? IntegerType::class : NumberType::class;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isInteger(): bool
+  {
+    return $this->options['integer'];
+  }
 }

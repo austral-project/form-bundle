@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the Austral Form Bundle package.
  *
@@ -10,44 +11,43 @@
 
 namespace Austral\FormBundle\Field;
 
-use Austral\FormBundle\Field\Base\Field;
 use Symfony\Component\Form\FormTypeInterface;
 
 /**
- * Austral Field Symfony Input.
- * @template T of object
+ * Austral Symfony Field.
  *
- * @extends Field<T>
+ * Any Symfony form type in the Austral layout, with the presentation of an Austral field. Replaces the 3.x
+ * FormTypeField too (a type instance is accepted, its class is used).
  *
  * @author Matthieu Beurel <matthieu@austral.dev>
- * @final
  */
-class SymfonyField extends Field
+final class SymfonyField extends Field
 {
-
   /**
-   * @param string $fieldname
-   * @param class-string<FormTypeInterface> $symfonyFormType
-   * @param array<string, mixed> $options
-   *
-   * @return self<object>
+   * @param string                         $name
+   * @param string|FormTypeInterface<mixed> $type    Class of a form type, or a form type; anything else is rejected
+   * @param array<string, mixed>           $options
    */
-  public static function create(string $fieldname, string $symfonyFormType, array $options = []): self
+  public function __construct(string $name, string|FormTypeInterface $type, array $options = [])
   {
-    return new self($fieldname, $symfonyFormType, $options);
+    $type = $type instanceof FormTypeInterface ? $type::class : $type;
+    if (!is_a($type, FormTypeInterface::class, true))
+    {
+      throw new \InvalidArgumentException(\sprintf('The type of the field "%s" must be a class implementing "%s", "%s" given.', $name, FormTypeInterface::class, $type));
+    }
+    $this->symfonyType = $type;
+    parent::__construct($name, $options);
   }
 
   /**
-   * SymfonyField constructor.
+   * @param string                         $name
+   * @param string|FormTypeInterface<mixed> $type
+   * @param array<string, mixed>           $options
    *
-   * @param string $fieldname
-   * @param class-string<FormTypeInterface> $symfonyFormType
-   * @param array<string, mixed> $options
+   * @return self
    */
-  public function __construct(string $fieldname, string $symfonyFormType, array $options = [])
+  public static function create(string $name, string|FormTypeInterface $type, array $options = []): self
   {
-    parent::__construct($fieldname, $options);
-    $this->symfonyFormType = $symfonyFormType;
+    return new self($name, $type, $options);
   }
-
 }

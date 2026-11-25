@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the Austral Form Bundle package.
  *
@@ -10,127 +11,113 @@
 
 namespace Austral\FormBundle\Field;
 
-use Austral\FormBundle\Field\Base\Field;
-
-use Austral\ToolsBundle\AustralTools;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * Austral Field Switch Input.
- * @template T of object
+ * Austral Switch Field.
  *
- * @extends Field<T>
+ * A checkbox shown as a switch (or as a checkbox: "appearance", replaces the 3.x CheckboxField). Its title,
+ * summary, pictos and colors are exposed as form.vars.austral.widget; the colors as CSS variables in "style".
  *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
-class SwitchField extends Field
+final class SwitchField extends Field
 {
+  public const string APPEARANCE_SWITCH = 'switch';
+  public const string APPEARANCE_CHECKBOX = 'checkbox';
 
   /**
-   * @param string $fieldname
+   * @var class-string|null
+   */
+  protected ?string $symfonyType = CheckboxType::class;
+
+  /**
+   * @param string               $name
    * @param array<string, mixed> $options
    *
-   * @return self<object>
+   * @return self
    */
-  public static function create(string $fieldname, array $options = []): self
+  public static function create(string $name, array $options = []): self
   {
-    return new self($fieldname, $options);
+    return new self($name, $options);
   }
 
   /**
-   * Switch constructor.
-   *
-   * @param string $fieldname
-   * @param array<string, mixed> $options
+   * {@inheritdoc}
    */
-  public function __construct(string $fieldname, array $options = [])
-  {
-    parent::__construct($fieldname, $options);
-    $this->symfonyFormType = CheckboxType::class;
-    if($this->isDefaultTemplate)
-    {
-      $this->options["template"]["path"] = "switch-field.html.twig";
-    }
-  }
-
-  /**
-   * @inheritDoc
-   */
-  public function configureOptions(OptionsResolver $resolver): void
+  protected function configureOptions(OptionsResolver $resolver): void
   {
     parent::configureOptions($resolver);
-    $resolver->setDefault('switch-options', function (OptionsResolver $resolverChild) {
-      $resolverChild->setDefaults(array(
-          "title"                 =>  null,
-          "summary"               =>  null,
-        )
-      );
-      $resolverChild->setDefault("pictos", function (OptionsResolver $resolverSubChild) {
-        $resolverSubChild->setDefaults(array(
-            "enabled"                 =>  null,
-            "disabled"                =>  null,
-          )
-        );
-        $resolverSubChild->setAllowedTypes('enabled', array('string', "null"));
-        $resolverSubChild->setAllowedTypes('disabled', array('string', "null"));
-      });
-      $resolverChild->setDefault("button-colors", function (OptionsResolver $resolverSubChild) {
-        $resolverSubChild->setDefaults(array(
-            "enabled"                 =>  "var(--color-white-force)",
-            "disabled"                =>  "var(--color-white-force)",
-          )
-        );
-        $resolverSubChild->setAllowedTypes('enabled', array('string', "null"));
-        $resolverSubChild->setAllowedTypes('disabled', array('string', "null"));
-      });
-      $resolverChild->setDefault("fond-colors", function (OptionsResolver $resolverSubChild) {
-        $resolverSubChild->setDefaults(array(
-            "enabled"                 =>  "var(--color-green-40)",
-            "disabled"                =>  "var(--color-main-40)",
-          )
-        );
-        $resolverSubChild->setAllowedTypes('enabled', array('string', "null"));
-        $resolverSubChild->setAllowedTypes('disabled', array('string', "null"));
-      });
-      $resolverChild->setAllowedTypes('title', array('string', "null"));
-      $resolverChild->setAllowedTypes('summary', array('string', "null"));
+    $resolver->setDefaults([
+      'appearance' => self::APPEARANCE_SWITCH,
+      'title' => null,
+      'summary' => null,
+    ]);
+    $resolver->setAllowedValues('appearance', [self::APPEARANCE_SWITCH, self::APPEARANCE_CHECKBOX])
+      ->setAllowedTypes('title', ['null', 'string'])
+      ->setAllowedTypes('summary', ['null', 'string']);
+    $resolver->setOptions('pictos', static function (OptionsResolver $pictos): void {
+      $pictos->setDefaults(['enabled' => null, 'disabled' => null])
+        ->setAllowedTypes('enabled', ['null', 'string'])
+        ->setAllowedTypes('disabled', ['null', 'string']);
+    });
+    $resolver->setOptions('button_colors', static function (OptionsResolver $colors): void {
+      $colors->setDefaults(['enabled' => 'var(--color-white-force)', 'disabled' => 'var(--color-white-force)'])
+        ->setAllowedTypes('enabled', ['null', 'string'])
+        ->setAllowedTypes('disabled', ['null', 'string']);
+    });
+    $resolver->setOptions('background_colors', static function (OptionsResolver $colors): void {
+      $colors->setDefaults(['enabled' => 'var(--color-green-40)', 'disabled' => 'var(--color-main-40)'])
+        ->setAllowedTypes('enabled', ['null', 'string'])
+        ->setAllowedTypes('disabled', ['null', 'string']);
     });
   }
 
   /**
-   * @return array<string, mixed>
+   * {@inheritdoc}
    */
-  public function getSwitchOptions(): array
+  public function getSymfonyOptions(): array
   {
-    return $this->options['switch-options'];
+    $options = parent::getSymfonyOptions();
+    $options['attr'] += ['autocomplete' => 'off'];
+
+    return $options;
   }
 
   /**
+   * CSS variables of the colors, as in 3.x (the admin theme reads --switch-button-color-* and --switch-fond-color-*).
+   *
    * @return string
    */
-  public function getSwitchStyles(): string
+  public function getStyle(): string
   {
     $styles = [];
-    foreach($this->options['switch-options']['button-colors'] as $key => $color)
+    foreach (['button_colors' => 'button', 'background_colors' => 'fond'] as $option => $variable)
     {
-      $styles[] = "--switch-button-color-{$key}:{$color};";
+      foreach ($this->options[$option] as $state => $color)
+      {
+        if (null !== $color)
+        {
+          $styles[] = "--switch-{$variable}-color-{$state}:{$color};";
+        }
+      }
     }
-    foreach($this->options['switch-options']['fond-colors'] as $key => $color)
-    {
-      $styles[] = "--switch-fond-color-{$key}:{$color};";
-    }
-    return implode(" ", $styles);
+
+    return implode(' ', $styles);
   }
 
   /**
-   * @inheritDoc
+   * {@inheritdoc}
    */
-  public function getFieldOptions(): array
+  protected function getWidget(): array
   {
-    $fieldOptions = parent::getFieldOptions();
-    $fieldOptions["attr"]['autocomplete'] = AustralTools::getValueByKey(AustralTools::getValueByKey($fieldOptions, "attr", []), "autocomplete", "off");
-    return $fieldOptions;
+    return [
+      'appearance' => $this->options['appearance'],
+      'title' => $this->options['title'],
+      'summary' => $this->options['summary'],
+      'pictos' => $this->options['pictos'],
+      'style' => $this->getStyle(),
+    ];
   }
-
 }

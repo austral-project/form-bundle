@@ -1,4 +1,5 @@
 <?php
+
 /*
  * This file is part of the Austral Form Bundle package.
  *
@@ -10,42 +11,30 @@
 
 namespace Austral\FormBundle\Field;
 
-use Austral\FormBundle\Field\Base\Field;
-
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
 /**
- * Austral Field Text Input.
- * @template T of object
+ * Austral Text Field.
  *
- * @extends Field<T>
+ * Not final: other bundles build their own text fields on it (PathField of seo-bundle).
  *
  * @author Matthieu Beurel <matthieu@austral.dev>
  */
 class TextField extends Field
 {
+  /**
+   * @var class-string|null
+   */
+  protected ?string $symfonyType = TextType::class;
 
   /**
-   * @param string $fieldname
+   * @param string               $name
    * @param array<string, mixed> $options
    *
-   * @return self<object>
+   * @return self
    */
-  public static function create(string $fieldname, array $options = []): self
+  public static function create(string $name, array $options = []): self
   {
-    return new self($fieldname, $options);
+    return new self($name, $options);
   }
-
-  /**
-   * TextField constructor.
-   *
-   * @param string $fieldname
-   * @param array<string, mixed> $options
-   */
-  public function __construct(string $fieldname, array $options = [])
-  {
-    parent::__construct($fieldname, $options);
-    $this->symfonyFormType = TextType::class;
-  }
-
 }

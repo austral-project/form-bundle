@@ -44,6 +44,7 @@ final class PresentationTypeExtension extends AbstractTypeExtension
     'after' => null,
     'template' => null,
     'template_vars' => [],
+    'widget' => [],
   ];
 
   /**
