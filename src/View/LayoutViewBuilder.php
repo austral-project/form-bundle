@@ -11,6 +11,7 @@
 
 namespace Austral\FormBundle\View;
 
+use Austral\FormBundle\Field\CollectionEmbedField;
 use Austral\FormBundle\Field\Field;
 use Austral\FormBundle\Layout\Fieldset;
 use Austral\FormBundle\Layout\Group;
@@ -23,7 +24,8 @@ use Symfony\Component\Form\FormView;
  * Austral Layout View Builder.
  *
  * Builds form.vars.austral_layout, the view contract of the layout: the visible nodes in display order, each one
- * with its children (names of the fields to render with form_row(), or nodes). The ids are prefixed with the id
+ * with its children (names of the fields to render with form_row(), or nodes: template for a display-only
+ * field, variants for a CollectionEmbedField with variants). The ids are prefixed with the id
  * of the form view, so they are unique on the page and in every entry of a collection.
  *
  * @internal used by AustralFormType
@@ -89,6 +91,10 @@ final class LayoutViewBuilder
       {
         $children[] = self::template($field, $view);
       }
+      elseif ($field instanceof CollectionEmbedField && $field->hasVariants() && $field->isVisible())
+      {
+        $children[] = self::variants($field, $view);
+      }
     }
 
     $built = [
@@ -119,6 +125,28 @@ final class LayoutViewBuilder
       ],
       default => $built,
     };
+  }
+
+  /**
+   * Node of a container of variants: its children are the names of its variants (collections of the form).
+   *
+   * @param CollectionEmbedField $field
+   * @param FormView             $view
+   *
+   * @return array<string, mixed>
+   */
+  private static function variants(CollectionEmbedField $field, FormView $view): array
+  {
+    return [
+      'type' => 'variants',
+      'id' => $view->vars['id'].'-variants-'.LayoutNode::slug($field->getName()),
+      'name' => $field->getName(),
+      'austral' => $field->getPresentation(),
+      'children' => array_values(array_filter(
+        array_map(static fn (CollectionEmbedField $variant): string => $variant->getName(), $field->getVariants()),
+        static fn (string $name): bool => isset($view->children[$name]),
+      )),
+    ];
   }
 
   /**

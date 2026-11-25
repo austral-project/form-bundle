@@ -70,14 +70,8 @@ final class AustralFormType extends AbstractType
       'translation_domain' => static fn (Options $options): string => $options['mapper']->getTranslationDomain(),
       'validation_groups' => static fn (Options $options): ?array => $options['mapper']->getValidationGroups(),
     ]);
-    $resolver->addNormalizer('attr', static function (Options $options, array $attr): array {
-      if (!$options['mapper']->isHtml5Validate())
-      {
-        $attr += ['novalidate' => 'novalidate'];
-      }
-
-      return $attr;
-    });
+    $resolver->setDefault('entry_vars', null);
+    $resolver->setAllowedTypes('entry_vars', ['null', \Closure::class]);
     $resolver->addNormalizer('constraints', function (Options $options, mixed $constraints): array {
       return array_merge(
         \is_array($constraints) ? $constraints : [$constraints],
@@ -124,14 +118,33 @@ final class AustralFormType extends AbstractType
   }
 
   /**
-   * The layout needs the views of the children: finishView(), not buildView().
+   * novalidate on the <form> only (the root view), unless the mapper asks for the HTML5 validation.
+   *
+   * {@inheritdoc}
+   */
+  public function buildView(FormView $view, FormInterface $form, array $options): void
+  {
+    if (null === $view->parent && !$options['mapper']->isHtml5Validate())
+    {
+      $view->vars['attr'] += ['novalidate' => 'novalidate'];
+    }
+  }
+
+  /**
+   * The layout needs the views of the children: finishView(), not buildView(). An entry of a collection also
+   * gets form.vars.austral_entry, from the option "entry_vars" given by CollectionEmbedField (its position...).
    *
    * {@inheritdoc}
    */
   public function finishView(FormView $view, FormInterface $form, array $options): void
   {
     $data = $form->getData();
-    $view->vars['austral_layout'] = LayoutViewBuilder::build($options['mapper'], $view, \is_object($data) ? $data : null);
+    $data = \is_object($data) ? $data : null;
+    $view->vars['austral_layout'] = LayoutViewBuilder::build($options['mapper'], $view, $data);
+    if (null !== $options['entry_vars'])
+    {
+      $view->vars['austral_entry'] = ($options['entry_vars'])($data);
+    }
   }
 
   /**

@@ -98,10 +98,10 @@ final class AustralFormTypeTest extends TestCase
   public function testNoValidateUnlessHtml5Validation(): void
   {
     $mapper = new FormMapper('form_austral');
-    self::assertSame(['class' => 'form', 'novalidate' => 'novalidate'], $this->create($mapper, null, ['attr' => ['class' => 'form']])->getConfig()->getOption('attr'));
+    self::assertSame(['class' => 'form', 'novalidate' => 'novalidate'], $this->create($mapper, null, ['attr' => ['class' => 'form']])->createView()->vars['attr']);
 
     $mapper->setHtml5Validate(true);
-    self::assertSame([], $this->create($mapper)->getConfig()->getOption('attr'));
+    self::assertSame([], $this->create($mapper)->createView()->vars['attr']);
   }
 
   public function testFieldsAddedWithTheirSymfonyOptions(): void
