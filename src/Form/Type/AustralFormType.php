@@ -102,14 +102,17 @@ final class AustralFormType extends AbstractType
       {
         continue;
       }
-      $type = $field->getSymfonyType() ?? throw new \LogicException(\sprintf('The field "%s" (%s) has no Symfony form type.', $field->getName(), $field::class));
+      if (null === $field->getSymfonyType())
+      {
+        throw new \LogicException(\sprintf('The field "%s" (%s) has no Symfony form type.', $field->getName(), $field::class));
+      }
       // Same class kept by addConstraint(): building the form again adds nothing.
       foreach ($this->constraintGuesser->guessFieldConstraints($options['data_class'], $field) as $constraint)
       {
         $field->addConstraint($constraint);
       }
       // Step 4: event austral.form.field.build, before the field is added.
-      $builder->add($field->getName(), $type, $field->getSymfonyOptions() + ['austral' => $field->getPresentation()]);
+      $field->addToForm($builder, $field->getSymfonyOptions() + ['austral' => $field->getPresentation()]);
     }
   }
 

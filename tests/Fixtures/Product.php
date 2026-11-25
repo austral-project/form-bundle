@@ -27,4 +27,15 @@ class Product
   public bool $enabled = false;
 
   public ?string $reference = null;
+
+  public ?string $category = null;
+
+  /**
+   * @var list<string>
+   */
+  public array $tags = [];
+
+  public ?ArticleStatus $status = null;
+
+  public ?bool $published = null;
 }

@@ -12,6 +12,7 @@
 namespace Austral\FormBundle\Field;
 
 use Austral\FormBundle\Mapper\FormMapper;
+use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\NotNull;
@@ -499,6 +500,20 @@ abstract class Field
     $this->formMapper = $formMapper;
 
     return $this;
+  }
+
+  /**
+   * Adds the field to the form being built (called by AustralFormType with the final options). A field that
+   * needs form listeners (SelectField with tags) overrides it, calls the parent and adds them to $builder.
+   *
+   * @param FormBuilderInterface<mixed> $builder Builder of the parent form
+   * @param array<string, mixed>        $options Options of the Symfony form type
+   *
+   * @return void
+   */
+  public function addToForm(FormBuilderInterface $builder, array $options): void
+  {
+    $builder->add($this->name, $this->getSymfonyType(), $options);
   }
 
   /**
